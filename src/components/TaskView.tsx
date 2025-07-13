@@ -1,0 +1,277 @@
+import React, { useState } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
+
+interface TaskViewProps {
+  learningOutcome: LearningOutcome;
+  task: TaskItem;
+  answer?: StudentAnswer;
+  onAnswerUpdate: (content: string) => void;
+  onRequestFeedback: () => void;
+  onMarkComplete: () => void;
+  onNavigateBack: () => void;
+  onNavigateNext: () => void;
+  hasNext: boolean;
+}
+
+export const TaskView: React.FC<TaskViewProps> = ({
+  learningOutcome,
+  task,
+  answer,
+  onAnswerUpdate,
+  onRequestFeedback,
+  onMarkComplete,
+  onNavigateBack,
+  onNavigateNext,
+  hasNext
+}) => {
+  const [content, setContent] = useState(answer?.content || '');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
+  const [showIndicativeContent, setShowIndicativeContent] = useState(false);
+
+  const handleContentChange = (value: string) => {
+    setContent(value);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = () => {
+    onAnswerUpdate(content);
+    setHasUnsavedChanges(false);
+  };
+
+  const getTaskTypeColor = (type: string) => {
+    switch (type) {
+      case 'standard': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'merit': return 'bg-gray-100 text-gray-700 border-gray-300';
+      case 'distinction': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatCriteriaText = (text: string) => {
+    // Check if the text contains lettered list items like a), b), c), d), etc.
+    const letteredListRegex = /\b[a-z]\)\s/g;
+    const hasLetteredList = letteredListRegex.test(text);
+    
+    if (hasLetteredList) {
+      // Reset regex for actual use
+      letteredListRegex.lastIndex = 0;
+      
+      // Find all matches to get the positions
+      const matches = [...text.matchAll(/\b([a-z])\)\s/g)];
+      
+      if (matches.length > 0) {
+        // Get the intro text (everything before the first match)
+        const introText = text.substring(0, matches[0].index).trim();
+        
+        // Extract list items
+        const listItems = [];
+        for (let i = 0; i < matches.length; i++) {
+          const currentMatch = matches[i];
+          const nextMatch = matches[i + 1];
+          
+          // Get text from after current marker to before next marker (or end of string)
+          const startPos = currentMatch.index + currentMatch[0].length;
+          const endPos = nextMatch ? nextMatch.index : text.length;
+          const itemText = text.substring(startPos, endPos).trim();
+          
+          if (itemText) {
+            listItems.push(itemText);
+          }
+        }
+        
+        // If we have multiple items, render as a list
+        if (listItems.length > 0) {
+          return (
+            <div>
+              {introText && <p className="mb-3">{introText}</p>}
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                {listItems.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+      }
+    }
+      
+    // Return as regular text if no lettered lists found
+    return <div className="text-gray-800">{text}</div>;
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onNavigateBack}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </button>
+          
+          {answer?.isGoodEnough && (
+            <div className="flex items-center text-green-600">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              <span className="font-medium">Task Complete</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
+            <p className="text-gray-600 mt-2">{learningOutcome.description}</p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
+            {task.type}
+          </span>
+        </div>
+      </div>
+
+      {/* Task Description */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Description</h2>
+        <p className="text-gray-700 leading-relaxed">{task.description}</p>
+      </div>
+
+      {/* Acceptance Criteria */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <button
+          onClick={() => setShowAcceptanceCriteria(!showAcceptanceCriteria)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Acceptance Criteria</h2>
+          {showAcceptanceCriteria ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+        </button>
+        
+        {showAcceptanceCriteria && (
+          <div className="mt-4 space-y-3">
+            {task.acceptance_criteria.map((criteria, index) => (
+              <div key={criteria.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                {formatCriteriaText(criteria.criteria)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Indicative Content */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <button
+          onClick={() => setShowIndicativeContent(!showIndicativeContent)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Indicative Content</h2>
+          {showIndicativeContent ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+        </button>
+        
+        {showIndicativeContent && (
+          <div className="mt-4">
+            <ul className="space-y-2">
+              {learningOutcome.indicative_content.map((content, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span className="text-gray-700">{content.description}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Answer Section */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
+          <div className="flex space-x-3">
+            {hasUnsavedChanges && (
+              <button
+                onClick={handleSave}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save
+              </button>
+            )}
+            {answer && !answer.isGoodEnough && (
+              <button
+                onClick={onRequestFeedback}
+                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Request Feedback
+              </button>
+            )}
+            {answer && !answer.isGoodEnough && (
+              <button
+                onClick={onMarkComplete}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark Complete
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <textarea
+          value={content}
+          onChange={(e) => handleContentChange(e.target.value)}
+          placeholder="Enter your answer here..."
+          className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+        />
+        
+        {answer && (
+          <div className="mt-4 text-sm text-gray-600">
+            <p>Last saved: {answer.lastModified.toLocaleString()}</p>
+            <p>Version: {answer.version}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Feedback Section */}
+      {answer?.feedback && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Feedback</h2>
+          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+            <p className="text-gray-800">{answer.feedback}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex justify-between">
+        <button
+          onClick={onNavigateBack}
+          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </button>
+        
+        {hasNext && (
+          <button
+            onClick={onNavigateNext}
+            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Next Task
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
