@@ -26,7 +26,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onMarkComplete,
   onNavigateBack,
   onNavigateNext,
-  hasNext
+ hasNext,
   totalTasks = 0,
   completedTasks = 0,
   currentTaskNumber = 1
