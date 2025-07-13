@@ -3,13 +3,14 @@ import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
 import { useProgress } from './hooks/useProgress';
-import { unitData } from './data/unit';
+import { useUnitData } from './hooks/useUnitData';
 import { generateFeedback } from './utils/feedbackGenerator';
 
 type View = 'overview' | 'dashboard' | 'task';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('overview');
+  const { unitData, loading, error } = useUnitData();
   const {
     progress,
     updateAnswer,
@@ -19,7 +20,40 @@ function App() {
     setCurrentTask,
     getVelocityMetrics,
     getNextTask
-  } = useProgress();
+  } = useProgress(unitData?.id);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading unit data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !unitData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Unit Data</h1>
+          <p className="text-gray-600 mb-4">
+            {error || 'Unit data could not be loaded. Please check that unit-1.json exists in the public folder.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getCurrentLO = () => {
     return unitData.learning_outcomes.find(lo => lo.id === progress.currentLO);
@@ -78,8 +112,9 @@ function App() {
       case 'dashboard':
         return (
           <ProgressDashboard
+            unit={unitData}
             progress={progress}
-            metrics={getVelocityMetrics()}
+            metrics={getVelocityMetrics(unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0))}
             onTaskSelect={handleTaskSelect}
           />
         );
@@ -88,7 +123,7 @@ function App() {
         const lo = getCurrentLO();
         const task = getCurrentTask();
         const answer = getCurrentAnswer();
-        const nextTask = getNextTask();
+        const nextTask = getNextTask(unitData.learning_outcomes);
         
         if (!lo || !task) {
           return <div>Task not found</div>;

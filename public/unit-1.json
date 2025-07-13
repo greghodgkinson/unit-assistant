@@ -1,6 +1,4 @@
-import { Unit } from '../types/Unit';
-
-export const unitData: Unit = {
+{
   "id": "unit-1",
   "title": "Unit 1 Business Environment Assignment",
   "instructions": "At the beginning of each module, you will need to decide whether you want to achieve a Pass, Merit, or Distinction grade for the relevant module keeping in mind your overall score goal and possible qualification progression goal. 1. Pass: Complete the \"Pass\" questions in the assignment. Please disregard the extension activities. The Merit and Distinction within assignments are extension activities, which enable you to provide additional evidence to show that the criteria for the higher grades have been met. 2. Merit: To achieve a Merit for this Module, complete the \"Pass\" as well as the \"Merit\" additional extension activities in the assignment. 3. Distinction: To achieve a Distinction for this Module complete the \"Pass\", \"Merit\" & \"Distinction\" additional extension activities in the assignment. *Please also note* Students cannot omit to complete work to meet the pass standard and simply work to the higher grades, as this would put a pass for the unit in jeopardy. Similarly, students cannot complete work to meet the criteria for distinction in the anticipation that this will also meet the criteria for merit. However, where work for the pass standard is marginal, assessors can consider any extension work completed as this may support the achievement of the pass standard. REMEMBER: Extension activities will not only contribute to a Merit, or Distinction for the module. It can also help to increase your overall point score. The points are converted to an overall qualification grade where you can either meet the minimum number of points required for Pass, Merit or Distinction grade for the qualification. See the Course Orientation for further clarification.",
@@ -216,4 +214,4 @@ export const unitData: Unit = {
       ]
     }
   ]
-};
+}
