@@ -93,7 +93,7 @@ function App() {
   };
 
   const handleNavigateNext = () => {
-    const nextTask = getNextTask();
+    const nextTask = getNextTask(unitData.learning_outcomes);
     if (nextTask) {
       setCurrentTask(nextTask.loId, nextTask.taskId);
     }
