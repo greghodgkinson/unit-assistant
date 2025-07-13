@@ -72,43 +72,28 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    const paragraphs = text.split('\n').filter(p => p.trim());
+    // Normalize to force lettered list items to start on new lines, except inside "for part c)"
+    const normalized = text.replace(/(?<!part )\b([a-z])\)\s+/gi, '\n$1) ');
+
+    const paragraphs = normalized.split('\n').filter(p => p.trim());
 
     return (
       <div className="text-gray-800 space-y-3">
         {paragraphs.map((paragraph, index) => {
           const trimmed = paragraph.trim();
 
-          const letteredListRegex = /([a-zA-Z])\)\s+/g;
-          const matches = [...trimmed.matchAll(letteredListRegex)];
-
-          if (matches.length > 0) {
-            const introText = trimmed.slice(0, matches[0].index).trim();
-            const listItems: string[] = [];
-
-            for (let i = 0; i < matches.length; i++) {
-              const marker = matches[i][0].trim(); // e.g. "a)"
-              const start = matches[i].index! + matches[i][0].length;
-              const end = matches[i + 1] ? matches[i + 1].index : trimmed.length;
-              const item = trimmed.slice(start, end).trim();
-              if (item) listItems.push(`${marker} ${item}`);
-            }
-
+          // Match lines that start with a lettered bullet
+          const letteredBulletMatch = trimmed.match(/^([a-z])\)\s+/i);
+          if (letteredBulletMatch) {
             return (
-              <div key={index}>
-                {introText && <p className="mb-2">{introText}</p>}
-                <ul className="list-none space-y-1 ml-4">
-                  {listItems.map((item, i) => (
-                    <li key={i} className="flex items-start">
-                      <span className="w-6 font-bold">{item.slice(0, 2)}</span>
-                      <span className="flex-1">{item.slice(2).trim()}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div key={index} className="flex">
+                <span className="font-bold mr-2">{letteredBulletMatch[1]})</span>
+                <span>{trimmed.slice(letteredBulletMatch[0].length)}</span>
               </div>
             );
           }
 
+          // Regular paragraph
           return <p key={index}>{trimmed}</p>;
         })}
       </div>
