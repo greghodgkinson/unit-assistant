@@ -1,20 +1,21 @@
 import React from 'react';
 import { BookOpen, CheckCircle, Clock, TrendingUp } from 'lucide-react';
-import { Progress, VelocityMetrics } from '../types/Unit';
-import { unitData } from '../data/unit';
+import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 
 interface ProgressDashboardProps {
+  unit: Unit;
   progress: Progress;
   metrics: VelocityMetrics;
   onTaskSelect: (loId: string, taskId: string) => void;
 }
 
 export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
+  unit,
   progress,
   metrics,
   onTaskSelect
 }) => {
-  const totalTasks = unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
+  const totalTasks = unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
   const completionRate = (metrics.completedTasks / totalTasks) * 100;
 
   const getTaskStatus = (taskId: string) => {
@@ -103,7 +104,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
       {/* Learning Outcomes */}
       <div className="space-y-6">
-        {unitData.learning_outcomes.map((lo) => (
+        {unit.learning_outcomes.map((lo) => (
           <div key={lo.id} className="bg-white rounded-xl shadow-sm border p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>

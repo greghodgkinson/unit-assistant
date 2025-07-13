@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Progress, StudentAnswer, VelocityMetrics } from '../types/Unit';
-import { unitData } from '../data/unit';
 
 const STORAGE_KEY = 'learning-assistant-progress';
 
-export const useProgress = () => {
+export const useProgress = (unitId: string = 'unit-1') => {
   const [progress, setProgress] = useState<Progress>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -22,7 +21,7 @@ export const useProgress = () => {
     }
     
     return {
-      unitId: unitData.id,
+      unitId: unitId,
       currentLO: 'LO1',
       currentTask: '1.1',
       completedTasks: [],
@@ -100,7 +99,7 @@ export const useProgress = () => {
     }));
   };
 
-  const getVelocityMetrics = (): VelocityMetrics => {
+  const getVelocityMetrics = (totalTasks: number = 0): VelocityMetrics => {
     const now = new Date();
     const daysSinceStart = Math.max(1, Math.ceil((now.getTime() - progress.startDate.getTime()) / (1000 * 60 * 60 * 24)));
     
@@ -115,8 +114,8 @@ export const useProgress = () => {
     };
   };
 
-  const getNextTask = () => {
-    const allTasks = unitData.learning_outcomes.flatMap(lo => 
+  const getNextTask = (learningOutcomes: any[] = []) => {
+    const allTasks = learningOutcomes.flatMap(lo => 
       lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id, task }))
     );
     
