@@ -72,27 +72,44 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    // Only split out lettered list items if they are NOT preceded by "part "
-    const forcedNewlines = text.replace(/(?<!part\s)(?<!for\s)(\b[a-z]\))\s*/gi, '\n$1 ');
+    // Step 1: Inject line breaks only before bullet points not in phrases like "for part c)"
+    const safeNewlines = text.replace(
+      /(?<!part\s)(?<!for\s)(\b[a-z]\))\s+/gi,
+      '\n$1 '
+    );
 
-    const lines = forcedNewlines.split('\n').filter(p => p.trim());
+    // Step 2: Rejoin wrapped lines, preserve bullet alignment
+    const lines = safeNewlines.split('\n');
+    const blocks: { letter?: string; content: string }[] = [];
+    let currentBlock = '';
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      const match = trimmed.match(/^([a-z])\)\s+(.*)/i);
+
+      if (match) {
+        if (currentBlock) blocks.push({ content: currentBlock });
+        blocks.push({ letter: match[1], content: match[2] });
+        currentBlock = '';
+      } else {
+        currentBlock += ' ' + trimmed;
+      }
+    });
+
+    if (currentBlock) blocks.push({ content: currentBlock });
 
     return (
       <div className="text-gray-800 space-y-3">
-        {lines.map((line, idx) => {
-          const match = line.trim().match(/^([a-z])\)\s+(.*)/i);
-
-          if (match) {
-            const [, letter, content] = match;
+        {blocks.map((block, idx) => {
+          if (block.letter) {
             return (
-              <div key={idx} className="flex">
-                <span className="font-bold mr-2">{letter})</span>
-                <span>{content}</span>
+              <div key={idx} className="flex items-start">
+                <span className="font-bold mr-2">{block.letter})</span>
+                <span>{block.content.trim()}</span>
               </div>
             );
           }
-
-          return <p key={idx}>{line.trim()}</p>;
+          return <p key={idx}>{block.content.trim()}</p>;
         })}
       </div>
     );
