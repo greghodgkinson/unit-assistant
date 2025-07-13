@@ -72,40 +72,48 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-  const paragraphs = text.split('\n').filter(p => p.trim());
+    const paragraphs = text.split('\n').filter(p => p.trim());
 
-  return (
-    <div className="text-gray-800 space-y-3">
-      {paragraphs.map((paragraph, index) => {
-        const trimmed = paragraph.trim();
+    return (
+      <div className="text-gray-800 space-y-3">
+        {paragraphs.map((paragraph, index) => {
+          const trimmed = paragraph.trim();
 
-        // Check if the paragraph starts with lettered bullets (a), b), c) ...)
-        const bulletMatches = [...trimmed.matchAll(/([a-z])\)\s+/gi)];
+          const letteredListRegex = /([a-zA-Z])\)\s+/g;
+          const matches = [...trimmed.matchAll(letteredListRegex)];
 
-        const isBulletList = bulletMatches.length > 1 && bulletMatches[0].index === 0;
+          if (matches.length > 0) {
+            const introText = trimmed.slice(0, matches[0].index).trim();
+            const listItems: string[] = [];
 
-        if (isBulletList) {
-          const listItems: string[] = [];
-          for (let i = 0; i < bulletMatches.length; i++) {
-            const start = bulletMatches[i].index! + bulletMatches[i][0].length;
-            const end = bulletMatches[i + 1] ? bulletMatches[i + 1].index : trimmed.length;
-            listItems.push(trimmed.substring(start, end).trim());
+            for (let i = 0; i < matches.length; i++) {
+              const marker = matches[i][0].trim(); // e.g. "a)"
+              const start = matches[i].index! + matches[i][0].length;
+              const end = matches[i + 1] ? matches[i + 1].index : trimmed.length;
+              const item = trimmed.slice(start, end).trim();
+              if (item) listItems.push(`${marker} ${item}`);
+            }
+
+            return (
+              <div key={index}>
+                {introText && <p className="mb-2">{introText}</p>}
+                <ul className="list-none space-y-1 ml-4">
+                  {listItems.map((item, i) => (
+                    <li key={i} className="flex items-start">
+                      <span className="w-6 font-bold">{item.slice(0, 2)}</span>
+                      <span className="flex-1">{item.slice(2).trim()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
           }
 
-          return (
-            <ul key={index} className="list-disc list-inside space-y-1 ml-4">
-              {listItems.map((item, itemIndex) => (
-                <li key={itemIndex}>{item}</li>
-              ))}
-            </ul>
-          );
-        }
-
-        return <p key={index}>{trimmed}</p>;
-      })}
-    </div>
-  );
-};
+          return <p key={index}>{trimmed}</p>;
+        })}
+      </div>
+    );
+  };
 
   const getTaskStatus = () => {
     if (!answer) return 'not-started';
