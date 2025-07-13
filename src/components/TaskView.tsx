@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 
 interface TaskViewProps {
@@ -12,6 +12,9 @@ interface TaskViewProps {
   onNavigateBack: () => void;
   onNavigateNext: () => void;
   hasNext: boolean;
+  totalTasks?: number;
+  completedTasks?: number;
+  currentTaskNumber?: number;
 }
 
 export const TaskView: React.FC<TaskViewProps> = ({
@@ -24,6 +27,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onNavigateBack,
   onNavigateNext,
   hasNext
+  totalTasks = 0,
+  completedTasks = 0,
+  currentTaskNumber = 1
 }) => {
   const [content, setContent] = useState(answer?.content || '');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -107,6 +113,42 @@ export const TaskView: React.FC<TaskViewProps> = ({
     return <div className="text-gray-800">{text}</div>;
   };
 
+  const getTaskStatus = () => {
+    if (!answer) return 'not-started';
+    if (answer.isGoodEnough) return 'completed';
+    return 'in-progress';
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'in-progress': return <Clock className="h-5 w-5 text-yellow-600" />;
+      case 'not-started': return <BookOpen className="h-5 w-5 text-gray-400" />;
+      default: return <BookOpen className="h-5 w-5 text-gray-400" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Completed';
+      case 'in-progress': return 'In Progress';
+      case 'not-started': return 'Not Started';
+      default: return 'Not Started';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-green-600 bg-green-50 border-green-200';
+      case 'in-progress': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'not-started': return 'text-gray-600 bg-gray-50 border-gray-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const taskStatus = getTaskStatus();
+  const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -120,12 +162,21 @@ export const TaskView: React.FC<TaskViewProps> = ({
             Back to Dashboard
           </button>
           
-          {answer?.isGoodEnough && (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span className="font-medium">Task Complete</span>
+          <div className="flex items-center space-x-4">
+            {/* Current Task Status */}
+            <div className={`flex items-center px-3 py-1 rounded-full border ${getStatusColor(taskStatus)}`}>
+              {getStatusIcon(taskStatus)}
+              <span className="ml-2 text-sm font-medium">{getStatusText(taskStatus)}</span>
             </div>
-          )}
+            
+            {/* Overall Progress */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <BookOpen className="h-4 w-4" />
+              <span>Task {currentTaskNumber} of {totalTasks}</span>
+              <span className="text-gray-400">•</span>
+              <span>{progressPercentage}% Complete</span>
+            </div>
+          </div>
         </div>
         
         <div className="flex items-start justify-between">
@@ -136,6 +187,20 @@ export const TaskView: React.FC<TaskViewProps> = ({
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
             {task.type}
           </span>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600">Overall Progress</span>
+            <span className="text-sm text-gray-600">{completedTasks} of {totalTasks} tasks completed</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
         </div>
       </div>
 

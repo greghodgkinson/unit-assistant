@@ -124,6 +124,14 @@ function App() {
         const task = getCurrentTask();
         const answer = getCurrentAnswer();
         const nextTask = getNextTask(unitData.learning_outcomes);
+        const totalTasks = unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
+        const metrics = getVelocityMetrics(totalTasks);
+        
+        // Calculate current task number
+        const allTasks = unitData.learning_outcomes.flatMap(lo => 
+          lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id }))
+        );
+        const currentTaskNumber = allTasks.findIndex(t => t.taskId === progress.currentTask) + 1;
         
         if (!lo || !task) {
           return <div>Task not found</div>;
@@ -140,6 +148,9 @@ function App() {
             onNavigateBack={() => setCurrentView('dashboard')}
             onNavigateNext={handleNavigateNext}
             hasNext={!!nextTask}
+            totalTasks={totalTasks}
+            completedTasks={metrics.completedTasks}
+            currentTaskNumber={currentTaskNumber}
           />
         );
       
