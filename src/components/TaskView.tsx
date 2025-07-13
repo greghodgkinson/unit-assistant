@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 
@@ -29,6 +30,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [showIndicativeContent, setShowIndicativeContent] = useState(false);
+
+  // Update content when task changes
+  useEffect(() => {
+    setContent(answer?.content || '');
+    setHasUnsavedChanges(false);
+  }, [answer, task.id]);
 
   const handleContentChange = (value: string) => {
     setContent(value);
