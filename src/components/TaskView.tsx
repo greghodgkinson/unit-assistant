@@ -72,55 +72,57 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    // Check if the text contains lettered list items like a), b), c), d), etc.
-    const letteredListRegex = /\b[a-z]\)\s/g;
-    const hasLetteredList = letteredListRegex.test(text);
+    // Split text into paragraphs and format each one
+    const paragraphs = text.split('\n').filter(p => p.trim());
     
-    if (hasLetteredList) {
-      // Reset regex for actual use
-      letteredListRegex.lastIndex = 0;
-      
-      // Find all matches to get the positions
-      const matches = [...text.matchAll(/\b([a-z])\)\s/g)];
-      
-      if (matches.length > 0) {
-        // Get the intro text (everything before the first match)
-        const introText = text.substring(0, matches[0].index).trim();
-        
-        // Extract list items
-        const listItems = [];
-        for (let i = 0; i < matches.length; i++) {
-          const currentMatch = matches[i];
-          const nextMatch = matches[i + 1];
+    return (
+      <div className="text-gray-800 space-y-3">
+        {paragraphs.map((paragraph, index) => {
+          const trimmed = paragraph.trim();
           
-          // Get text from after current marker to before next marker (or end of string)
-          const startPos = currentMatch.index + currentMatch[0].length;
-          const endPos = nextMatch ? nextMatch.index : text.length;
-          const itemText = text.substring(startPos, endPos).trim();
+          // Check if this paragraph contains lettered list items like a), b), c)
+          const letteredListRegex = /\b([a-z])\)\s/gi;
+          const matches = [...trimmed.matchAll(letteredListRegex)];
           
-          if (itemText) {
-            listItems.push(itemText);
+          if (matches.length > 0) {
+            // Get the intro text (everything before the first match)
+            const introText = trimmed.substring(0, matches[0].index).trim();
+            
+            // Extract list items
+            const listItems = [];
+            for (let i = 0; i < matches.length; i++) {
+              const currentMatch = matches[i];
+              const nextMatch = matches[i + 1];
+              
+              // Get text from after current marker to before next marker (or end of string)
+              const startPos = currentMatch.index + currentMatch[0].length;
+              const endPos = nextMatch ? nextMatch.index : trimmed.length;
+              const itemText = trimmed.substring(startPos, endPos).trim();
+              
+              if (itemText) {
+                listItems.push(itemText);
+              }
+            }
+            
+            return (
+              <div key={index}>
+                {introText && <p className="mb-2">{introText}</p>}
+                {listItems.length > 0 && (
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    {listItems.map((item, itemIndex) => (
+                      <li key={itemIndex}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
           }
-        }
-        
-        // If we have multiple items, render as a list
-        if (listItems.length > 0) {
-          return (
-            <div>
-              {introText && <p className="mb-3">{introText}</p>}
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                {listItems.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          );
-        }
-      }
-    }
-      
-    // Return as regular text if no lettered lists found
-    return <div className="text-gray-800">{text}</div>;
+          
+          // Regular paragraph
+          return <p key={index}>{trimmed}</p>;
+        })}
+      </div>
+    );
   };
 
   const getTaskStatus = () => {
