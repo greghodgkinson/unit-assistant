@@ -72,29 +72,27 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    // Normalize to force lettered list items to start on new lines, except inside "for part c)"
-    const normalized = text.replace(/(?<!part )\b([a-z])\)\s+/gi, '\n$1) ');
+    // Only split out lettered list items if they are NOT preceded by "part "
+    const forcedNewlines = text.replace(/(?<!part\s)(?<!for\s)(\b[a-z]\))\s*/gi, '\n$1 ');
 
-    const paragraphs = normalized.split('\n').filter(p => p.trim());
+    const lines = forcedNewlines.split('\n').filter(p => p.trim());
 
     return (
       <div className="text-gray-800 space-y-3">
-        {paragraphs.map((paragraph, index) => {
-          const trimmed = paragraph.trim();
+        {lines.map((line, idx) => {
+          const match = line.trim().match(/^([a-z])\)\s+(.*)/i);
 
-          // Match lines that start with a lettered bullet
-          const letteredBulletMatch = trimmed.match(/^([a-z])\)\s+/i);
-          if (letteredBulletMatch) {
+          if (match) {
+            const [, letter, content] = match;
             return (
-              <div key={index} className="flex">
-                <span className="font-bold mr-2">{letteredBulletMatch[1]})</span>
-                <span>{trimmed.slice(letteredBulletMatch[0].length)}</span>
+              <div key={idx} className="flex">
+                <span className="font-bold mr-2">{letter})</span>
+                <span>{content}</span>
               </div>
             );
           }
 
-          // Regular paragraph
-          return <p key={index}>{trimmed}</p>;
+          return <p key={idx}>{line.trim()}</p>;
         })}
       </div>
     );
