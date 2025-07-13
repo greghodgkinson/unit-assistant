@@ -72,35 +72,40 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    const listItemRegex = /\b([a-z])\)\s/g;
+    const listItemRegex = /\b([a-z])\)\s*/gi;
+    const protectedPattern = /\b(part\s+[a-z])\)/gi;
 
-    // Protect mentions like "part c)" by replacing them temporarily
-    const protectedText = text.replace(/\b(part\s+[a-z])\)/gi, '__PROTECT__$1)__');
+    // Step 1: Protect phrases like "part c)"
+    const protectedText = text.replace(protectedPattern, (_, g1) => `__PROTECT__${g1})__`);
 
-    // Split the text into chunks by list marker
-    const chunks = protectedText.split(listItemRegex);
+    // Step 2: Normalize newlines and spaces
+    const lines = protectedText
+      .split(/\n+/)
+      .map(line => line.trim())
+      .filter(Boolean);
 
-    // Recombine chunks into items: [intro, a, contentA, b, contentB, ...]
+    const merged = lines.join(' '); // Merge into a single block
+
+    // Step 3: Split into intro and lettered items
+    const segments = merged.split(listItemRegex); // [intro, a, content, b, content, ...]
+
+    const intro = segments[0] ? segments[0].trim() : '';
     const items = [];
-    for (let i = 1; i < chunks.length; i += 2) {
-      const letter = chunks[i];
-      const content = chunks[i + 1] || '';
+    for (let i = 1; i < segments.length; i += 2) {
+      const letter = segments[i];
+      const content = segments[i + 1] || '';
       items.push({ letter, content: content.trim() });
     }
 
-    // Restore protected parts
+    // Step 4: Restore protected phrases
     const restoreProtected = (s: string) =>
-      s.replace(/__PROTECT__(part\s+[a-z])__\)/gi, '$1)');
+      s.replace(/__PROTECT__(part\s+[a-z])\)__/gi, '$1)');
 
     return (
       <div className="text-gray-800 space-y-3">
-        {/* Render intro if present */}
-        {chunks[0].trim() && (
-          <p>{restoreProtected(chunks[0].trim())}</p>
-        )}
-
-        {items.map((item, idx) => (
-          <div key={idx} className="flex items-start">
+        {intro && <p>{restoreProtected(intro)}</p>}
+        {items.map((item, index) => (
+          <div key={index} className="flex items-start">
             <span className="font-bold mr-2">{item.letter})</span>
             <span>{restoreProtected(item.content)}</span>
           </div>
