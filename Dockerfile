@@ -22,6 +22,9 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Ensure JSON files are copied to the correct location
+COPY --from=builder /app/public/*.json /usr/share/nginx/html/
+
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
