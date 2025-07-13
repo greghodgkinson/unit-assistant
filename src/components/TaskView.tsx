@@ -73,7 +73,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   const formatCriteriaText = (text: string) => {
     // Check if the text contains lettered list items like a), b), c), d), etc.
-    const letteredListRegex = /\b[a-z]\)\s/g;
+    const letteredListRegex = /\b[a-z]\)\s/gi;
     const hasLetteredList = letteredListRegex.test(text);
     
     if (hasLetteredList) {
@@ -81,7 +81,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       letteredListRegex.lastIndex = 0;
       
       // Find all matches to get the positions
-      const matches = [...text.matchAll(/\b([a-z])\)\s/g)];
+      const matches = [...text.matchAll(/\b([a-z])\)\s/gi)];
       
       if (matches.length > 0) {
         // Get the intro text (everything before the first match)
