@@ -72,58 +72,40 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    // Split text into paragraphs and format each one
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    
-    return (
-      <div className="text-gray-800 space-y-3">
-        {paragraphs.map((paragraph, index) => {
-          const trimmed = paragraph.trim();
-          
-          // Check if this paragraph contains lettered list items like a), b), c)
-          const letteredListRegex = /\b([a-z])\)\s/gi;
-          const matches = [...trimmed.matchAll(letteredListRegex)];
-          
-          if (matches.length > 0) {
-            // Get the intro text (everything before the first match)
-            const introText = trimmed.substring(0, matches[0].index).trim();
-            
-            // Extract list items
-            const listItems = [];
-            for (let i = 0; i < matches.length; i++) {
-              const currentMatch = matches[i];
-              const nextMatch = matches[i + 1];
-              
-              // Get text from after current marker to before next marker (or end of string)
-              const startPos = currentMatch.index + currentMatch[0].length;
-              const endPos = nextMatch ? nextMatch.index : trimmed.length;
-              const itemText = trimmed.substring(startPos, endPos).trim();
-              
-              if (itemText) {
-                listItems.push(itemText);
-              }
-            }
-            
-            return (
-              <div key={index}>
-                {introText && <p className="mb-2">{introText}</p>}
-                {listItems.length > 0 && (
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    {listItems.map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
+  const paragraphs = text.split('\n').filter(p => p.trim());
+
+  return (
+    <div className="text-gray-800 space-y-3">
+      {paragraphs.map((paragraph, index) => {
+        const trimmed = paragraph.trim();
+
+        // Check if the paragraph starts with lettered bullets (a), b), c) ...)
+        const bulletMatches = [...trimmed.matchAll(/([a-z])\)\s+/gi)];
+
+        const isBulletList = bulletMatches.length > 1 && bulletMatches[0].index === 0;
+
+        if (isBulletList) {
+          const listItems: string[] = [];
+          for (let i = 0; i < bulletMatches.length; i++) {
+            const start = bulletMatches[i].index! + bulletMatches[i][0].length;
+            const end = bulletMatches[i + 1] ? bulletMatches[i + 1].index : trimmed.length;
+            listItems.push(trimmed.substring(start, end).trim());
           }
-          
-          // Regular paragraph
-          return <p key={index}>{trimmed}</p>;
-        })}
-      </div>
-    );
-  };
+
+          return (
+            <ul key={index} className="list-disc list-inside space-y-1 ml-4">
+              {listItems.map((item, itemIndex) => (
+                <li key={itemIndex}>{item}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        return <p key={index}>{trimmed}</p>;
+      })}
+    </div>
+  );
+};
 
   const getTaskStatus = () => {
     if (!answer) return 'not-started';
