@@ -1,4 +1,4 @@
-# Learning Assistant Application
+# Unit Assistant Application
 
 A modern React-based learning assistant application designed to help students track their progress through educational units and tasks. Built with TypeScript, Tailwind CSS, and featuring a clean, intuitive interface for managing learning outcomes and assignments.
 
@@ -59,7 +59,7 @@ npm run dev
 To build the Docker image locally:
 
 ```bash
-docker build -t learning-assistant .
+docker build -t unit-assistant .
 ```
 
 ### Running the Container
@@ -67,7 +67,7 @@ docker build -t learning-assistant .
 To run the application in a Docker container:
 
 ```bash
-docker run -d -p 8080:80 --name learning-assistant-app learning-assistant
+docker run -d -p 8080:80 --name unit-assistant-app unit-assistant
 ```
 
 The application will be available at `http://localhost:8080`
