@@ -71,48 +71,59 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
-  const formatCriteriaText = (text: string) => {
-    const listItemRegex = /\b([a-z])\)\s*/gi;
-    const protectedPattern = /\b(part\s+[a-z])\)/gi;
+ const formatCriteriaText = (text: string) => {
+    const listItemLineRegex = /^([a-z])\)$/i; // line with just "a)"
+    const listItemInlineRegex = /\b([a-z])\)\s*/gi;
+    const protectRegex = /\b(part\s+[a-z])\)/gi;
 
-    // Step 1: Protect phrases like "part c)"
-    const protectedText = text.replace(protectedPattern, (_, g1) => `__PROTECT__${g1})__`);
-
-    // Step 2: Normalize newlines and spaces
-    const lines = protectedText
-      .split(/\n+/)
+    // Step 1: Protect things like "part c)"
+    let lines = text
+      .replace(protectRegex, (_, g1) => `__PROTECT__${g1})__`)
+      .split('\n')
       .map(line => line.trim())
       .filter(Boolean);
 
-    const merged = lines.join(' '); // Merge into a single block
+    let intro = '';
+    let items: { letter: string; content: string }[] = [];
+    let current: { letter: string; content: string } | null = null;
 
-    // Step 3: Split into intro and lettered items
-    const segments = merged.split(listItemRegex); // [intro, a, content, b, content, ...]
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
 
-    const intro = segments[0] ? segments[0].trim() : '';
-    const items = [];
-    for (let i = 1; i < segments.length; i += 2) {
-      const letter = segments[i];
-      const content = segments[i + 1] || '';
-      items.push({ letter, content: content.trim() });
+      if (listItemLineRegex.test(line)) {
+        // This line is just 'a)', 'b)', etc.
+        const letter = line[0];
+        if (current) items.push(current);
+        current = { letter, content: '' };
+      } else if (current) {
+        // Append line to current item's content
+        current.content += (current.content ? ' ' : '') + line;
+      } else {
+        intro += (intro ? ' ' : '') + line;
+      }
     }
+    if (current) items.push(current);
 
-    // Step 4: Restore protected phrases
-    const restoreProtected = (s: string) =>
+    // Step 2: Restore protected parts
+    const restore = (s: string) =>
       s.replace(/__PROTECT__(part\s+[a-z])\)__/gi, '$1)');
 
     return (
       <div className="text-gray-800 space-y-3">
-        {intro && <p>{restoreProtected(intro)}</p>}
-        {items.map((item, index) => (
-          <div key={index} className="flex items-start">
-            <span className="font-bold mr-2">{item.letter})</span>
-            <span>{restoreProtected(item.content)}</span>
-          </div>
-        ))}
+        {intro && <p>{restore(intro)}</p>}
+        {items.length > 0 && (
+          <ul className="list-none space-y-2 ml-4">
+            {items.map((item, idx) => (
+              <li key={idx} className="flex items-start">
+                <span className="font-bold mr-2">{item.letter})</span>
+                <span>{restore(item.content)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     );
-  };
+    };
 
   const getTaskStatus = () => {
     if (!answer) return 'not-started';
