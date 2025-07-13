@@ -84,7 +84,7 @@ export const useProgress = (unitId: string = 'unit-1') => {
     setProgress(prev => ({
       ...prev,
       answers: prev.answers.map(a => 
-        a.taskId === taskId ? { ...a, feedback, feedbackRequested: true } : a
+        a.taskId === taskId ? { ...a, feedback, feedbackRequested: true, lastModified: new Date() } : a
       ),
       lastActivity: new Date()
     }));

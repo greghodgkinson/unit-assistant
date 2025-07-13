@@ -4,7 +4,7 @@ import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
 import { useProgress } from './hooks/useProgress';
 import { useUnitData } from './hooks/useUnitData';
-import { generateFeedback } from './utils/feedbackGenerator';
+import { requestFeedback } from './utils/feedbackService';
 
 type View = 'overview' | 'dashboard' | 'task';
 
@@ -77,13 +77,25 @@ function App() {
     updateAnswer(progress.currentTask, content);
   };
 
-  const handleRequestFeedback = () => {
+  const handleRequestFeedback = async () => {
     const task = getCurrentTask();
     const answer = getCurrentAnswer();
     
     if (task && answer) {
-      const feedback = generateFeedback(answer, task);
-      addFeedback(progress.currentTask, feedback);
+      try {
+        const feedbackResponse = await requestFeedback({
+          unitId: unitData.id,
+          outcomeTaskId: task.id,
+          answerText: answer.content,
+          feedbackType: 'evaluate'
+        });
+        
+        const formattedFeedback = `${feedbackResponse.feedbackMessage}\n\nLevel: ${feedbackResponse.level}\nScore: ${Math.round(feedbackResponse.score * 100)}%`;
+        addFeedback(progress.currentTask, formattedFeedback);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to get feedback';
+        addFeedback(progress.currentTask, `Error: ${errorMessage}`);
+      }
     }
   };
 

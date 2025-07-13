@@ -7,7 +7,7 @@ interface TaskViewProps {
   task: TaskItem;
   answer?: StudentAnswer;
   onAnswerUpdate: (content: string) => void;
-  onRequestFeedback: () => void;
+  onRequestFeedback: () => Promise<void>;
   onMarkComplete: () => void;
   onNavigateBack: () => void;
   onNavigateNext: () => void;
@@ -33,6 +33,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
 }) => {
   const [content, setContent] = useState(answer?.content || '');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isRequestingFeedback, setIsRequestingFeedback] = useState(false);
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [showIndicativeContent, setShowIndicativeContent] = useState(false);
 
@@ -50,6 +51,15 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const handleSave = () => {
     onAnswerUpdate(content);
     setHasUnsavedChanges(false);
+  };
+
+  const handleRequestFeedback = async () => {
+    setIsRequestingFeedback(true);
+    try {
+      await onRequestFeedback();
+    } finally {
+      setIsRequestingFeedback(false);
+    }
   };
 
   const getTaskTypeColor = (type: string) => {
@@ -279,11 +289,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
             )}
             {answer && !answer.isGoodEnough && (
               <button
-                onClick={onRequestFeedback}
-                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                onClick={handleRequestFeedback}
+                disabled={isRequestingFeedback}
+                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Request Feedback
+                {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
               </button>
             )}
             {answer && !answer.isGoodEnough && (
