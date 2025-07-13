@@ -72,45 +72,39 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatCriteriaText = (text: string) => {
-    // Step 1: Inject line breaks only before bullet points not in phrases like "for part c)"
-    const safeNewlines = text.replace(
-      /(?<!part\s)(?<!for\s)(\b[a-z]\))\s+/gi,
-      '\n$1 '
-    );
+    const listItemRegex = /\b([a-z])\)\s/g;
 
-    // Step 2: Rejoin wrapped lines, preserve bullet alignment
-    const lines = safeNewlines.split('\n');
-    const blocks: { letter?: string; content: string }[] = [];
-    let currentBlock = '';
+    // Protect mentions like "part c)" by replacing them temporarily
+    const protectedText = text.replace(/\b(part\s+[a-z])\)/gi, '__PROTECT__$1)__');
 
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      const match = trimmed.match(/^([a-z])\)\s+(.*)/i);
+    // Split the text into chunks by list marker
+    const chunks = protectedText.split(listItemRegex);
 
-      if (match) {
-        if (currentBlock) blocks.push({ content: currentBlock });
-        blocks.push({ letter: match[1], content: match[2] });
-        currentBlock = '';
-      } else {
-        currentBlock += ' ' + trimmed;
-      }
-    });
+    // Recombine chunks into items: [intro, a, contentA, b, contentB, ...]
+    const items = [];
+    for (let i = 1; i < chunks.length; i += 2) {
+      const letter = chunks[i];
+      const content = chunks[i + 1] || '';
+      items.push({ letter, content: content.trim() });
+    }
 
-    if (currentBlock) blocks.push({ content: currentBlock });
+    // Restore protected parts
+    const restoreProtected = (s: string) =>
+      s.replace(/__PROTECT__(part\s+[a-z])__\)/gi, '$1)');
 
     return (
       <div className="text-gray-800 space-y-3">
-        {blocks.map((block, idx) => {
-          if (block.letter) {
-            return (
-              <div key={idx} className="flex items-start">
-                <span className="font-bold mr-2">{block.letter})</span>
-                <span>{block.content.trim()}</span>
-              </div>
-            );
-          }
-          return <p key={idx}>{block.content.trim()}</p>;
-        })}
+        {/* Render intro if present */}
+        {chunks[0].trim() && (
+          <p>{restoreProtected(chunks[0].trim())}</p>
+        )}
+
+        {items.map((item, idx) => (
+          <div key={idx} className="flex items-start">
+            <span className="font-bold mr-2">{item.letter})</span>
+            <span>{restoreProtected(item.content)}</span>
+          </div>
+        ))}
       </div>
     );
   };
