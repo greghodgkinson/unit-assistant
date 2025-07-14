@@ -158,6 +158,76 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
+  const formatFeedback = (feedback: string) => {
+    // Split feedback into sections based on **Header** patterns
+    const sections = feedback.split(/(\*\*[^*]+\*\*)/).filter(Boolean);
+    const processedSections: { type: 'header' | 'content'; text: string }[] = [];
+    
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i].trim();
+      if (section.startsWith('**') && section.endsWith('**')) {
+        // This is a header
+        const headerText = section.slice(2, -2);
+        processedSections.push({ type: 'header', text: headerText });
+      } else if (section) {
+        // This is content
+        processedSections.push({ type: 'content', text: section });
+      }
+    }
+
+    // Extract Level and Score if present
+    let levelScore = '';
+    const lastSection = processedSections[processedSections.length - 1];
+    if (lastSection && lastSection.type === 'content') {
+      const levelScoreMatch = lastSection.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/);
+      if (levelScoreMatch) {
+        levelScore = lastSection.text;
+        processedSections.pop(); // Remove from main content
+      }
+    }
+
+    return (
+      <div className="space-y-4">
+        {processedSections.map((section, index) => (
+          <div key={index}>
+            {section.type === 'header' ? (
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
+                {section.text}
+              </h3>
+            ) : (
+              <div className="text-gray-700 leading-relaxed">
+                {section.text.split('\n').map((paragraph, pIndex) => (
+                  paragraph.trim() && (
+                    <p key={pIndex} className="mb-2">
+                      {paragraph.trim()}
+                    </p>
+                  )
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {levelScore && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+            <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
+            <div className="flex space-x-4">
+              {levelScore.match(/Level:\s*(\S+)/) && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' ? 'Not available' : levelScore.match(/Level:\s*(\S+)/)?.[1]}
+                </span>
+              )}
+              {levelScore.match(/Score:\s*(\S+)/) && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' ? 'Not available' : levelScore.match(/Score:\s*(\S+)/)?.[1]}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
   const taskStatus = getTaskStatus();
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
