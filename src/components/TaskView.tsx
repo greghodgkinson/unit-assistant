@@ -158,70 +158,52 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
-  const formatFeedback = (feedback: string) => {
+ const formatFeedback = (feedback: string) => {
     console.log('=== FEEDBACK DEBUGGING ===');
     console.log('Raw feedback:', feedback);
-    
-    // Clean up the feedback text
-    let cleanFeedback = feedback.replace(/^Feedback\s*/, '').trim();
-    cleanFeedback = cleanFeedback.replace(/�/g, ''); // Remove special characters
-    
+
+    // Step 1: Clean up any known bad characters
+    let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
+    cleanFeedback = cleanFeedback.replace(/[^\x20-\x7E\n\r]+/g, ''); // Strip non-printable/rogue characters
+
     console.log('Cleaned feedback:', cleanFeedback);
-    
-    // Find all headers and their positions
+
+    // Step 2: Match all headers of the form **Header**
     const headerMatches = [...cleanFeedback.matchAll(/\*\*([^*]+)\*\*/g)];
-    
-    console.log('Header matches found:', headerMatches.length);
-    headerMatches.forEach((match, i) => {
-      console.log(`Header ${i}:`, match[1], 'at position', match.index);
-    });
-    
+
     const sections: { type: 'header' | 'content'; text: string }[] = [];
-    
+
     for (let i = 0; i < headerMatches.length; i++) {
       const currentMatch = headerMatches[i];
       const nextMatch = headerMatches[i + 1];
-      
-      console.log(`Processing header ${i}: "${currentMatch[1]}"`);
-      
-      // Add the header
-      sections.push({
-        type: 'header',
-        text: currentMatch[1].trim()
-      });
-      
-      // Extract content between this header and the next one (or end of text)
+
+      const headerText = currentMatch[1].trim();
       const contentStart = currentMatch.index! + currentMatch[0].length;
       const contentEnd = nextMatch ? nextMatch.index! : cleanFeedback.length;
-      const content = cleanFeedback.slice(contentStart, contentEnd).trim();
-      
-      console.log(`Content for "${currentMatch[1]}":`, content);
-      console.log(`Content start: ${contentStart}, end: ${contentEnd}`);
-      
-      if (content) {
-        console.log(`Adding content section for: "${currentMatch[1]}"`);
-        sections.push({
-          type: 'content',
-          text: content
-        });
-      } else {
-        console.log(`No content found for header: "${currentMatch[1]}"`);
+      const rawContent = cleanFeedback.slice(contentStart, contentEnd).trim();
+
+      console.log(`Header ${i}: "${headerText}"`);
+      console.log(`Content for "${headerText}":`, rawContent);
+
+      sections.push({ type: 'header', text: headerText });
+
+      if (rawContent) {
+        sections.push({ type: 'content', text: rawContent });
       }
     }
 
-    console.log('Final sections:', sections);
-    
-    // Extract Level and Score if present
+    // Step 3: Extract Level and Score if present
     let levelScore = '';
     const lastSection = sections[sections.length - 1];
     if (lastSection && lastSection.type === 'content') {
-      const levelScoreMatch = lastSection.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/);
+      const levelScoreMatch = lastSection.text.match(/Level:\s*\S+\s*Score:\s*\S+/i);
       if (levelScoreMatch) {
         levelScore = lastSection.text;
-        sections.pop(); // Remove from main content
+        sections.pop(); // remove it from normal rendering
       }
     }
 
+    // Step 4: Render
     return (
       <div className="space-y-4">
         {sections.map((section, index) => (
@@ -243,19 +225,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
             )}
           </div>
         ))}
-        
+
         {levelScore && (
           <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
             <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
             <div className="flex space-x-4">
               {levelScore.match(/Level:\s*(\S+)/) && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' || !levelScore.match(/Level:\s*(\S+)/)?.[1] ? 'Not available' : levelScore.match(/Level:\s*(\S+)/)?.[1]}
+                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' || !levelScore.match(/Level:\s*(\S+)/)?.[1]
+                    ? 'Not available'
+                    : levelScore.match(/Level:\s*(\S+)/)?.[1]}
                 </span>
               )}
               {levelScore.match(/Score:\s*(\S+)/) && (
                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' || !levelScore.match(/Score:\s*(\S+)/)?.[1] ? 'Not available' : levelScore.match(/Score:\s*(\S+)/)?.[1]}
+                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' || !levelScore.match(/Score:\s*(\S+)/)?.[1]
+                    ? 'Not available'
+                    : levelScore.match(/Score:\s*(\S+)/)?.[1]}
                 </span>
               )}
             </div>
