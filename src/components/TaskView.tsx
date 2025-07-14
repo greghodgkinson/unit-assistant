@@ -159,18 +159,30 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatFeedback = (feedback: string) => {
+    console.log('=== FEEDBACK DEBUGGING ===');
+    console.log('Raw feedback:', feedback);
+    
     // Clean up the feedback text
     let cleanFeedback = feedback.replace(/^Feedback\s*/, '').trim();
     cleanFeedback = cleanFeedback.replace(/�/g, ''); // Remove special characters
     
+    console.log('Cleaned feedback:', cleanFeedback);
+    
     // Find all headers and their positions
     const headerMatches = [...cleanFeedback.matchAll(/\*\*([^*]+)\*\*/g)];
+    
+    console.log('Header matches found:', headerMatches.length);
+    headerMatches.forEach((match, i) => {
+      console.log(`Header ${i}:`, match[1], 'at position', match.index);
+    });
     
     const sections: { type: 'header' | 'content'; text: string }[] = [];
     
     for (let i = 0; i < headerMatches.length; i++) {
       const currentMatch = headerMatches[i];
       const nextMatch = headerMatches[i + 1];
+      
+      console.log(`Processing header ${i}: "${currentMatch[1]}"`);
       
       // Add the header
       sections.push({
@@ -183,14 +195,21 @@ export const TaskView: React.FC<TaskViewProps> = ({
       const contentEnd = nextMatch ? nextMatch.index! : cleanFeedback.length;
       const content = cleanFeedback.slice(contentStart, contentEnd).trim();
       
+      console.log(`Content for "${currentMatch[1]}":`, content);
+      console.log(`Content start: ${contentStart}, end: ${contentEnd}`);
+      
       if (content) {
         sections.push({
           type: 'content',
           text: content
         });
+      } else {
+        console.log(`No content found for header: "${currentMatch[1]}"`);
       }
     }
 
+    console.log('Final sections:', sections);
+    
     // Extract Level and Score if present
     let levelScore = '';
     const lastSection = sections[sections.length - 1];
