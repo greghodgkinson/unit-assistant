@@ -12,7 +12,7 @@ export interface FeedbackResponse {
   score: number;
 }
 
-const FEEDBACK_SERVICE_URL = import.meta.env.VITE_FEEDBACK_SERVICE_URL || 'https://name-statistics-cottages-plasma.trycloudflare.com/feedback';
+const FEEDBACK_SERVICE_URL = import.meta.env.VITE_FEEDBACK_SERVICE_URL || 'https://headlines-template-tickets-crystal.trycloudflare.com/feedback';
 
 export const requestFeedback = async (request: FeedbackRequest): Promise<FeedbackResponse> => {
   try {
