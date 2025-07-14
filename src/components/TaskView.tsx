@@ -199,6 +199,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       console.log(`Content start: ${contentStart}, end: ${contentEnd}`);
       
       if (content) {
+        console.log(`Adding content section for: "${currentMatch[1]}"`);
         sections.push({
           type: 'content',
           text: content
