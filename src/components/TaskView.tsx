@@ -332,3 +332,30 @@ export const TaskView: React.FC<TaskViewProps> = ({
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Feedback</h2>
           <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
             {formatFeedback(answer.feedback)}
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex justify-between items-center pt-6">
+        <button
+          onClick={onNavigateBack}
+          className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Previous
+        </button>
+        
+        {hasNext && (
+          <button
+            onClick={onNavigateNext}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Next
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
