@@ -159,45 +159,52 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatFeedback = (feedback: string) => {
-    // Clean up the feedback text and split into sections
-    const cleanFeedback = feedback.replace(/^Feedback\s*/, '').trim();
+    // Clean up the feedback text
+    let cleanFeedback = feedback.replace(/^Feedback\s*/, '').trim();
+    cleanFeedback = cleanFeedback.replace(/�/g, ''); // Remove special characters
     
-    // Split by headers but keep the headers
-    const headerRegex = /(\*\*[^*]+\*\*)/g;
-    const parts = cleanFeedback.split(headerRegex).filter(part => part.trim());
+    // Find all headers and their positions
+    const headerMatches = [...cleanFeedback.matchAll(/\*\*([^*]+)\*\*/g)];
     
-    const processedSections: { type: 'header' | 'content'; text: string }[] = [];
+    const sections: { type: 'header' | 'content'; text: string }[] = [];
     
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i].trim();
+    for (let i = 0; i < headerMatches.length; i++) {
+      const currentMatch = headerMatches[i];
+      const nextMatch = headerMatches[i + 1];
       
-      if (part.startsWith('**') && part.endsWith('**')) {
-        // This is a header
-        const headerText = part.slice(2, -2);
-        processedSections.push({ type: 'header', text: headerText });
-      } else if (part) {
-        // This is content - clean up any special characters
-        const cleanContent = part.replace(/�/g, '').trim();
-        if (cleanContent) {
-          processedSections.push({ type: 'content', text: cleanContent });
-        }
+      // Add the header
+      sections.push({
+        type: 'header',
+        text: currentMatch[1].trim()
+      });
+      
+      // Extract content between this header and the next one (or end of text)
+      const contentStart = currentMatch.index! + currentMatch[0].length;
+      const contentEnd = nextMatch ? nextMatch.index! : cleanFeedback.length;
+      const content = cleanFeedback.slice(contentStart, contentEnd).trim();
+      
+      if (content) {
+        sections.push({
+          type: 'content',
+          text: content
+        });
       }
     }
 
     // Extract Level and Score if present
     let levelScore = '';
-    const lastSection = processedSections[processedSections.length - 1];
+    const lastSection = sections[sections.length - 1];
     if (lastSection && lastSection.type === 'content') {
       const levelScoreMatch = lastSection.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/);
       if (levelScoreMatch) {
         levelScore = lastSection.text;
-        processedSections.pop(); // Remove from main content
+        sections.pop(); // Remove from main content
       }
     }
 
     return (
       <div className="space-y-4">
-        {processedSections.map((section, index) => (
+        {sections.map((section, index) => (
           <div key={index}>
             {section.type === 'header' ? (
               <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
