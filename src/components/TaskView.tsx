@@ -159,97 +159,83 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
  const formatFeedback = (feedback: string) => {
-    console.log('=== FEEDBACK DEBUGGING ===');
-    console.log('Raw feedback:', feedback);
+  let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
+  cleanFeedback = cleanFeedback
+  .replace(/[�]/g, '')              // Specifically remove replacement character (U+FFFD)
+  .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
 
-    // Step 1: Clean up any known bad characters
-    let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
-    cleanFeedback = cleanFeedback.replace(/[^\x20-\x7E\n\r]+/g, ''); // Strip non-printable/rogue characters
+  const headerRegex = /\*\*([^*]+)\*\*/g;
+  const sections: { type: 'header' | 'content'; text: string }[] = [];
 
-    console.log('Cleaned feedback:', cleanFeedback);
+  const headers: { header: string; index: number }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = headerRegex.exec(cleanFeedback)) !== null) {
+    headers.push({ header: match[1].trim(), index: match.index });
+  }
 
-    // Step 2: Match all headers of the form **Header**
-    const headerMatches = [...cleanFeedback.matchAll(/\*\*([^*]+)\*\*/g)];
+  for (let i = 0; i < headers.length; i++) {
+    const current = headers[i];
+    const next = headers[i + 1];
 
-    const sections: { type: 'header' | 'content'; text: string }[] = [];
+    const contentStart = cleanFeedback.indexOf('**', current.index) + current.header.length + 4; // 4 for ** **
+    const contentEnd = next ? next.index : cleanFeedback.length;
+    const content = cleanFeedback.slice(contentStart, contentEnd).trim();
 
-    for (let i = 0; i < headerMatches.length; i++) {
-      const currentMatch = headerMatches[i];
-      const nextMatch = headerMatches[i + 1];
+    sections.push({ type: 'header', text: current.header });
+    sections.push({ type: 'content', text: content || '(No suggestions provided.)' });
+  }
 
-      const headerText = currentMatch[1].trim();
-      const contentStart = currentMatch.index! + currentMatch[0].length;
-      const contentEnd = nextMatch ? nextMatch.index! : cleanFeedback.length;
-      const rawContent = cleanFeedback.slice(contentStart, contentEnd).trim();
-
-      console.log(`Header ${i}: "${headerText}"`);
-      console.log(`Content for "${headerText}":`, rawContent);
-
-      sections.push({ type: 'header', text: headerText });
-
-      if (rawContent) {
-        sections.push({ type: 'content', text: rawContent });
-      }
+  // Optional: extract level/score
+  let levelScore = '';
+  const lastContent = sections[sections.length - 1];
+  if (lastContent && lastContent.type === 'content') {
+    const match = lastContent.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/i);
+    if (match) {
+      levelScore = lastContent.text;
+      sections.pop(); // Remove from display if it's score info
     }
+  }
 
-    // Step 3: Extract Level and Score if present
-    let levelScore = '';
-    const lastSection = sections[sections.length - 1];
-    if (lastSection && lastSection.type === 'content') {
-      const levelScoreMatch = lastSection.text.match(/Level:\s*\S+\s*Score:\s*\S+/i);
-      if (levelScoreMatch) {
-        levelScore = lastSection.text;
-        sections.pop(); // remove it from normal rendering
-      }
-    }
+  return (
+    <div className="space-y-4">
+      {sections.map((section, index) => (
+        <div key={index}>
+          {section.type === 'header' ? (
+  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
+    {section.text}
+  </h3>
+) : (
+  <div className="text-gray-700 leading-relaxed">
+    {section.text.trim()
+  ? section.text.split(/\n{2,}|\n/).map((paragraph, pIndex) => (
+      <p key={pIndex} className="mb-2">{paragraph.trim()}</p>
+    ))
+  : <p className="italic text-gray-500">No suggestions provided.</p>}
+  </div>
+)}
+        </div>
+      ))}
 
-    // Step 4: Render
-    return (
-      <div className="space-y-4">
-        {sections.map((section, index) => (
-          <div key={index}>
-            {section.type === 'header' ? (
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
-                {section.text}
-              </h3>
-            ) : (
-              <div className="text-gray-700 leading-relaxed">
-                {section.text.split('\n').map((paragraph, pIndex) => (
-                  paragraph.trim() ? (
-                    <p key={pIndex} className="mb-2">
-                      {paragraph.trim()}
-                    </p>
-                  ) : null
-                ))}
-              </div>
+      {levelScore && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+          <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
+          <div className="flex space-x-4">
+            {levelScore.match(/Level:\s*(\S+)/) && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] || 'Not available'}
+              </span>
+            )}
+            {levelScore.match(/Score:\s*(\S+)/) && (
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] || 'Not available'}
+              </span>
             )}
           </div>
-        ))}
-
-        {levelScore && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-            <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
-            <div className="flex space-x-4">
-              {levelScore.match(/Level:\s*(\S+)/) && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' || !levelScore.match(/Level:\s*(\S+)/)?.[1]
-                    ? 'Not available'
-                    : levelScore.match(/Level:\s*(\S+)/)?.[1]}
-                </span>
-              )}
-              {levelScore.match(/Score:\s*(\S+)/) && (
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' || !levelScore.match(/Score:\s*(\S+)/)?.[1]
-                    ? 'Not available'
-                    : levelScore.match(/Score:\s*(\S+)/)?.[1]}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+        </div>
+      )}
+    </div>
+  );
+};
   const taskStatus = getTaskStatus();
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
