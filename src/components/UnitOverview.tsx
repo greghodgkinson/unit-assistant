@@ -1,4 +1,3 @@
-import React from 'react';
 import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
 import { BookOpen, Target, Users, ChevronDown, ChevronRight } from 'lucide-react';
