@@ -330,32 +330,5 @@ export const TaskView: React.FC<TaskViewProps> = ({
       {answer?.feedback && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Feedback</h2>
-          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-            <p className="text-gray-800">{answer.feedback}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex justify-between">
-        <button
-          onClick={onNavigateBack}
-          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </button>
-        
-        {hasNext && (
-          <button
-            onClick={onNavigateNext}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Next Task
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+          <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+            {formatFeedback(answer.feedback)}
