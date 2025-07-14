@@ -159,19 +159,28 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const formatFeedback = (feedback: string) => {
-    // Split feedback into sections based on **Header** patterns
-    const sections = feedback.split(/(\*\*[^*]+\*\*)/).filter(Boolean);
+    // Clean up the feedback text and split into sections
+    const cleanFeedback = feedback.replace(/^Feedback\s*/, '').trim();
+    
+    // Split by headers but keep the headers
+    const headerRegex = /(\*\*[^*]+\*\*)/g;
+    const parts = cleanFeedback.split(headerRegex).filter(part => part.trim());
+    
     const processedSections: { type: 'header' | 'content'; text: string }[] = [];
     
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i].trim();
-      if (section.startsWith('**') && section.endsWith('**')) {
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i].trim();
+      
+      if (part.startsWith('**') && part.endsWith('**')) {
         // This is a header
-        const headerText = section.slice(2, -2);
+        const headerText = part.slice(2, -2);
         processedSections.push({ type: 'header', text: headerText });
-      } else if (section) {
-        // This is content
-        processedSections.push({ type: 'content', text: section });
+      } else if (part) {
+        // This is content - clean up any special characters
+        const cleanContent = part.replace(/�/g, '').trim();
+        if (cleanContent) {
+          processedSections.push({ type: 'content', text: cleanContent });
+        }
       }
     }
 
@@ -197,11 +206,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
             ) : (
               <div className="text-gray-700 leading-relaxed">
                 {section.text.split('\n').map((paragraph, pIndex) => (
-                  paragraph.trim() && (
+                  paragraph.trim() ? (
                     <p key={pIndex} className="mb-2">
                       {paragraph.trim()}
                     </p>
-                  )
+                  ) : null
                 ))}
               </div>
             )}
@@ -214,12 +223,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <div className="flex space-x-4">
               {levelScore.match(/Level:\s*(\S+)/) && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' ? 'Not available' : levelScore.match(/Level:\s*(\S+)/)?.[1]}
+                  Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] === 'undefined' || !levelScore.match(/Level:\s*(\S+)/)?.[1] ? 'Not available' : levelScore.match(/Level:\s*(\S+)/)?.[1]}
                 </span>
               )}
               {levelScore.match(/Score:\s*(\S+)/) && (
                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' ? 'Not available' : levelScore.match(/Score:\s*(\S+)/)?.[1]}
+                  Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] === 'NaN%' || !levelScore.match(/Score:\s*(\S+)/)?.[1] ? 'Not available' : levelScore.match(/Score:\s*(\S+)/)?.[1]}
                 </span>
               )}
             </div>
