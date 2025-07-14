@@ -1,6 +1,7 @@
 import React from 'react';
+import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
-import { BookOpen, Target, Users } from 'lucide-react';
+import { BookOpen, Target, Users, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface UnitOverviewProps {
   unit: Unit;
@@ -8,6 +9,8 @@ interface UnitOverviewProps {
 }
 
 export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearning }) => {
+  const [showInstructions, setShowInstructions] = useState(false);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -26,14 +29,6 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
             <Users className="h-6 w-6 mr-2" />
             <span>Internship Program</span>
           </div>
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Instructions</h2>
-        <div className="prose prose-gray max-w-none">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-line">{unit.instructions}</p>
         </div>
       </div>
 
@@ -65,6 +60,27 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Instructions - Collapsed Section */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <button
+          onClick={() => setShowInstructions(!showInstructions)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+          {showInstructions ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+        </button>
+        
+        {showInstructions && (
+          <div className="mt-4 prose prose-gray max-w-none">
+            <p className="text-gray-700 leading-relaxed whitespace-pre-line">{unit.instructions}</p>
+          </div>
+        )}
       </div>
 
       {/* Start Button */}
