@@ -161,14 +161,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
  const formatFeedback = (feedback: string) => {
   let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
   cleanFeedback = cleanFeedback
-  .replace(/[�]/g, '')              // Specifically remove replacement character (U+FFFD)
-  .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
+    .replace(/[�]/g, '') // Remove replacement character
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
 
   const headerRegex = /\*\*([^*]+)\*\*/g;
   const sections: { type: 'header' | 'content'; text: string }[] = [];
-
   const headers: { header: string; index: number }[] = [];
   let match: RegExpExecArray | null;
+
   while ((match = headerRegex.exec(cleanFeedback)) !== null) {
     headers.push({ header: match[1].trim(), index: match.index });
   }
@@ -176,8 +176,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   for (let i = 0; i < headers.length; i++) {
     const current = headers[i];
     const next = headers[i + 1];
-
-    const contentStart = cleanFeedback.indexOf('**', current.index) + current.header.length + 4; // 4 for ** **
+    const contentStart = cleanFeedback.indexOf('**', current.index) + current.header.length + 4;
     const contentEnd = next ? next.index : cleanFeedback.length;
     const content = cleanFeedback.slice(contentStart, contentEnd).trim();
 
@@ -185,14 +184,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
     sections.push({ type: 'content', text: content || '(No suggestions provided.)' });
   }
 
-  // Optional: extract level/score
-  let levelScore = '';
+  // Check for Level and Score in last section
   const lastContent = sections[sections.length - 1];
-  if (lastContent && lastContent.type === 'content') {
+  let levelScore = '';
+  let validLevel = '';
+  let validScore = '';
+
+  if (lastContent?.type === 'content') {
     const match = lastContent.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/i);
     if (match) {
-      levelScore = lastContent.text;
-      sections.pop(); // Remove from display if it's score info
+      const [, level, score] = match;
+      if (level.toLowerCase() !== 'undefined' && score.toLowerCase() !== 'nan%') {
+        levelScore = lastContent.text;
+        validLevel = level;
+        validScore = score;
+        sections.pop(); // Remove raw score text from visible section
+      }
     }
   }
 
@@ -201,35 +208,31 @@ export const TaskView: React.FC<TaskViewProps> = ({
       {sections.map((section, index) => (
         <div key={index}>
           {section.type === 'header' ? (
-  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
-    {section.text}
-  </h3>
-) : (
-  <div className="text-gray-700 leading-relaxed">
-    {section.text.trim()
-  ? section.text.split(/\n{2,}|\n/).map((paragraph, pIndex) => (
-      <p key={pIndex} className="mb-2">{paragraph.trim()}</p>
-    ))
-  : <p className="italic text-gray-500">No suggestions provided.</p>}
-  </div>
-)}
+            <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
+              {section.text}
+            </h3>
+          ) : (
+            <div className="text-gray-700 leading-relaxed">
+              {section.text.trim()
+                ? section.text.split(/\n{2,}|\n/).map((paragraph, pIndex) => (
+                    <p key={pIndex} className="mb-2">{paragraph.trim()}</p>
+                  ))
+                : <p className="italic text-gray-500">No suggestions provided.</p>}
+            </div>
+          )}
         </div>
       ))}
 
-      {levelScore && (
+      {validLevel && validScore && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
           <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
           <div className="flex space-x-4">
-            {levelScore.match(/Level:\s*(\S+)/) && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                Level: {levelScore.match(/Level:\s*(\S+)/)?.[1] || 'Not available'}
-              </span>
-            )}
-            {levelScore.match(/Score:\s*(\S+)/) && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                Score: {levelScore.match(/Score:\s*(\S+)/)?.[1] || 'Not available'}
-              </span>
-            )}
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+              Level: {validLevel}
+            </span>
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+              Score: {validScore}
+            </span>
           </div>
         </div>
       )}
