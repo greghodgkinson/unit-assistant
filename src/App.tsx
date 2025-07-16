@@ -108,6 +108,12 @@ function App() {
     const answer = getCurrentAnswer();
     
     if (task && answer) {
+      console.log('Feedback request details:', {
+        unitId: currentUnitId,
+        taskId: task.id,
+        answerLength: answer.content.length
+      });
+      
       try {
         const feedbackResponse = await requestFeedback({
           unitId: currentUnitId || '',
@@ -201,6 +207,7 @@ function App() {
           <TaskView
             learningOutcome={lo}
             task={task}
+            unitId={currentUnitId || ''}
             answer={answer}
             onAnswerUpdate={handleAnswerUpdate}
             onRequestFeedback={handleRequestFeedback}

@@ -5,6 +5,7 @@ import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
   task: TaskItem;
+  unitId: string;
   answer?: StudentAnswer;
   onAnswerUpdate: (content: string) => void;
   onRequestFeedback: () => Promise<void>;
@@ -20,6 +21,7 @@ interface TaskViewProps {
 export const TaskView: React.FC<TaskViewProps> = ({
   learningOutcome,
   task,
+  unitId,
   answer,
   onAnswerUpdate,
   onRequestFeedback,
