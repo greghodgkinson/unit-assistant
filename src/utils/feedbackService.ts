@@ -3,6 +3,18 @@ export interface FeedbackRequest {
   outcomeTaskId: string;
   answerText: string;
   feedbackType: string;
+  taskDetails: {
+    description: string;
+    type: string;
+    acceptance_criteria: Array<{
+      id: string;
+      criteria: string;
+    }>;
+  };
+  learningOutcome: {
+    id: string;
+    description: string;
+  };
 }
 
 export interface FeedbackResponse {

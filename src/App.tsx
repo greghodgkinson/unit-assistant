@@ -106,12 +106,15 @@ function App() {
   const handleRequestFeedback = async () => {
     const task = getCurrentTask();
     const answer = getCurrentAnswer();
+    const lo = getCurrentLO();
     
-    if (task && answer) {
+    if (task && answer && lo) {
       console.log('Feedback request details:', {
         unitId: currentUnitId,
         taskId: task.id,
-        answerLength: answer.content.length
+        answerLength: answer.content.length,
+        taskDescription: task.description,
+        acceptanceCriteriaCount: task.acceptance_criteria.length
       });
       
       try {
@@ -119,7 +122,16 @@ function App() {
           unitId: currentUnitId || '',
           outcomeTaskId: task.id,
           answerText: answer.content,
-          feedbackType: 'evaluate'
+          feedbackType: 'evaluate',
+          taskDetails: {
+            description: task.description,
+            type: task.type,
+            acceptance_criteria: task.acceptance_criteria
+          },
+          learningOutcome: {
+            id: lo.id,
+            description: lo.description
+          }
         });
         
         const formattedFeedback = `${feedbackResponse.feedbackMessage}\n\nLevel: ${feedbackResponse.level}\nScore: ${Math.round(feedbackResponse.score * 100)}%`;
