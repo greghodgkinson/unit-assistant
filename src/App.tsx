@@ -107,14 +107,10 @@ function App() {
     const task = getCurrentTask();
     const answer = getCurrentAnswer();
     
-    if (!unitData) {
-      throw new Error('No unit data available');
-    }
-    
     if (task && answer) {
       try {
         const feedbackResponse = await requestFeedback({
-          unitId: unitData.id,
+          unitId: currentUnitId || '',
           outcomeTaskId: task.id,
           answerText: answer.content,
           feedbackType: 'evaluate'
