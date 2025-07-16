@@ -14,6 +14,9 @@ export interface FeedbackRequest {
   learningOutcome: {
     id: string;
     description: string;
+    indicative_content: Array<{
+      description: string;
+    }>;
   };
 }
 

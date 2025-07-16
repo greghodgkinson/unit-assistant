@@ -130,7 +130,8 @@ function App() {
           },
           learningOutcome: {
             id: lo.id,
-            description: lo.description
+            description: lo.description,
+            indicative_content: lo.indicative_content
           }
         });
         
