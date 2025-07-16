@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Progress, StudentAnswer, VelocityMetrics } from '../types/Unit';
 
-const STORAGE_KEY = 'learning-assistant-progress';
-
-export const useProgress = (unitId: string = 'unit-1') => {
+export const useProgress = (unitId: string) => {
+  const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
+  
   const [progress, setProgress] = useState<Progress>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {

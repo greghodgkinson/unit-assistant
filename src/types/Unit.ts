@@ -58,3 +58,12 @@ export interface VelocityMetrics {
   dailySubmissions: { date: string; count: number }[];
   qualityTrend: { date: string; goodEnoughRate: number }[];
 }
+
+export interface UnitSummary {
+  id: string;
+  title: string;
+  totalTasks: number;
+  completedTasks: number;
+  lastActivity?: Date;
+  dateAdded: Date;
+}

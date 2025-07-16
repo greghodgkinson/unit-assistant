@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
+import { UnitList } from './components/UnitList';
+import { UnitUpload } from './components/UnitUpload';
 import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
 import { useProgress } from './hooks/useProgress';
-import { useUnitData } from './hooks/useUnitData';
+import { useUnitManager } from './hooks/useUnitManager';
 import { requestFeedback } from './utils/feedbackService';
+import { Unit } from './types/Unit';
 
-type View = 'overview' | 'dashboard' | 'task';
+type View = 'list' | 'upload' | 'overview' | 'dashboard' | 'task';
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('overview');
-  const { unitData, loading, error } = useUnitData();
+  const [currentView, setCurrentView] = useState<View>('list');
+  const [currentUnitId, setCurrentUnitId] = useState<string | null>(null);
+  const { units, unitList, loading, error, addUnit, removeUnit, getUnit, updateUnitProgress } = useUnitManager();
+  
+  // Only initialize progress hook when we have a current unit
+  const unitData = currentUnitId ? getUnit(currentUnitId) : null;
   const {
     progress,
     updateAnswer,
@@ -20,7 +27,7 @@ function App() {
     setCurrentTask,
     getVelocityMetrics,
     getNextTask
-  } = useProgress(unitData?.id);
+  } = useProgress(currentUnitId || '');
 
   // Show loading state
   if (loading) {
@@ -35,14 +42,14 @@ function App() {
   }
 
   // Show error state
-  if (error || !unitData) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-600 text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Unit Data</h1>
           <p className="text-gray-600 mb-4">
-            {error || 'Unit data could not be loaded. Please check that unit-1.json exists in the public folder.'}
+            {error}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -55,8 +62,22 @@ function App() {
     );
   }
 
+  const handleSelectUnit = (unitId: string) => {
+    setCurrentUnitId(unitId);
+    setCurrentView('overview');
+  };
+
+  const handleAddUnit = () => {
+    setCurrentView('upload');
+  };
+
+  const handleUnitUploaded = (unit: Unit) => {
+    addUnit(unit);
+    setCurrentView('list');
+  };
+
   const getCurrentLO = () => {
-    return unitData.learning_outcomes.find(lo => lo.id === progress.currentLO);
+    return unitData?.learning_outcomes.find(lo => lo.id === progress.currentLO);
   };
 
   const getCurrentTask = () => {
@@ -73,6 +94,11 @@ function App() {
     setCurrentView('task');
   };
 
+  const handleBackToList = () => {
+    setCurrentUnitId(null);
+    setCurrentView('list');
+  };
+
   const handleAnswerUpdate = (content: string) => {
     updateAnswer(progress.currentTask, content);
   };
@@ -80,6 +106,10 @@ function App() {
   const handleRequestFeedback = async () => {
     const task = getCurrentTask();
     const answer = getCurrentAnswer();
+    
+    if (!unitData) {
+      throw new Error('No unit data available');
+    }
     
     if (task && answer) {
       try {
@@ -102,10 +132,15 @@ function App() {
   const handleMarkComplete = () => {
     markAsGoodEnough(progress.currentTask, true);
     markTaskComplete(progress.currentTask);
+    
+    // Update unit progress in the manager
+    if (currentUnitId) {
+      updateUnitProgress(currentUnitId, progress.completedTasks.length + 1);
+    }
   };
 
   const handleNavigateNext = () => {
-    const nextTask = getNextTask(unitData.learning_outcomes);
+    const nextTask = getNextTask(unitData?.learning_outcomes || []);
     if (nextTask) {
       setCurrentTask(nextTask.loId, nextTask.taskId);
     }
@@ -113,34 +148,51 @@ function App() {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'overview':
+      case 'list':
         return (
+          <UnitList
+            units={unitList}
+            onSelectUnit={handleSelectUnit}
+            onAddUnit={handleAddUnit}
+            onRemoveUnit={removeUnit}
+          />
+        );
+      
+      case 'upload':
+        return <UnitUpload onUnitUploaded={handleUnitUploaded} onBack={() => setCurrentView('list')} />;
+      
+      case 'overview':
+        return unitData ? (
           <UnitOverview
             unit={unitData}
             onStartLearning={() => setCurrentView('dashboard')}
           />
-        );
+        ) : <div>Unit not found</div>;
       
       case 'dashboard':
-        return (
+        return unitData ? (
           <ProgressDashboard
             unit={unitData}
             progress={progress}
-            metrics={getVelocityMetrics(unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0))}
+            metrics={getVelocityMetrics(unitData?.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0) || 0)}
             onTaskSelect={handleTaskSelect}
           />
-        );
+        ) : <div>Unit not found</div>;
       
       case 'task':
+        if (!unitData) {
+          return <div>Unit not found</div>;
+        }
+        
         const lo = getCurrentLO();
         const task = getCurrentTask();
         const answer = getCurrentAnswer();
-        const nextTask = getNextTask(unitData.learning_outcomes);
+        const nextTask = getNextTask(unitData?.learning_outcomes || []);
         const totalTasks = unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
         const metrics = getVelocityMetrics(totalTasks);
         
         // Calculate current task number
-        const allTasks = unitData.learning_outcomes.flatMap(lo => 
+        const allTasks = (unitData?.learning_outcomes || []).flatMap(lo => 
           lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id }))
         );
         const currentTaskNumber = allTasks.findIndex(t => t.taskId === progress.currentTask) + 1;
@@ -178,15 +230,17 @@ function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Learning Assistant</h1>
-              {currentView !== 'overview' && (
+              <button onClick={handleBackToList} className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                Learning Assistant
+              </button>
+              {currentView !== 'list' && currentView !== 'upload' && currentView !== 'overview' && unitData && (
                 <span className="ml-4 text-sm text-gray-600">
                   {unitData.title}
                 </span>
               )}
             </div>
             
-            {currentView !== 'overview' && (
+            {currentView !== 'list' && currentView !== 'upload' && currentView !== 'overview' && (
               <nav className="flex space-x-4">
                 <button
                   onClick={() => setCurrentView('dashboard')}
