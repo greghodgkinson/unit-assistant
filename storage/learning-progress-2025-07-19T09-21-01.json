@@ -1,0 +1,47 @@
+{
+  "exportDate": "2025-07-19T09:21:01.237Z",
+  "totalUnits": 1,
+  "units": {
+    "unit-1": {
+      "unitSummary": {
+        "id": "unit-1",
+        "title": "Unit 1 Business Environment Assignment",
+        "totalTasks": 10,
+        "completedTasks": 2,
+        "dateAdded": "2025-07-19T09:20:29.026Z",
+        "lastActivity": "2025-07-19T09:20:46.924Z"
+      },
+      "progress": {
+        "unitId": "",
+        "currentLO": "LO2",
+        "currentTask": "2.1",
+        "completedTasks": [
+          "1.1",
+          "1.2"
+        ],
+        "answers": [
+          {
+            "taskId": "1.1",
+            "content": "frgrgr",
+            "submissionDate": "2025-07-19T09:20:39.784Z",
+            "lastModified": "2025-07-19T09:20:39.784Z",
+            "version": 1,
+            "isGoodEnough": true,
+            "feedbackRequested": false
+          },
+          {
+            "taskId": "1.2",
+            "content": "efegeg",
+            "submissionDate": "2025-07-19T09:20:44.739Z",
+            "lastModified": "2025-07-19T09:20:44.739Z",
+            "version": 1,
+            "isGoodEnough": true,
+            "feedbackRequested": false
+          }
+        ],
+        "startDate": "2025-07-19T08:43:50.556Z",
+        "lastActivity": "2025-07-19T09:20:48.054Z"
+      }
+    }
+  }
+}
