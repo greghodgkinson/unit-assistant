@@ -13,23 +13,35 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the frontend application
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Set working directory
+WORKDIR /app
 
-# Ensure JSON files are copied to the correct location
-COPY --from=builder /app/public/*.json /usr/share/nginx/html/
+# Copy package files for production dependencies
+COPY package*.json ./
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install only production dependencies
+RUN npm ci --only=production
 
-# Expose port 80
-EXPOSE 80
+# Copy built frontend assets from builder stage
+COPY --from=builder /app/dist ./dist
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy server file
+COPY server.js ./
+
+# Copy storage directory if it exists
+COPY storage ./storage
+
+# Create storage directory if it doesn't exist
+RUN mkdir -p storage
+
+# Expose port 3001 (the server port)
+EXPOSE 3001
+
+# Start the Express server (which serves both API and static files)
+CMD ["node", "server.js"]

@@ -8,7 +8,7 @@ set -e  # Exit on any error
 # Configuration
 IMAGE_NAME="unit-assistant"
 CONTAINER_NAME="unit-assistant-app"
-PORT="8080"
+PORT="3001"
 
 echo "🚀 Starting deployment of Unit Assistant..."
 
@@ -39,7 +39,7 @@ podman build -t $IMAGE_NAME .
 echo "🏃 Starting new container..."
 podman run -d \
     --name $CONTAINER_NAME \
-    -p $PORT:80 \
+    -p $PORT:3001 \
     --restart unless-stopped \
     $IMAGE_NAME
 
@@ -47,7 +47,7 @@ podman run -d \
 sleep 2
 if podman ps -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "✅ Deployment successful!"
-    echo "🌐 Application is running at: http://localhost:$PORT"
+    echo "🌐 Application is running at: http://localhost:3001"
     echo "📊 Container status:"
     podman ps -f name=$CONTAINER_NAME
 else
