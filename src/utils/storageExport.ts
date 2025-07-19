@@ -70,7 +70,7 @@ export const saveProgressToStorageFolder = async () => {
   
   try {
     console.log('Attempting to save to storage folder...');
-    const response = await fetch('http://localhost:3001/api/save-progress', {
+    const response = await fetch('/api/save-progress', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,8 +94,8 @@ export const saveProgressToStorageFolder = async () => {
     return result;
   } catch (error) {
     console.error('Error saving to storage folder:', error);
-    if (error.message.includes('fetch')) {
-      throw new Error('Cannot connect to server. Make sure to run "npm run start" instead of "npm run dev" to enable storage functionality.');
+    if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+      throw new Error('Cannot connect to server. Make sure the Express server is running on port 3001. Run "npm run start" to enable storage functionality.');
     }
     throw error;
   }
@@ -108,7 +108,7 @@ export interface StorageFile {
 
 export const getStorageFiles = async (): Promise<StorageFile[]> => {
   try {
-    const response = await fetch('http://localhost:3001/api/storage-files');
+    const response = await fetch('/api/storage-files');
     
     // Check if we got HTML instead of JSON (API not available)
     const contentType = response.headers.get('content-type');
@@ -138,7 +138,7 @@ export const getStorageFiles = async (): Promise<StorageFile[]> => {
 
 export const loadProgressFromStorage = async (filename: string): Promise<ExportedProgress> => {
   try {
-    const response = await fetch(`http://localhost:3001/api/load-progress/${encodeURIComponent(filename)}`);
+    const response = await fetch(`/api/load-progress/${encodeURIComponent(filename)}`);
     if (!response.ok) {
       throw new Error(`Failed to load progress file: ${response.status}`);
     }
