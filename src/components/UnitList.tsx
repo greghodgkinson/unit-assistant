@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
-import { saveProgressToStorageFolder, downloadProgressAsJson } from '../utils/storageExport';
+import { downloadProgressAsJson, saveProgressToStorageFolder } from '../utils/storageExport';
 
 interface UnitListProps {
   units: UnitSummary[];
@@ -35,6 +35,16 @@ export const UnitList: React.FC<UnitListProps> = ({
   };
 
   const handleSaveToStorage = async () => {
+    try {
+      const result = await saveProgressToStorageFolder();
+      alert(`Progress saved successfully to storage/${result.fileName}`);
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert(`Failed to save to storage folder: ${error.message}\n\nNote: Make sure to run "npm run start" instead of "npm run dev" to enable server storage.`);
+    }
+  };
+
+  const handleDownloadProgress = () => {
     downloadProgressAsJson();
   };
 
@@ -67,13 +77,22 @@ export const UnitList: React.FC<UnitListProps> = ({
           Add New Unit
         </button>
         {units.length > 0 && (
-          <button
-            onClick={handleSaveToStorage}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-          >
-            <Save className="h-5 w-5 mr-2" />
-            Save Progress
-          </button>
+          <>
+            <button
+              onClick={handleDownloadProgress}
+              className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+            >
+              <Save className="h-5 w-5 mr-2" />
+              Download Progress
+            </button>
+            <button
+              onClick={handleSaveToStorage}
+              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+            >
+              <Save className="h-5 w-5 mr-2" />
+              Save to Storage
+            </button>
+          </>
         )}
       </div>
 
