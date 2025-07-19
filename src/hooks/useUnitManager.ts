@@ -47,7 +47,7 @@ export const useUnitManager = () => {
     };
 
     loadData();
-  }, []);
+  }, []); // Keep dependency array empty to only run on mount
 
   // Save to localStorage whenever units or unitList changes
   useEffect(() => {

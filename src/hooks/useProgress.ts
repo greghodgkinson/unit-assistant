@@ -69,7 +69,28 @@ export const useProgress = (unitId: string) => {
         });
       } catch (error) {
         console.error('Error parsing saved progress:', error);
+        // Reset to default state if parsing fails
+        setProgress({
+          unitId: unitId,
+          currentLO: 'LO1',
+          currentTask: '1.1',
+          completedTasks: [],
+          answers: [],
+          startDate: new Date(),
+          lastActivity: new Date()
+        });
       }
+    } else {
+      // Reset to default state if no saved data
+      setProgress({
+        unitId: unitId,
+        currentLO: 'LO1',
+        currentTask: '1.1',
+        completedTasks: [],
+        answers: [],
+        startDate: new Date(),
+        lastActivity: new Date()
+      });
     }
   }, [unitId, STORAGE_KEY]);
 

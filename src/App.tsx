@@ -84,9 +84,14 @@ function App() {
   };
 
   const handleProgressLoaded = () => {
+    // Reset all state when loading from storage
+    setCurrentUnitId(null);
     setCurrentView('list');
-    // Force a page reload to refresh all data
-    window.location.reload();
+    
+    // Force a complete page reload to ensure all hooks and state are properly reset
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const getCurrentLO = () => {
