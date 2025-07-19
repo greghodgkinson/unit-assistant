@@ -42,10 +42,10 @@ export const UnitList: React.FC<UnitListProps> = ({
     try {
       const exportData = exportAllProgress();
       await saveProgressToStorage(exportData);
-      alert('Progress saved to storage folder successfully!');
+      alert('Progress saved to browser storage successfully!');
     } catch (error) {
       console.error('Error saving to storage:', error);
-      alert('Failed to save progress to storage folder.');
+      alert('Failed to save progress to browser storage.');
     }
   };
   return (

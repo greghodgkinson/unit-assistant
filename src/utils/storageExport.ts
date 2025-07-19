@@ -63,18 +63,31 @@ export const saveProgressToStorage = async (exportData: ExportedProgress) => {
   const jsonString = JSON.stringify(exportData, null, 2);
   const filename = `learning-progress-${new Date().toISOString().split('T')[0]}.json`;
   
-  // For web applications, we can't directly write to file system
-  // Instead, we'll trigger a download to the storage folder
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  // Save to localStorage with a special key for storage
+  const storageKey = `learning-assistant-storage-${new Date().toISOString().split('T')[0]}`;
+  localStorage.setItem(storageKey, jsonString);
   
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `storage/${filename}`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Also save a list of all storage backups
+  const storageListKey = 'learning-assistant-storage-list';
+  const existingList = JSON.parse(localStorage.getItem(storageListKey) || '[]');
+  const newBackup = {
+    key: storageKey,
+    filename,
+    date: new Date().toISOString(),
+    totalUnits: exportData.totalUnits
+  };
+  
+  const updatedList = [...existingList.filter((item: any) => item.key !== storageKey), newBackup];
+  localStorage.setItem(storageListKey, JSON.stringify(updatedList));
   
   return filename;
+};
+
+export const getStoredBackups = () => {
+  const storageListKey = 'learning-assistant-storage-list';
+  return JSON.parse(localStorage.getItem(storageListKey) || '[]');
+};
+
+export const loadFromStorage = (storageKey: string) => {
+  return localStorage.getItem(storageKey);
 };
