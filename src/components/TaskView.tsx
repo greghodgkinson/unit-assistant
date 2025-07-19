@@ -166,9 +166,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
     .replace(/[�]/g, '') // Remove replacement character
     .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
 
-  // Remove Level: and Score: lines from the end of the feedback
-  cleanFeedback = cleanFeedback.replace(/\n\s*Level:\s*.*$/i, '');
-  cleanFeedback = cleanFeedback.replace(/\n\s*Score:\s*.*$/i, '');
+  // Remove Level: and Score: lines from anywhere in the feedback
+  cleanFeedback = cleanFeedback.replace(/\n\s*Level:\s*.*$/gim, '');
+  cleanFeedback = cleanFeedback.replace(/\n\s*Score:\s*.*$/gim, '');
+  cleanFeedback = cleanFeedback.replace(/Level:\s*.*$/gim, '');
+  cleanFeedback = cleanFeedback.replace(/Score:\s*.*$/gim, '');
   cleanFeedback = cleanFeedback.trim();
 
   const headerRegex = /\*\*([^*]+)\*\*/g;
