@@ -7,6 +7,7 @@ export interface ExportedProgress {
     [unitId: string]: {
       unitSummary: UnitSummary;
       progress: any;
+      unitData: any;
     };
   };
 }
@@ -24,6 +25,7 @@ export const exportAllProgress = (): ExportedProgress => {
   }
 
   const unitList: UnitSummary[] = JSON.parse(unitListData);
+  const units = JSON.parse(unitsData);
   const exportData: ExportedProgress = {
     exportDate: new Date().toISOString(),
     totalUnits: unitList.length,
@@ -37,7 +39,8 @@ export const exportAllProgress = (): ExportedProgress => {
     
     exportData.units[unitSummary.id] = {
       unitSummary,
-      progress: progressData ? JSON.parse(progressData) : null
+      progress: progressData ? JSON.parse(progressData) : null,
+      unitData: units[unitSummary.id] || null
     };
   });
 
@@ -160,9 +163,14 @@ export const importProgress = (progressData: ExportedProgress) => {
     const unitList = Object.values(progressData.units).map(unit => unit.unitSummary);
     localStorage.setItem('learning-assistant-unit-list', JSON.stringify(unitList));
     
-    // Import units data (we'll need to reconstruct this from the progress data)
-    // For now, we'll just clear it since we don't have the full unit data in the export
-    localStorage.setItem('learning-assistant-units', JSON.stringify({}));
+    // Import units data
+    const units: Record<string, any> = {};
+    Object.entries(progressData.units).forEach(([unitId, unitData]) => {
+      if (unitData.unitData) {
+        units[unitId] = unitData.unitData;
+      }
+    });
+    localStorage.setItem('learning-assistant-units', JSON.stringify(units));
     
     // Import progress for each unit
     Object.entries(progressData.units).forEach(([unitId, unitData]) => {
