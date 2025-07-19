@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js",
-    "start": "npm run build && npm run server"
+    "start": "npm run build && npm run server",
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\" --names \"frontend,backend\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
     "express": "^4.18.2",
