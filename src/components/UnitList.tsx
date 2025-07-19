@@ -1,7 +1,7 @@
 import React from 'react';
-import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Download, Save } from 'lucide-react';
+import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
-import { exportAllProgress, downloadProgressAsJson, saveProgressToStorage } from '../utils/storageExport';
+import { saveProgressToStorageFolder } from '../utils/storageExport';
 
 interface UnitListProps {
   units: UnitSummary[];
@@ -34,20 +34,10 @@ export const UnitList: React.FC<UnitListProps> = ({
     }
   };
 
-  const handleExportProgress = () => {
-    downloadProgressAsJson();
+  const handleSaveToStorage = () => {
+    saveProgressToStorageFolder();
   };
 
-  const handleSaveToStorage = async () => {
-    try {
-      const exportData = exportAllProgress();
-      await saveProgressToStorage(exportData);
-      alert('Progress saved to browser storage successfully!');
-    } catch (error) {
-      console.error('Error saving to storage:', error);
-      alert('Failed to save progress to browser storage.');
-    }
-  };
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -70,22 +60,13 @@ export const UnitList: React.FC<UnitListProps> = ({
       {/* Add Unit Button */}
       <div className="flex justify-end space-x-4">
         {units.length > 0 && (
-          <>
-            <button
-              onClick={handleSaveToStorage}
-              className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
-            >
-              <Save className="h-5 w-5 mr-2" />
-              Save to Storage
-            </button>
-            <button
-              onClick={handleExportProgress}
-              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              Export Progress
-            </button>
-          </>
+          <button
+            onClick={handleSaveToStorage}
+            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+          >
+            <Save className="h-5 w-5 mr-2" />
+            Save Progress
+          </button>
         )}
         <button
           onClick={onAddUnit}
