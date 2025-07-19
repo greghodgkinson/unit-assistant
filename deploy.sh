@@ -9,8 +9,18 @@ set -e  # Exit on any error
 IMAGE_NAME="unit-assistant"
 CONTAINER_NAME="unit-assistant-app"
 PORT="3001"
+STORAGE_DIR="$HOME/.learning-assistant"
 
 echo "🚀 Starting deployment of Unit Assistant..."
+
+# Create storage directory if it doesn't exist
+echo "📁 Setting up storage directory..."
+if [ ! -d "$STORAGE_DIR" ]; then
+    echo "   Creating storage directory: $STORAGE_DIR"
+    mkdir -p "$STORAGE_DIR"
+else
+    echo "   Storage directory already exists: $STORAGE_DIR"
+fi
 
 # Check if podman is installed
 if ! command -v podman &> /dev/null; then
@@ -40,6 +50,7 @@ echo "🏃 Starting new container..."
 podman run -d \
     --name $CONTAINER_NAME \
     -p $PORT:3001 \
+    -v "$STORAGE_DIR:/app/storage" \
     --restart unless-stopped \
     $IMAGE_NAME
 
