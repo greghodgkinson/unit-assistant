@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UnitList } from './components/UnitList';
 import { UnitUpload } from './components/UnitUpload';
+import { LoadFromStorage } from './components/LoadFromStorage';
 import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
@@ -9,7 +10,7 @@ import { useUnitManager } from './hooks/useUnitManager';
 import { requestFeedback } from './utils/feedbackService';
 import { Unit } from './types/Unit';
 
-type View = 'list' | 'upload' | 'overview' | 'dashboard' | 'task';
+type View = 'list' | 'upload' | 'load-storage' | 'overview' | 'dashboard' | 'task';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('list');
@@ -71,9 +72,19 @@ function App() {
     setCurrentView('upload');
   };
 
+  const handleLoadFromStorage = () => {
+    setCurrentView('load-storage');
+  };
+
   const handleUnitUploaded = (unit: Unit) => {
     addUnit(unit);
     setCurrentView('list');
+  };
+
+  const handleProgressLoaded = () => {
+    setCurrentView('list');
+    // Force a page reload to refresh all data
+    window.location.reload();
   };
 
   const getCurrentLO = () => {
@@ -169,12 +180,16 @@ function App() {
             units={unitList}
             onSelectUnit={handleSelectUnit}
             onAddUnit={handleAddUnit}
+            onLoadFromStorage={handleLoadFromStorage}
             onRemoveUnit={removeUnit}
           />
         );
       
       case 'upload':
         return <UnitUpload onUnitUploaded={handleUnitUploaded} onBack={() => setCurrentView('list')} />;
+      
+      case 'load-storage':
+        return <LoadFromStorage onProgressLoaded={handleProgressLoaded} onBack={() => setCurrentView('list')} />;
       
       case 'overview':
         return unitData ? (

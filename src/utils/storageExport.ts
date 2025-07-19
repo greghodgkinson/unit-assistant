@@ -98,3 +98,64 @@ export const saveProgressToStorageFolder = async () => {
     throw error;
   }
 };
+export interface StorageFile {
+  name: string;
+  size: number;
+  modified: Date;
+}
+
+export const getStorageFiles = async (): Promise<StorageFile[]> => {
+  try {
+    const response = await fetch('/api/storage-files');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch storage files: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.files.map((file: any) => ({
+      ...file,
+      modified: new Date(file.modified)
+    }));
+  } catch (error) {
+    console.error('Error fetching storage files:', error);
+    throw error;
+  }
+};
+
+export const loadProgressFromStorage = async (filename: string): Promise<ExportedProgress> => {
+  try {
+    const response = await fetch(`/api/load-progress/${encodeURIComponent(filename)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load progress file: ${response.status}`);
+    }
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error loading progress from storage:', error);
+    throw error;
+  }
+};
+
+export const importProgress = (progressData: ExportedProgress) => {
+  try {
+    // Import unit list
+    const unitList = Object.values(progressData.units).map(unit => unit.unitSummary);
+    localStorage.setItem('learning-assistant-unit-list', JSON.stringify(unitList));
+    
+    // Import units data (we'll need to reconstruct this from the progress data)
+    // For now, we'll just clear it since we don't have the full unit data in the export
+    localStorage.setItem('learning-assistant-units', JSON.stringify({}));
+    
+    // Import progress for each unit
+    Object.entries(progressData.units).forEach(([unitId, unitData]) => {
+      if (unitData.progress) {
+        const progressKey = `learning-assistant-progress-${unitId}`;
+        localStorage.setItem(progressKey, JSON.stringify(unitData.progress));
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error importing progress:', error);
+    throw error;
+  }
+};

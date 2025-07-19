@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save } from 'lucide-react';
+import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save, Download } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
 import { downloadProgressAsJson, saveProgressToStorageFolder } from '../utils/storageExport';
 
@@ -7,6 +7,7 @@ interface UnitListProps {
   units: UnitSummary[];
   onSelectUnit: (unitId: string) => void;
   onAddUnit: () => void;
+  onLoadFromStorage: () => void;
   onRemoveUnit: (unitId: string) => void;
 }
 
@@ -14,6 +15,7 @@ export const UnitList: React.FC<UnitListProps> = ({
   units,
   onSelectUnit,
   onAddUnit,
+  onLoadFromStorage,
   onRemoveUnit
 }) => {
   const getProgressPercentage = (unit: UnitSummary) => {
@@ -75,6 +77,13 @@ export const UnitList: React.FC<UnitListProps> = ({
         >
           <Plus className="h-5 w-5 mr-2" />
           Add New Unit
+        </button>
+        <button
+          onClick={onLoadFromStorage}
+          className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+        >
+          <Download className="h-5 w-5 mr-2" />
+          Load from Storage
         </button>
         {units.length > 0 && (
           <>
