@@ -42,7 +42,7 @@ export const UnitList: React.FC<UnitListProps> = ({
       alert(`Progress saved successfully to storage/${result.fileName}`);
     } catch (error) {
       console.error('Save failed:', error);
-      alert(`Failed to save to storage folder: ${error.message}\n\nNote: Make sure to run "npm run start" instead of "npm run dev" to enable server storage.`);
+      alert(`Failed to save to storage folder: ${error.message}`);
     }
   };
 

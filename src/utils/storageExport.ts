@@ -94,8 +94,8 @@ export const saveProgressToStorageFolder = async () => {
     return result;
   } catch (error) {
     console.error('Error saving to storage folder:', error);
-    if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-      throw new Error('Cannot connect to server. Make sure the Express server is running on port 3001. Run "npm run start" to enable storage functionality.');
+    if (error.message.includes('fetch') || error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      throw new Error('Backend server not running. Please open a second terminal and run "npm run server" to start the Express server, then try again.');
     }
     throw error;
   }
@@ -131,7 +131,11 @@ export const getStorageFiles = async (): Promise<StorageFile[]> => {
       modified: new Date(file.modified)
     }));
   } catch (error) {
-    console.warn('Error fetching storage files, returning empty list:', error);
+    if (error.name === 'TypeError' || error.message.includes('fetch')) {
+      console.warn('Backend server not running - returning empty file list');
+    } else {
+      console.warn('Error fetching storage files, returning empty list:', error);
+    }
     return []; // Return empty array instead of throwing
   }
 };
