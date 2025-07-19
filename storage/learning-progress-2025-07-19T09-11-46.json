@@ -1,0 +1,16 @@
+{
+  "exportDate": "2025-07-19T09:11:46.818Z",
+  "totalUnits": 1,
+  "units": {
+    "unit-1": {
+      "unitSummary": {
+        "id": "unit-1",
+        "title": "Unit 1 Business Environment Assignment",
+        "totalTasks": 10,
+        "completedTasks": 0,
+        "dateAdded": "2025-07-19T09:11:43.273Z"
+      },
+      "progress": null
+    }
+  }
+}
