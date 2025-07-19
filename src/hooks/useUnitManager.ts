@@ -31,24 +31,6 @@ export const useUnitManager = () => {
             lastActivity: unit.lastActivity ? new Date(unit.lastActivity) : undefined,
             dateAdded: new Date(unit.dateAdded)
           }));
-        } else {
-          // Try to load the default unit-1.json if no units exist
-          try {
-            const response = await fetch('/unit-1.json');
-            if (response.ok) {
-              const defaultUnit = await response.json();
-              loadedUnits[defaultUnit.id] = defaultUnit;
-              loadedUnitList = [{
-                id: defaultUnit.id,
-                title: defaultUnit.title,
-                totalTasks: defaultUnit.learning_outcomes.reduce((sum: number, lo: any) => sum + lo.outcome_tasks.length, 0),
-                completedTasks: 0,
-                dateAdded: new Date()
-              }];
-            }
-          } catch (err) {
-            console.log('No default unit found, starting with empty list');
-          }
         }
 
         setUnits(loadedUnits);
