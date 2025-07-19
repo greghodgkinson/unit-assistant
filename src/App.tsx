@@ -85,17 +85,13 @@ function App() {
   };
 
   const handleProgressLoaded = () => {
-    // Force refresh progress data and reset all state
-    if (refreshProgress) {
-      refreshProgress();
-    }
     setCurrentUnitId(null);
     setCurrentView('list');
     
-    // Small delay to ensure state updates, then reload
+    // Force a complete page reload to ensure all hooks reinitialize
     setTimeout(() => {
       window.location.reload();
-    }, 50);
+    }, 100);
   };
 
   const getCurrentLO = () => {

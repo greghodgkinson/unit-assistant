@@ -5,6 +5,7 @@ export const useProgress = (unitId: string) => {
   const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
   
   const getInitialProgress = (): Progress => {
+    console.log('getInitialProgress called for unitId:', unitId);
     if (!unitId) {
       return {
         unitId: '',
@@ -18,9 +19,11 @@ export const useProgress = (unitId: string) => {
     }
     
     const saved = localStorage.getItem(STORAGE_KEY);
+    console.log('Saved progress data:', saved);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        console.log('Parsed progress:', parsed);
         return {
           ...parsed,
           unitId: unitId,
@@ -50,24 +53,13 @@ export const useProgress = (unitId: string) => {
 
   const [progress, setProgress] = useState<Progress>(getInitialProgress);
 
-  // Re-load progress when unitId changes
+  // Re-load progress when unitId changes or when explicitly refreshed
   useEffect(() => {
     if (!unitId) return;
-    
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setProgress(getInitialProgress());
-      } catch (error) {
-        console.error('Error parsing saved progress:', error);
-        setProgress(getInitialProgress());
-      }
-    } else {
-      setProgress(getInitialProgress());
-    }
+    setProgress(getInitialProgress());
   }, [unitId]);
 
-  // Add a force refresh function that can be called externally
+  // Force refresh function that can be called externally
   const refreshProgress = () => {
     setProgress(getInitialProgress());
   };
