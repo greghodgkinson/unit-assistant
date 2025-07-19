@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
-import { saveProgressToStorageFolder } from '../utils/storageExport';
+import { saveProgressToStorageFolder, downloadProgressAsJson } from '../utils/storageExport';
 
 interface UnitListProps {
   units: UnitSummary[];
