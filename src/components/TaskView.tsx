@@ -166,6 +166,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
     .replace(/[�]/g, '') // Remove replacement character
     .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
 
+  // Remove Level: and Score: lines from the end of the feedback
+  cleanFeedback = cleanFeedback.replace(/\n\s*Level:\s*.*$/i, '');
+  cleanFeedback = cleanFeedback.replace(/\n\s*Score:\s*.*$/i, '');
+  cleanFeedback = cleanFeedback.trim();
+
   const headerRegex = /\*\*([^*]+)\*\*/g;
   const sections: { type: 'header' | 'content'; text: string }[] = [];
   const headers: { header: string; index: number }[] = [];
@@ -184,19 +189,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
     sections.push({ type: 'header', text: current.header });
     sections.push({ type: 'content', text: content || '(No suggestions provided.)' });
-  }
-
-  // Check for Level and Score in last section
-  const lastContent = sections[sections.length - 1];
-
-  if (lastContent?.type === 'content') {
-    const match = lastContent.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/i);
-    if (match) {
-      const [, level, score] = match;
-      if (level.toLowerCase() !== 'undefined' && score.toLowerCase() !== 'nan%') {
-        sections.pop(); // Remove raw score text from visible section
-      }
-    }
   }
 
   return (
