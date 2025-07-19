@@ -65,13 +65,12 @@ export const saveProgressToStorageFolder = async () => {
   const exportData = exportAllProgress();
   const jsonString = JSON.stringify(exportData, null, 2);
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Remove milliseconds and replace colons/dots
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
   const fileName = `learning-progress-${timestamp}.json`;
   
   try {
     console.log('Attempting to save to storage folder...');
-    // Save to storage folder in the app
-    const response = await fetch('/api/save-progress', {
+    const response = await fetch('http://localhost:3001/api/save-progress', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,6 +94,9 @@ export const saveProgressToStorageFolder = async () => {
     return result;
   } catch (error) {
     console.error('Error saving to storage folder:', error);
+    if (error.message.includes('fetch')) {
+      throw new Error('Cannot connect to server. Make sure to run "npm run start" instead of "npm run dev" to enable storage functionality.');
+    }
     throw error;
   }
 };
@@ -106,7 +108,7 @@ export interface StorageFile {
 
 export const getStorageFiles = async (): Promise<StorageFile[]> => {
   try {
-    const response = await fetch('/api/storage-files');
+    const response = await fetch('http://localhost:3001/api/storage-files');
     
     // Check if we got HTML instead of JSON (API not available)
     const contentType = response.headers.get('content-type');
@@ -136,7 +138,7 @@ export const getStorageFiles = async (): Promise<StorageFile[]> => {
 
 export const loadProgressFromStorage = async (filename: string): Promise<ExportedProgress> => {
   try {
-    const response = await fetch(`/api/load-progress/${encodeURIComponent(filename)}`);
+    const response = await fetch(`http://localhost:3001/api/load-progress/${encodeURIComponent(filename)}`);
     if (!response.ok) {
       throw new Error(`Failed to load progress file: ${response.status}`);
     }
