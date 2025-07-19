@@ -83,16 +83,40 @@ app.post('/api/save-progress', async (req, res) => {
       return res.status(400).json({ error: 'fileName and content are required' });
     }
     
+    // Validate fileName to prevent directory traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      return res.status(400).json({ error: 'Invalid filename' });
+    }
+    
     const storageDir = path.join(__dirname, 'storage');
     const filePath = path.join(storageDir, fileName);
     
     console.log('Saving to:', filePath);
+    console.log('Storage directory:', storageDir);
     
     // Ensure storage directory exists
-    await fs.mkdir(storageDir, { recursive: true });
+    try {
+      await fs.mkdir(storageDir, { recursive: true });
+      console.log('Storage directory created/verified');
+    } catch (mkdirError) {
+      console.error('Failed to create storage directory:', mkdirError);
+      return res.status(500).json({ 
+        error: 'Failed to create storage directory',
+        details: mkdirError.message 
+      });
+    }
     
     // Write the file
-    await fs.writeFile(filePath, content, 'utf8');
+    try {
+      await fs.writeFile(filePath, content, 'utf8');
+      console.log('File written successfully');
+    } catch (writeError) {
+      console.error('Failed to write file:', writeError);
+      return res.status(500).json({ 
+        error: 'Failed to write file',
+        details: writeError.message 
+      });
+    }
     
     console.log('File saved successfully');
     res.json({ 
