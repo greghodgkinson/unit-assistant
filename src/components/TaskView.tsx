@@ -188,7 +188,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   // Check for Level and Score in last section
   const lastContent = sections[sections.length - 1];
-  let levelScore = '';
   let validLevel = '';
   let validScore = '';
 
@@ -197,7 +196,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
     if (match) {
       const [, level, score] = match;
       if (level.toLowerCase() !== 'undefined' && score.toLowerCase() !== 'nan%') {
-        levelScore = lastContent.text;
         validLevel = level;
         validScore = score;
         sections.pop(); // Remove raw score text from visible section
