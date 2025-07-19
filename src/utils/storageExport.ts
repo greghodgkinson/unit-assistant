@@ -59,6 +59,31 @@ export const downloadProgressAsJson = () => {
   URL.revokeObjectURL(url);
 };
 
-export const saveProgressToStorageFolder = () => {
-  downloadProgressAsJson();
+export const saveProgressToStorageFolder = async () => {
+  const exportData = exportAllProgress();
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const fileName = `learning-progress-${new Date().toISOString().split('T')[0]}.json`;
+  
+  try {
+    // Save to storage folder in the app
+    const response = await fetch('/api/save-progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fileName,
+        content: jsonString
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save to storage folder');
+    }
+    
+    return { success: true, fileName };
+  } catch (error) {
+    console.error('Error saving to storage folder:', error);
+    throw error;
+  }
 };
