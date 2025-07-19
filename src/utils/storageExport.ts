@@ -50,9 +50,11 @@ export const downloadProgressAsJson = () => {
   const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Remove milliseconds and replace colons/dots
   const link = document.createElement('a');
   link.href = url;
-  link.download = `learning-progress-${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `learning-progress-${timestamp}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -62,7 +64,9 @@ export const downloadProgressAsJson = () => {
 export const saveProgressToStorageFolder = async () => {
   const exportData = exportAllProgress();
   const jsonString = JSON.stringify(exportData, null, 2);
-  const fileName = `learning-progress-${new Date().toISOString().split('T')[0]}.json`;
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Remove milliseconds and replace colons/dots
+  const fileName = `learning-progress-${timestamp}.json`;
   
   try {
     console.log('Attempting to save to storage folder...');
