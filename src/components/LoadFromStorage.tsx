@@ -52,7 +52,8 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
       
       setSuccess(true);
       setTimeout(() => {
-        onProgressLoaded();
+        // Force a complete reload to ensure all data is properly loaded
+        window.location.reload();
       }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load progress');

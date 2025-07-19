@@ -159,8 +159,11 @@ export const loadProgressFromStorage = async (filename: string): Promise<Exporte
 
 export const importProgress = (progressData: ExportedProgress) => {
   try {
+    console.log('Importing progress data:', progressData);
+    
     // Import unit list
     const unitList = Object.values(progressData.units).map(unit => unit.unitSummary);
+    console.log('Importing unit list:', unitList);
     localStorage.setItem('learning-assistant-unit-list', JSON.stringify(unitList));
     
     // Import units data
@@ -170,12 +173,14 @@ export const importProgress = (progressData: ExportedProgress) => {
         units[unitId] = unitData.unitData;
       }
     });
+    console.log('Importing units data:', units);
     localStorage.setItem('learning-assistant-units', JSON.stringify(units));
     
     // Import progress for each unit
     Object.entries(progressData.units).forEach(([unitId, unitData]) => {
       if (unitData.progress) {
         const progressKey = `learning-assistant-progress-${unitId}`;
+        console.log(`Importing progress for ${unitId}:`, unitData.progress);
         localStorage.setItem(progressKey, JSON.stringify(unitData.progress));
       }
     });

@@ -33,6 +33,9 @@ export const useUnitManager = () => {
           }));
         }
 
+        console.log('Loaded units from storage:', loadedUnits);
+        console.log('Loaded unit list from storage:', loadedUnitList);
+
         setUnits(loadedUnits);
         setUnitList(loadedUnitList);
       } catch (err) {
