@@ -15,14 +15,18 @@ app.use(express.static('dist'));
 // API endpoint to save progress to storage folder
 app.post('/api/save-progress', async (req, res) => {
   try {
+    console.log('Received save progress request:', req.body);
     const { fileName, content } = req.body;
     
     if (!fileName || !content) {
+      console.log('Missing fileName or content');
       return res.status(400).json({ error: 'fileName and content are required' });
     }
     
     const storageDir = path.join(__dirname, 'storage');
     const filePath = path.join(storageDir, fileName);
+    
+    console.log('Saving to:', filePath);
     
     // Ensure storage directory exists
     await fs.mkdir(storageDir, { recursive: true });
@@ -30,6 +34,7 @@ app.post('/api/save-progress', async (req, res) => {
     // Write the file
     await fs.writeFile(filePath, content, 'utf8');
     
+    console.log('File saved successfully');
     res.json({ 
       success: true, 
       message: `Progress saved to storage/${fileName}`,

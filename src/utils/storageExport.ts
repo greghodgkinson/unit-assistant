@@ -65,6 +65,7 @@ export const saveProgressToStorageFolder = async () => {
   const fileName = `learning-progress-${new Date().toISOString().split('T')[0]}.json`;
   
   try {
+    console.log('Attempting to save to storage folder...');
     // Save to storage folder in the app
     const response = await fetch('/api/save-progress', {
       method: 'POST',
@@ -77,11 +78,17 @@ export const saveProgressToStorageFolder = async () => {
       })
     });
     
+    console.log('Response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to save to storage folder');
+      const errorData = await response.text();
+      console.error('Server response:', errorData);
+      throw new Error(`Server error: ${response.status} - ${errorData}`);
     }
     
-    return { success: true, fileName };
+    const result = await response.json();
+    console.log('Save successful:', result);
+    return result;
   } catch (error) {
     console.error('Error saving to storage folder:', error);
     throw error;
