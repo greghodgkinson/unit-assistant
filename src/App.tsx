@@ -17,8 +17,10 @@ function App() {
   const [currentUnitId, setCurrentUnitId] = useState<string | null>(null);
   const { units, unitList, loading, error, addUnit, removeUnit, getUnit, updateUnitProgress } = useUnitManager();
   
-  // Only initialize progress hook when we have a current unit
+  // Get unit data
   const unitData = currentUnitId ? getUnit(currentUnitId) : null;
+  
+  // Only initialize progress hook when we have both a current unit ID and the unit data is loaded
   const {
     progress,
     updateAnswer,
@@ -28,7 +30,7 @@ function App() {
     setCurrentTask,
     getVelocityMetrics,
     getNextTask
-  } = useProgress(currentUnitId || '');
+  } = useProgress(currentUnitId && unitData ? currentUnitId : '');
 
   // Show loading state
   if (loading) {
