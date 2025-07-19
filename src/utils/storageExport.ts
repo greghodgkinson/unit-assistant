@@ -176,6 +176,21 @@ export const importProgress = (progressData: ExportedProgress) => {
     console.log('Importing units data:', units);
     localStorage.setItem('learning-assistant-units', JSON.stringify(units));
     
+    // Import progress for each unit and sync completed tasks count
+    const updatedUnitList = unitList.map(unitSummary => {
+      const unitProgress = progressData.units[unitSummary.id]?.progress;
+      if (unitProgress && unitProgress.completedTasks) {
+        return {
+          ...unitSummary,
+          completedTasks: unitProgress.completedTasks.length
+        };
+      }
+      return unitSummary;
+    });
+    
+    // Update unit list with correct completed tasks count
+    localStorage.setItem('learning-assistant-unit-list', JSON.stringify(updatedUnitList));
+    
     // Import progress for each unit
     Object.entries(progressData.units).forEach(([unitId, unitData]) => {
       if (unitData.progress) {
