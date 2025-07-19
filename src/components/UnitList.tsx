@@ -35,12 +35,7 @@ export const UnitList: React.FC<UnitListProps> = ({
   };
 
   const handleSaveToStorage = async () => {
-    try {
-      const result = await saveProgressToStorageFolder();
-      alert(`Progress saved successfully to storage/${result.fileName}`);
-    } catch (error) {
-      alert('Failed to save progress to storage folder');
-    }
+    downloadProgressAsJson();
   };
 
   return (
