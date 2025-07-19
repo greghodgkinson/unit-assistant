@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, AlertCircle, CheckCircle } from 'lucide-react';
-import { StorageFile, getStorageFiles, loadProgressFromStorage, importProgress } from '../utils/storageExport';
+import { StorageFile, getStorageFiles, loadProgressFromStorage, importProgress, saveProgressToStorageFolder } from '../utils/storageExport';
 
 interface LoadFromStorageProps {
   onBack: () => void;
@@ -37,6 +37,15 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
     try {
       setImporting(filename);
       setError(null);
+      
+      // Auto-save current progress before loading
+      try {
+        await saveProgressToStorageFolder();
+        console.log('Current progress auto-saved before loading');
+      } catch (saveError) {
+        console.warn('Failed to auto-save current progress:', saveError);
+        // Continue with loading even if auto-save fails
+      }
       
       const progressData = await loadProgressFromStorage(filename);
       importProgress(progressData);
