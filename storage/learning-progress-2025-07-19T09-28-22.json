@@ -1,0 +1,274 @@
+{
+  "exportDate": "2025-07-19T09:28:22.628Z",
+  "totalUnits": 1,
+  "units": {
+    "unit-1": {
+      "unitSummary": {
+        "id": "unit-1",
+        "title": "Unit 1 Business Environment Assignment",
+        "totalTasks": 10,
+        "completedTasks": 3,
+        "dateAdded": "2025-07-19T09:25:28.859Z",
+        "lastActivity": "2025-07-19T09:27:47.308Z"
+      },
+      "progress": {
+        "unitId": "unit-1",
+        "currentLO": "LO2",
+        "currentTask": "2.2",
+        "completedTasks": [
+          "1.1",
+          "1.2",
+          "2.1"
+        ],
+        "answers": [
+          {
+            "taskId": "1.1",
+            "content": "tertrter",
+            "submissionDate": "2025-07-19T09:26:05.283Z",
+            "lastModified": "2025-07-19T09:26:05.283Z",
+            "version": 1,
+            "isGoodEnough": true,
+            "feedbackRequested": false
+          },
+          {
+            "taskId": "1.2",
+            "content": "trrrytr",
+            "submissionDate": "2025-07-19T09:26:10.029Z",
+            "lastModified": "2025-07-19T09:26:10.029Z",
+            "version": 1,
+            "isGoodEnough": true,
+            "feedbackRequested": false
+          },
+          {
+            "taskId": "2.1",
+            "content": "grgrhrrh",
+            "submissionDate": "2025-07-19T09:27:46.535Z",
+            "lastModified": "2025-07-19T09:27:46.535Z",
+            "version": 1,
+            "isGoodEnough": true,
+            "feedbackRequested": false
+          }
+        ],
+        "startDate": "2025-07-19T09:25:54.644Z",
+        "lastActivity": "2025-07-19T09:27:51.695Z"
+      },
+      "unitData": {
+        "id": "unit-1",
+        "title": "Unit 1 Business Environment Assignment",
+        "instructions": "At the beginning of each module, you will need to decide whether you want to achieve a Pass, Merit, or Distinction grade for the relevant module keeping in mind your overall score goal and possible qualification progression goal. 1. Pass: Complete the \"Pass\" questions in the assignment. Please disregard the extension activities. The Merit and Distinction within assignments are extension activities, which enable you to provide additional evidence to show that the criteria for the higher grades have been met. 2. Merit: To achieve a Merit for this Module, complete the \"Pass\" as well as the \"Merit\" additional extension activities in the assignment. 3. Distinction: To achieve a Distinction for this Module complete the \"Pass\", \"Merit\" & \"Distinction\" additional extension activities in the assignment. *Please also note* Students cannot omit to complete work to meet the pass standard and simply work to the higher grades, as this would put a pass for the unit in jeopardy. Similarly, students cannot complete work to meet the criteria for distinction in the anticipation that this will also meet the criteria for merit. However, where work for the pass standard is marginal, assessors can consider any extension work completed as this may support the achievement of the pass standard. REMEMBER: Extension activities will not only contribute to a Merit, or Distinction for the module. It can also help to increase your overall point score. The points are converted to an overall qualification grade where you can either meet the minimum number of points required for Pass, Merit or Distinction grade for the qualification. See the Course Orientation for further clarification.",
+        "scenario": "Before progressing onto university to study International Business, you have managed to secure a 4-month management internship with a prestigious company in Oxford, England. Verto is a relatively small UK- based electric vehicle manufacturer focussed on making small, affordable electric cars and commercial vehicles. It has run the internship scheme for several years, offering just 10 places a year. If you complete the internship successfully, it will increase your chances of joining Verto's graduate recruitment programme. Your responses to the tasks should be based on real businesses that you are familiar with. The businesses need to be Small Medium Enterprises (SMEs), although some sole traders may not be able to provide sufficient information required for the tasks.",
+        "task": "Verto has worked with young business and management trainees for a number of years and the Human Resources department has produced a Business Environment Workbook to help trainees demonstrate to HR their understanding of the external environment in which all businesses operate. Kareem Akram, the Head of Human Resources, asks you to complete the Workbook as part of your internship. Please use the separate Unit 1 Workbook to submit your responses. In your workbook, you should demonstrate that you can:",
+        "learning_outcomes": [
+          {
+            "id": "LO1",
+            "description": "Understand the range of stakeholders who have an interest and influence on a business",
+            "outcome_tasks": [
+              {
+                "id": "1.1",
+                "description": "1.1 Identify the stakeholders for a named, profit making, organisation and explain their interests, objectives and potential conflicts. (LO1)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 1.1",
+                    "criteria": "AC 1.1 The learners must select and name, a profit-making business. Learners must be able to clearly explain a) what are the interests of different stakeholders and b) their objectives. Examples should be used to explain and illustrate differences and potential conflict for part c). At least two internal and two external stakeholder groups should be included in the response."
+                  }
+                ]
+              },
+              {
+                "id": "1.2",
+                "description": "1.2 Explain the interests and objectives of stakeholders in a named organisation operating in the not- for-profit sector. (LO1)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 1.2",
+                    "criteria": "AC 1.2 Learners must apply their learning to a named not-for-profit organisation. The explanation must demonstrate that the learner understands the difference between profit and not-for-profit organisations. The answer should explain both a) interests and b) objectives of at least two internal and two external stakeholder groups."
+                  }
+                ]
+              }
+            ],
+            "indicative_content": [
+              {
+                "description": "Internal stakeholders e.g.; shareholders, employees, trade unions."
+              },
+              {
+                "description": "External stakeholders e.g.; customers, suppliers, competitors, the local community"
+              },
+              {
+                "description": "The interests of stakeholders, e.g. costs, profit, social impact, job security, health and safety,"
+              },
+              {
+                "description": "The objectives of each stakeholder group, e.g. an investor may set an objective to achieve a 5% return"
+              },
+              {
+                "description": "Ways in which stakeholders' differing objectives may conflict"
+              }
+            ]
+          },
+          {
+            "id": "LO2",
+            "description": "Understand the sectors of an economy",
+            "outcome_tasks": [
+              {
+                "id": "2.1",
+                "description": "2.1 Describe economic sectors and the output generated from each sector. (LO2)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 2.1",
+                    "criteria": "AC 2.1 The learner work should include the four sectors listed in the indicative content. Descriptions of output should include examples for each sector."
+                  }
+                ]
+              },
+              {
+                "id": "2.2",
+                "description": "2.2 Analyse the size and importance of these sectors in a named country. (LO2)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 2.2",
+                    "criteria": "AC 2.2 Learners must state the country in in which the chosen economy is based. The analysis should use at least two measures (e.g. value of output or employment) to show the size of each sector. The analysis must also refer to the importance of each sector for the economy in the chosen country."
+                  }
+                ]
+              },
+              {
+                "id": "2M1",
+                "description": "2M1 Analyse recent changes seen in economic sectors in a named country. (LO2)",
+                "type": "merit",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 2M1",
+                    "criteria": "2M1 The analysis must be based on one named country. The analysis can consider changes within sectors, (e.g. the decline of one particular type of manufacturing and its replacement by a different type of manufacturing), or, changes between sectors, (e.g. the decline of the whole manufacturing sector and the increase in size of the service sector)."
+                  }
+                ]
+              }
+            ],
+            "indicative_content": [
+              {
+                "description": "Sectors of the economy, including: primary, secondary, tertiary and quaternary"
+              },
+              {
+                "description": "Different ways in which the size of each sector is measured, value of output and employment"
+              },
+              {
+                "description": "Importance of each sector to future growth of the economy"
+              },
+              {
+                "description": "Changes and trends within sectors, e.g. greater reliance on technology such as artificial intelligence in"
+              },
+              {
+                "description": "Changes and trends between sectors, e.g. The decline in manufacturing in the UK, greater reliance on"
+              }
+            ]
+          },
+          {
+            "id": "LO3",
+            "description": "Conduct a STEEPLE analysis",
+            "outcome_tasks": [
+              {
+                "id": "3.1",
+                "description": "3.1 Conduct a STEEPLE analysis to show how the external environment impacts a named organisation. (LO3)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 3.1",
+                    "criteria": "AC 3.1 The STEEPLE analysis should include both positive and negative aspects of each element. It is acceptable for learners to present the STEEPLE analysis in either text or tabular form."
+                  }
+                ]
+              },
+              {
+                "id": "4D1",
+                "description": "4D1 Evaluate the impact of technology on the organisation and individuals. (LO 3 & 4)",
+                "type": "distinction",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 4D1",
+                    "criteria": "The learner response should demonstrate evaluation and must 4D1 contain an examination of the positive and negative aspects of technology on both a) Organisations and b) Individuals Learners must draw a conclusion from the evidence contained within their answer"
+                  }
+                ]
+              }
+            ],
+            "indicative_content": [
+              {
+                "description": "STEEPLE analysis of factors beyond the control of a business"
+              },
+              {
+                "description": "Social, e.g. changes to social attitudes"
+              },
+              {
+                "description": "Technological, e.g. new developments and methods, new products"
+              },
+              {
+                "description": "Economic, e.g. the business cycle and level of demand, unemployment and inflation"
+              },
+              {
+                "description": "Ethical, e.g. changing attitudes towards ethical and moral issues"
+              },
+              {
+                "description": "Political, e.g. impact of government policies"
+              },
+              {
+                "description": "Legal, e.g. changes to legislation that impact business and consumers"
+              },
+              {
+                "description": "Environmental, e.g. sustainability"
+              },
+              {
+                "description": "Four stages of the Business Cycle"
+              }
+            ]
+          },
+          {
+            "id": "LO4",
+            "description": "Understand the changing nature and pattern of employment",
+            "outcome_tasks": [
+              {
+                "id": "4.1",
+                "description": "4.1 Explain how the nature of work and employment have changed globally in recent year. (LO4)",
+                "type": "standard",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 4.1",
+                    "criteria": "AC 4.1 The learner explanations must cover both • the changing nature of work and • the changing nature of employment. Responses should consider global patterns and not be confined to one economy. A substantial amount of the indicative guidance should be included in the response."
+                  }
+                ]
+              },
+              {
+                "id": "4M1",
+                "description": "4M1 Analyse the implications of the changes to working patterns for organisations and individuals. (LO4) To achieve a Distinction, you should complete the relevant Distinction task to provide evidence you can:",
+                "type": "merit",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 4M1",
+                    "criteria": "4M1 The analysis must cover the implications of the changes to • working patterns for organisations and • working patterns for individuals The changes should be recent changes i.e. from the last 2 decades, rather than historical changes."
+                  }
+                ]
+              },
+              {
+                "id": "4D1",
+                "description": "4D1 Evaluate the impact of technology on the organisation and individuals. (LO 3 & 4)",
+                "type": "distinction",
+                "acceptance_criteria": [
+                  {
+                    "id": "AC 4D1",
+                    "criteria": "The learner response should demonstrate evaluation and must 4D1 contain an examination of the positive and negative aspects of technology on both a) Organisations and b) Individuals Learners must draw a conclusion from the evidence contained within their answer"
+                  }
+                ]
+              }
+            ],
+            "indicative_content": [
+              {
+                "description": "Changing nature of work, e.g. balance of employment opportunities in the different sectors, the"
+              },
+              {
+                "description": "Changes to working patterns e.g. male and female participation rates, full and part time working,"
+              },
+              {
+                "description": "Global variation in employment patterns"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
