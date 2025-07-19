@@ -59,6 +59,13 @@ export const UnitList: React.FC<UnitListProps> = ({
 
       {/* Add Unit Button */}
       <div className="flex justify-end space-x-4">
+        <button
+          onClick={onAddUnit}
+          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Add New Unit
+        </button>
         {units.length > 0 && (
           <button
             onClick={handleSaveToStorage}
@@ -68,13 +75,6 @@ export const UnitList: React.FC<UnitListProps> = ({
             Save Progress
           </button>
         )}
-        <button
-          onClick={onAddUnit}
-          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add New Unit
-        </button>
       </div>
 
       {/* Units Grid */}
