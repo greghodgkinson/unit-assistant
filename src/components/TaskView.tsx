@@ -188,16 +188,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   // Check for Level and Score in last section
   const lastContent = sections[sections.length - 1];
-  let validLevel = '';
-  let validScore = '';
 
   if (lastContent?.type === 'content') {
     const match = lastContent.text.match(/Level:\s*(\S+)\s*Score:\s*(\S+)/i);
     if (match) {
       const [, level, score] = match;
       if (level.toLowerCase() !== 'undefined' && score.toLowerCase() !== 'nan%') {
-        validLevel = level;
-        validScore = score;
         sections.pop(); // Remove raw score text from visible section
       }
     }
@@ -222,20 +218,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
           )}
         </div>
       ))}
-
-      {validLevel && validScore && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-          <h4 className="font-semibold text-gray-900 mb-2">Assessment</h4>
-          <div className="flex space-x-4">
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-              Level: {validLevel}
-            </span>
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-              Score: {validScore}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
