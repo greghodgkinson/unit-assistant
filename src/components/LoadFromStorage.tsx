@@ -27,7 +27,37 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
       setLoading(true);
       setError(null);
       const storageFiles = await getStorageFiles();
-      setFiles(storageFiles.sort((a, b) => b.modified.getTime() - a.modified.getTime()));
+      
+      // Load preview data for each file
+      const filesWithPreview = await Promise.all(
+        storageFiles.map(async (file) => {
+          try {
+            const progressData = await loadProgressFromStorage(file.name);
+            const totalTasks = Object.values(progressData.units).reduce(
+              (sum, unit) => sum + unit.unitSummary.totalTasks, 0
+            );
+            const completedTasks = Object.values(progressData.units).reduce(
+              (sum, unit) => sum + unit.unitSummary.completedTasks, 0
+            );
+            const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            return {
+              ...file,
+              preview: {
+                totalUnits: progressData.totalUnits,
+                totalTasks,
+                completedTasks,
+                progressPercentage
+              }
+            };
+          } catch (error) {
+            console.warn(`Failed to load preview for ${file.name}:`, error);
+            return file; // Return file without preview if loading fails
+          }
+        })
+      );
+      
+      setFiles(filesWithPreview.sort((a, b) => b.modified.getTime() - a.modified.getTime()));
     } catch (err) {
       console.warn('Failed to load storage files:', err);
       setFiles([]); // Set empty files instead of showing error
@@ -334,6 +364,17 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
                       </div>
                       <span>{formatFileSize(file.size)}</span>
                     </div>
+                    {file.preview && (
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                        <span>{file.preview.totalUnits} unit{file.preview.totalUnits !== 1 ? 's' : ''}</span>
+                        <span>•</span>
+                        <span>{file.preview.totalTasks} task{file.preview.totalTasks !== 1 ? 's' : ''}</span>
+                        <span>•</span>
+                        <span className="text-green-600">{file.preview.completedTasks} completed</span>
+                        <span>•</span>
+                        <span className="text-blue-600">{file.preview.progressPercentage}% done</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

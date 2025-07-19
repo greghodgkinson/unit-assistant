@@ -107,6 +107,12 @@ export interface StorageFile {
   name: string;
   size: number;
   modified: Date;
+  preview?: {
+    totalUnits: number;
+    totalTasks: number;
+    completedTasks: number;
+    progressPercentage: number;
+  };
 }
 
 export const getStorageFiles = async (): Promise<StorageFile[]> => {
