@@ -5,19 +5,36 @@ export const useProgress = (unitId: string) => {
   const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
   
   const [progress, setProgress] = useState<Progress>(() => {
+    if (!unitId) {
+      return {
+        unitId: '',
+        currentLO: 'LO1',
+        currentTask: '1.1',
+        completedTasks: [],
+        answers: [],
+        startDate: new Date(),
+        lastActivity: new Date()
+      };
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        startDate: new Date(parsed.startDate),
-        lastActivity: new Date(parsed.lastActivity),
-        answers: parsed.answers.map((answer: any) => ({
-          ...answer,
-          submissionDate: new Date(answer.submissionDate),
-          lastModified: new Date(answer.lastModified)
-        }))
-      };
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          unitId: unitId,
+          startDate: new Date(parsed.startDate),
+          lastActivity: new Date(parsed.lastActivity),
+          answers: parsed.answers.map((answer: any) => ({
+            ...answer,
+            submissionDate: new Date(answer.submissionDate),
+            lastModified: new Date(answer.lastModified)
+          }))
+        };
+      } catch (error) {
+        console.error('Error parsing saved progress:', error);
+      }
     }
     
     return {
@@ -30,6 +47,31 @@ export const useProgress = (unitId: string) => {
       lastActivity: new Date()
     };
   });
+
+  // Re-load progress when unitId changes
+  useEffect(() => {
+    if (!unitId) return;
+    
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setProgress({
+          ...parsed,
+          unitId: unitId,
+          startDate: new Date(parsed.startDate),
+          lastActivity: new Date(parsed.lastActivity),
+          answers: parsed.answers.map((answer: any) => ({
+            ...answer,
+            submissionDate: new Date(answer.submissionDate),
+            lastModified: new Date(answer.lastModified)
+          }))
+        });
+      } catch (error) {
+        console.error('Error parsing saved progress:', error);
+      }
+    }
+  }, [unitId, STORAGE_KEY]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
