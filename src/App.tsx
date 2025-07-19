@@ -23,6 +23,7 @@ function App() {
   // Only initialize progress hook when we have both a current unit ID and the unit data is loaded
   const {
     progress,
+    refreshProgress,
     updateAnswer,
     markTaskComplete,
     markAsGoodEnough,
@@ -84,14 +85,17 @@ function App() {
   };
 
   const handleProgressLoaded = () => {
-    // Reset all state when loading from storage
+    // Force refresh progress data and reset all state
+    if (refreshProgress) {
+      refreshProgress();
+    }
     setCurrentUnitId(null);
     setCurrentView('list');
     
-    // Force a complete page reload to ensure all hooks and state are properly reset
+    // Small delay to ensure state updates, then reload
     setTimeout(() => {
       window.location.reload();
-    }, 100);
+    }, 50);
   };
 
   const getCurrentLO = () => {

@@ -4,7 +4,7 @@ import { Progress, StudentAnswer, VelocityMetrics } from '../types/Unit';
 export const useProgress = (unitId: string) => {
   const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
   
-  const [progress, setProgress] = useState<Progress>(() => {
+  const getInitialProgress = (): Progress => {
     if (!unitId) {
       return {
         unitId: '',
@@ -16,7 +16,7 @@ export const useProgress = (unitId: string) => {
         lastActivity: new Date()
       };
     }
-
+    
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
@@ -46,7 +46,9 @@ export const useProgress = (unitId: string) => {
       startDate: new Date(),
       lastActivity: new Date()
     };
-  });
+  };
+
+  const [progress, setProgress] = useState<Progress>(getInitialProgress);
 
   // Re-load progress when unitId changes
   useEffect(() => {
@@ -55,44 +57,20 @@ export const useProgress = (unitId: string) => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        setProgress({
-          ...parsed,
-          unitId: unitId,
-          startDate: new Date(parsed.startDate),
-          lastActivity: new Date(parsed.lastActivity),
-          answers: parsed.answers.map((answer: any) => ({
-            ...answer,
-            submissionDate: new Date(answer.submissionDate),
-            lastModified: new Date(answer.lastModified)
-          }))
-        });
+        setProgress(getInitialProgress());
       } catch (error) {
         console.error('Error parsing saved progress:', error);
-        // Reset to default state if parsing fails
-        setProgress({
-          unitId: unitId,
-          currentLO: 'LO1',
-          currentTask: '1.1',
-          completedTasks: [],
-          answers: [],
-          startDate: new Date(),
-          lastActivity: new Date()
-        });
+        setProgress(getInitialProgress());
       }
     } else {
-      // Reset to default state if no saved data
-      setProgress({
-        unitId: unitId,
-        currentLO: 'LO1',
-        currentTask: '1.1',
-        completedTasks: [],
-        answers: [],
-        startDate: new Date(),
-        lastActivity: new Date()
-      });
+      setProgress(getInitialProgress());
     }
-  }, [unitId, STORAGE_KEY]);
+  }, [unitId]);
+
+  // Add a force refresh function that can be called externally
+  const refreshProgress = () => {
+    setProgress(getInitialProgress());
+  };
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
@@ -190,6 +168,7 @@ export const useProgress = (unitId: string) => {
 
   return {
     progress,
+    refreshProgress,
     updateAnswer,
     markTaskComplete,
     markAsGoodEnough,
