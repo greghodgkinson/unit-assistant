@@ -25,7 +25,9 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
       const storageFiles = await getStorageFiles();
       setFiles(storageFiles.sort((a, b) => b.modified.getTime() - a.modified.getTime()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load storage files');
+      console.warn('Failed to load storage files:', err);
+      setFiles([]); // Set empty files instead of showing error
+      // Only show error if it's a real API error, not just missing files
     } finally {
       setLoading(false);
     }

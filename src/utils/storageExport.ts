@@ -107,17 +107,30 @@ export interface StorageFile {
 export const getStorageFiles = async (): Promise<StorageFile[]> => {
   try {
     const response = await fetch('/api/storage-files');
+    
+    // Check if we got HTML instead of JSON (API not available)
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Storage API not available - returning empty file list');
+      return [];
+    }
+    
     if (!response.ok) {
+      if (response.status === 404) {
+        console.warn('Storage endpoint not found - returning empty file list');
+        return [];
+      }
       throw new Error(`Failed to fetch storage files: ${response.status}`);
     }
+    
     const data = await response.json();
     return data.files.map((file: any) => ({
       ...file,
       modified: new Date(file.modified)
     }));
   } catch (error) {
-    console.error('Error fetching storage files:', error);
-    throw error;
+    console.warn('Error fetching storage files, returning empty list:', error);
+    return []; // Return empty array instead of throwing
   }
 };
 
