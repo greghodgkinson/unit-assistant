@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save, Download } from 'lucide-react';
+import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save, Download, Settings } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
 import { downloadProgressAsJson, saveProgressToStorageFolder } from '../utils/storageExport';
 
@@ -86,6 +86,13 @@ export const UnitList: React.FC<UnitListProps> = ({
         >
           <Download className="h-5 w-5 mr-2" />
           Load from Storage
+        </button>
+        <button
+          onClick={onOpenSettings}
+          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-lg"
+        >
+          <Settings className="h-5 w-5 mr-2" />
+          Settings
         </button>
         {units.length > 0 && (
           <>
