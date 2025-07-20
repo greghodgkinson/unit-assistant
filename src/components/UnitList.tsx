@@ -8,6 +8,7 @@ interface UnitListProps {
   onSelectUnit: (unitId: string) => void;
   onAddUnit: () => void;
   onLoadFromStorage: () => void;
+  onOpenSettings: () => void;
   onRemoveUnit: (unitId: string) => void;
 }
 
@@ -16,6 +17,7 @@ export const UnitList: React.FC<UnitListProps> = ({
   onSelectUnit,
   onAddUnit,
   onLoadFromStorage,
+  onOpenSettings,
   onRemoveUnit
 }) => {
   const getProgressPercentage = (unit: UnitSummary) => {

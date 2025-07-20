@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UnitList } from './components/UnitList';
 import { UnitUpload } from './components/UnitUpload';
 import { LoadFromStorage } from './components/LoadFromStorage';
+import { Settings } from './components/Settings';
 import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
@@ -10,7 +11,7 @@ import { useUnitManager } from './hooks/useUnitManager';
 import { requestFeedback } from './utils/feedbackService';
 import { Unit } from './types/Unit';
 
-type View = 'list' | 'upload' | 'load-storage' | 'overview' | 'dashboard' | 'task';
+type View = 'list' | 'upload' | 'load-storage' | 'settings' | 'overview' | 'dashboard' | 'task';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('list');
@@ -188,6 +189,7 @@ function App() {
             onSelectUnit={handleSelectUnit}
             onAddUnit={handleAddUnit}
             onLoadFromStorage={handleLoadFromStorage}
+            onOpenSettings={() => setCurrentView('settings')}
             onRemoveUnit={removeUnit}
           />
         );
@@ -197,6 +199,9 @@ function App() {
       
       case 'load-storage':
         return <LoadFromStorage onProgressLoaded={handleProgressLoaded} onBack={() => setCurrentView('list')} />;
+      
+      case 'settings':
+        return <Settings onBack={() => setCurrentView('list')} />;
       
       case 'overview':
         return unitData ? (
