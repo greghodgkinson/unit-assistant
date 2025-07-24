@@ -51,9 +51,26 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
   
   useEffect(() => {
+    const DEFAULT_QUESTIONS = [
+      "Can you help me understand what this task is asking for?",
+      "What are the key points I should cover in my answer?",
+      "How should I structure my response?",
+      "Can you give me an example of what a good answer might include?",
+      "What does this acceptance criteria mean exactly?",
+      "How much detail is expected for this type of task?"
+    ];
+    
     const savedQuestions = localStorage.getItem('learning-assistant-example-questions');
     if (savedQuestions) {
-      setExampleQuestions(JSON.parse(savedQuestions));
+      try {
+        const parsed = JSON.parse(savedQuestions);
+        setExampleQuestions(parsed.length > 0 ? parsed : DEFAULT_QUESTIONS);
+      } catch (error) {
+        console.error('Error parsing saved questions:', error);
+        setExampleQuestions(DEFAULT_QUESTIONS);
+      }
+    } else {
+      setExampleQuestions(DEFAULT_QUESTIONS);
     }
   }, []);
 
