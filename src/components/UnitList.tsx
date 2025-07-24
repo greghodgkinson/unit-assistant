@@ -48,10 +48,6 @@ export const UnitList: React.FC<UnitListProps> = ({
     }
   };
 
-  const handleDownloadProgress = () => {
-    downloadProgressAsJson();
-  };
-
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -90,22 +86,13 @@ export const UnitList: React.FC<UnitListProps> = ({
             Load from Storage
           </button>
           {units.length > 0 && (
-            <>
-              <button
-                onClick={handleDownloadProgress}
-                className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
-              >
-                <Save className="h-5 w-5 mr-2" />
-                Download Progress
-              </button>
-              <button
-                onClick={handleSaveToStorage}
-                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-              >
-                <Save className="h-5 w-5 mr-2" />
-                Save to Storage
-              </button>
-            </>
+            <button
+              onClick={handleSaveToStorage}
+              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+            >
+              <Save className="h-5 w-5 mr-2" />
+              Save to Storage
+            </button>
           )}
         </div>
         <button
