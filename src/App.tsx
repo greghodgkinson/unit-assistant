@@ -208,6 +208,7 @@ function App() {
             onLoadFromStorage={handleLoadFromStorage}
             onOpenSettings={() => setCurrentView('settings')}
             onRemoveUnit={removeUnit}
+            getUnit={getUnit}
           />
         );
       

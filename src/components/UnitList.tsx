@@ -10,6 +10,7 @@ interface UnitListProps {
   onLoadFromStorage: () => void;
   onOpenSettings: () => void;
   onRemoveUnit: (unitId: string) => void;
+  getUnit: (unitId: string) => any;
 }
 
 export const UnitList: React.FC<UnitListProps> = ({
@@ -172,6 +173,24 @@ export const UnitList: React.FC<UnitListProps> = ({
                       <div className="text-xs text-gray-600">Completed</div>
                     </div>
                   </div>
+
+                  {/* Additional Info - Credits and Learning Hours */}
+                  {(units.find(u => u.id === unit.id) && (getUnit(unit.id)?.credits || getUnit(unit.id)?.guided_learning_hours)) && (
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      {getUnit(unit.id)?.credits && (
+                        <div className="text-center p-2 bg-blue-50 rounded-lg">
+                          <div className="text-sm font-bold text-blue-900">{getUnit(unit.id)?.credits}</div>
+                          <div className="text-xs text-blue-700">Credits</div>
+                        </div>
+                      )}
+                      {getUnit(unit.id)?.guided_learning_hours && (
+                        <div className="text-center p-2 bg-purple-50 rounded-lg">
+                          <div className="text-sm font-bold text-purple-900">{getUnit(unit.id)?.guided_learning_hours}h</div>
+                          <div className="text-xs text-purple-700">Guided Hours</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Status and Date */}
                   <div className="flex items-center justify-between text-sm">
