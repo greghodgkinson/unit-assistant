@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Rich text editor styles */
+.ql-editor {
+  min-height: 150px;
+}
+
+.ql-container {
+  font-family: inherit;
+}
+
+.ql-toolbar {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: none;
+}
+
+.ql-container {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-top: none;
+}
