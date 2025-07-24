@@ -214,9 +214,9 @@ export const UnitList: React.FC<UnitListProps> = ({
                           <span className="text-gray-600">Not Started</span>
                         </>
                       )}
-          {units.find(u => u.id === unit.id) && (
-                    <div className="flex items-center text-gray-500">
-              <div className="text-center p-2 bg-blue-50 rounded-lg">
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}
