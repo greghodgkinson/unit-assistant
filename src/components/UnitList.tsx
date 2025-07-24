@@ -69,7 +69,6 @@ export const UnitList: React.FC<UnitListProps> = ({
 
       {/* Add Unit Button */}
       <div className="flex justify-between items-center">
-        <div></div>
         <div className="flex space-x-4">
           <button
             onClick={onAddUnit}
@@ -94,14 +93,14 @@ export const UnitList: React.FC<UnitListProps> = ({
               Save to Storage
             </button>
           )}
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-lg"
+          >
+            <Settings className="h-5 w-5 mr-2" />
+            Settings
+          </button>
         </div>
-        <button
-          onClick={onOpenSettings}
-          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-lg"
-        >
-          <Settings className="h-5 w-5 mr-2" />
-          Settings
-        </button>
       </div>
 
       {/* Units Grid */}
