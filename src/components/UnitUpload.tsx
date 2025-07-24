@@ -211,6 +211,8 @@ export const UnitUpload: React.FC<UnitUploadProps> = ({ onUnitUploaded, onBack }
             <li><code className="bg-blue-100 px-1 rounded">scenario</code> - Learning scenario</li>
             <li><code className="bg-blue-100 px-1 rounded">task</code> - Main task description</li>
             <li><code className="bg-blue-100 px-1 rounded">learning_outcomes</code> - Array of learning outcomes with tasks</li>
+            <li><code className="bg-blue-100 px-1 rounded">credits</code> - (Optional) Number of credits for this unit</li>
+            <li><code className="bg-blue-100 px-1 rounded">guided_learning_hours</code> - (Optional) Guided learning hours</li>
           </ul>
           <p className="mt-3">
             <span className="font-medium">Tip:</span> You can use the existing unit-1.json as a template for the required structure.

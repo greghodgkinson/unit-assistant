@@ -28,6 +28,8 @@ export interface Unit {
   scenario: string;
   task: string;
   learning_outcomes: LearningOutcome[];
+  credits?: number;
+  guided_learning_hours?: number;
 }
 
 export interface StudentAnswer {
