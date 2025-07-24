@@ -19,7 +19,8 @@ export const UnitList: React.FC<UnitListProps> = ({
   onAddUnit,
   onLoadFromStorage,
   onOpenSettings,
-  onRemoveUnit
+  onRemoveUnit,
+  getUnit
 }) => {
   const getProgressPercentage = (unit: UnitSummary) => {
     return unit.totalTasks > 0 ? Math.round((unit.completedTasks / unit.totalTasks) * 100) : 0;
