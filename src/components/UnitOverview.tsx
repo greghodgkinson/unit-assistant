@@ -24,18 +24,14 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
             <Target className="h-6 w-6 mr-2" />
             <span>Tasks: {unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0)}</span>
           </div>
-          {unit.credits && (
-            <div className="flex items-center">
-              <Users className="h-6 w-6 mr-2" />
-              <span>Credits: {unit.credits}</span>
-            </div>
-          )}
-          {unit.guided_learning_hours && (
-            <div className="flex items-center">
-              <Clock className="h-6 w-6 mr-2" />
-              <span>Guided Hours: {unit.guided_learning_hours}</span>
-            </div>
-          )}
+          <div className="flex items-center">
+            <Users className="h-6 w-6 mr-2" />
+            <span>Credits: {unit.credits || 0}</span>
+          </div>
+          <div className="flex items-center">
+            <Clock className="h-6 w-6 mr-2" />
+            <span>Guided Hours: {unit.guided_learning_hours || 0}</span>
+          </div>
           <div className="flex items-center">
             <BookOpen className="h-6 w-6 mr-2" />
             <span>Internship Program</span>

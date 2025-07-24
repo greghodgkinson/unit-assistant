@@ -214,13 +214,9 @@ export const UnitList: React.FC<UnitListProps> = ({
                           <span className="text-gray-600">Not Started</span>
                         </>
                       )}
-                    </div>
+          {units.find(u => u.id === unit.id) && (
                     <div className="flex items-center text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>{unit.lastActivity?.toLocaleDateString() || unit.dateAdded.toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center p-2 bg-blue-50 rounded-lg">
               </div>
             );
           })}
