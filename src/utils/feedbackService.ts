@@ -57,39 +57,24 @@ export const requestFeedback = async (request: FeedbackRequest): Promise<Feedbac
 
 export interface StudentQuestionRequest {
   unitId: string;
-  outcomeTaskId: string;
-  question: string;
-  feedbackType: string;
-  answerText?: string;
+  studentQuestion: string;
   taskDetails?: {
     description: string;
-    type: string;
     acceptance_criteria: Array<{
-      id: string;
       criteria: string;
     }>;
   };
   learningOutcome?: {
-    id: string;
     description: string;
     indicative_content: Array<{
       description: string;
     }>;
   };
-  context: {
-    currentAnswer?: string;
-    taskDescription: string;
-    acceptanceCriteria: Array<{
-      id: string;
-      criteria: string;
-    }>;
-  };
 }
 
 export interface StudentQuestionResponse {
-  answer: string;
-  suggestions?: string[];
-  relatedResources?: string[];
+  studentQuestion: string;
+  response: string;
 }
 
 export const askStudentQuestion = async (request: StudentQuestionRequest): Promise<StudentQuestionResponse> => {
@@ -98,7 +83,10 @@ export const askStudentQuestion = async (request: StudentQuestionRequest): Promi
     const savedUrl = localStorage.getItem('learning-assistant-feedback-service-url');
     const serviceUrl = savedUrl || FEEDBACK_SERVICE_URL;
     
-    const response = await fetch(serviceUrl, {
+    // Use the /student-question endpoint
+    const studentQuestionUrl = serviceUrl.replace('/feedback', '/student-question');
+    
+    const response = await fetch(studentQuestionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -87,24 +87,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
     try {
       const questionRequest: StudentQuestionRequest = {
         unitId: unitId,
-        outcomeTaskId: task.id,
-        question: studentQuestion,
-        feedbackType: 'student-question',
-        answerText: content || '',
+        studentQuestion: studentQuestion,
         taskDetails: {
           description: task.description,
-          type: task.type,
-          acceptance_criteria: task.acceptance_criteria
+          acceptance_criteria: task.acceptance_criteria.map(ac => ({
+            criteria: ac.criteria
+          }))
         },
         learningOutcome: {
-          id: learningOutcome.id,
           description: learningOutcome.description,
           indicative_content: learningOutcome.indicative_content
-        },
-        context: {
-          currentAnswer: content,
-          taskDescription: task.description,
-          acceptanceCriteria: task.acceptance_criteria
         }
       };
       
@@ -603,29 +595,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
                   <div className="text-sm text-purple-800 space-y-2">
-                    <p>{assistantResponse.answer}</p>
-                    
-                    {assistantResponse.suggestions && assistantResponse.suggestions.length > 0 && (
-                      <div>
-                        <h5 className="font-medium mt-3 mb-1">Suggestions:</h5>
-                        <ul className="list-disc list-inside space-y-1">
-                          {assistantResponse.suggestions.map((suggestion, index) => (
-                            <li key={index}>{suggestion}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {assistantResponse.relatedResources && assistantResponse.relatedResources.length > 0 && (
-                      <div>
-                        <h5 className="font-medium mt-3 mb-1">Related Resources:</h5>
-                        <ul className="list-disc list-inside space-y-1">
-                          {assistantResponse.relatedResources.map((resource, index) => (
-                            <li key={index}>{resource}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <p>{assistantResponse.response}</p>
                   </div>
                 </div>
               )}
