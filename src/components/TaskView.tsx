@@ -31,7 +31,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onMarkComplete,
   onNavigateBack,
   onNavigateNext,
- hasNext,
+  hasNext,
   totalTasks = 0,
   completedTasks = 0,
   currentTaskNumber = 1
@@ -126,7 +126,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
- const formatCriteriaText = (text: string) => {
+  const formatCriteriaText = (text: string) => {
     const listItemLineRegex = /^([a-z])\)$/i; // line with just "a)"
     const listItemInlineRegex = /\b([a-z])\)\s*/gi;
     const protectRegex = /\b(part\s+[a-z])\)/gi;
@@ -178,7 +178,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         )}
       </div>
     );
-    };
+  };
 
   const getTaskStatus = () => {
     if (!answer) return 'not-started';
@@ -213,61 +213,62 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
- const formatFeedback = (feedback: string) => {
-  let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
-  cleanFeedback = cleanFeedback
-    .replace(/[�]/g, '') // Remove replacement character
-    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
+  const formatFeedback = (feedback: string) => {
+    let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
+    cleanFeedback = cleanFeedback
+      .replace(/[�]/g, '') // Remove replacement character
+      .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''); // Remove other non-ASCII printable chars
 
-  // Remove Level: and Score: lines from anywhere in the feedback
-  cleanFeedback = cleanFeedback.replace(/\n\s*Level:\s*.*$/gim, '');
-  cleanFeedback = cleanFeedback.replace(/\n\s*Score:\s*.*$/gim, '');
-  cleanFeedback = cleanFeedback.replace(/Level:\s*.*$/gim, '');
-  cleanFeedback = cleanFeedback.replace(/Score:\s*.*$/gim, '');
-  cleanFeedback = cleanFeedback.trim();
+    // Remove Level: and Score: lines from anywhere in the feedback
+    cleanFeedback = cleanFeedback.replace(/\n\s*Level:\s*.*$/gim, '');
+    cleanFeedback = cleanFeedback.replace(/\n\s*Score:\s*.*$/gim, '');
+    cleanFeedback = cleanFeedback.replace(/Level:\s*.*$/gim, '');
+    cleanFeedback = cleanFeedback.replace(/Score:\s*.*$/gim, '');
+    cleanFeedback = cleanFeedback.trim();
 
-  const headerRegex = /\*\*([^*]+)\*\*/g;
-  const sections: { type: 'header' | 'content'; text: string }[] = [];
-  const headers: { header: string; index: number }[] = [];
-  let match: RegExpExecArray | null;
+    const headerRegex = /\*\*([^*]+)\*\*/g;
+    const sections: { type: 'header' | 'content'; text: string }[] = [];
+    const headers: { header: string; index: number }[] = [];
+    let match: RegExpExecArray | null;
 
-  while ((match = headerRegex.exec(cleanFeedback)) !== null) {
-    headers.push({ header: match[1].trim(), index: match.index });
-  }
+    while ((match = headerRegex.exec(cleanFeedback)) !== null) {
+      headers.push({ header: match[1].trim(), index: match.index });
+    }
 
-  for (let i = 0; i < headers.length; i++) {
-    const current = headers[i];
-    const next = headers[i + 1];
-    const contentStart = cleanFeedback.indexOf('**', current.index) + current.header.length + 4;
-    const contentEnd = next ? next.index : cleanFeedback.length;
-    const content = cleanFeedback.slice(contentStart, contentEnd).trim();
+    for (let i = 0; i < headers.length; i++) {
+      const current = headers[i];
+      const next = headers[i + 1];
+      const contentStart = cleanFeedback.indexOf('**', current.index) + current.header.length + 4;
+      const contentEnd = next ? next.index : cleanFeedback.length;
+      const content = cleanFeedback.slice(contentStart, contentEnd).trim();
 
-    sections.push({ type: 'header', text: current.header });
-    sections.push({ type: 'content', text: content || '(No suggestions provided.)' });
-  }
+      sections.push({ type: 'header', text: current.header });
+      sections.push({ type: 'content', text: content || '(No suggestions provided.)' });
+    }
 
-  return (
-    <div className="space-y-4">
-      {sections.map((section, index) => (
-        <div key={index}>
-          {section.type === 'header' ? (
-            <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
-              {section.text}
-            </h3>
-          ) : (
-            <div className="text-gray-700 leading-relaxed">
-              {section.text.trim()
-                ? section.text.split(/\n{2,}|\n/).map((paragraph, pIndex) => (
-                    <p key={pIndex} className="mb-2">{paragraph.trim()}</p>
-                  ))
-                : <p className="italic text-gray-500">No suggestions provided.</p>}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+    return (
+      <div className="space-y-4">
+        {sections.map((section, index) => (
+          <div key={index}>
+            {section.type === 'header' ? (
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
+                {section.text}
+              </h3>
+            ) : (
+              <div className="text-gray-700 leading-relaxed">
+                {section.text.trim()
+                  ? section.text.split(/\n{2,}|\n/).map((paragraph, pIndex) => (
+                      <p key={pIndex} className="mb-2">{paragraph.trim()}</p>
+                    ))
+                  : <p className="italic text-gray-500">No suggestions provided.</p>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
   const taskStatus = getTaskStatus();
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -336,7 +337,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <ReactQuill
               theme="snow"
               value={content}
-             onChange={handleContentChange}
+              onChange={handleContentChange}
               modules={quillModules}
               formats={quillFormats}
               placeholder="Enter your answer here..."
@@ -629,8 +630,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 </button>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Feedback Section */}
