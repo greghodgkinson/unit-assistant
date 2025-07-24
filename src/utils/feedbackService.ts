@@ -59,6 +59,7 @@ export interface StudentQuestionRequest {
   unitId: string;
   outcomeTaskId: string;
   question: string;
+  feedbackType: string;
   context: {
     currentAnswer?: string;
     taskDescription: string;
@@ -86,10 +87,7 @@ export const askStudentQuestion = async (request: StudentQuestionRequest): Promi
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...request,
-        operation: 'student-question'
-      }),
+      body: JSON.stringify(request),
     });
 
     if (!response.ok) {
