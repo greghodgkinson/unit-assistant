@@ -294,7 +294,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <ReactQuill
               theme="snow"
               value={content}
-              onChange={handleContentChange}
+             onChange={handleContentChange}
               modules={quillModules}
               formats={quillFormats}
               placeholder="Enter your answer here..."
@@ -475,7 +475,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           <ReactQuill
             theme="snow"
             value={content}
-            onChange={handleContentChange}
+           onChange={handleContentChange}
             modules={quillModules}
             formats={quillFormats}
             placeholder="Enter your answer here..."
