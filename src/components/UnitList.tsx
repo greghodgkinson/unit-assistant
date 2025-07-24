@@ -72,7 +72,54 @@ export const UnitList: React.FC<UnitListProps> = ({
       </div>
 
       {/* Add Unit Button */}
-      <div className="flex justify-end space-x-4">
+      <div className="flex justify-between items-center">
+        <div></div>
+        <div className="flex space-x-4">
+          <button
+            onClick={onAddUnit}
+            className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add New Unit
+          </button>
+          <button
+            onClick={onLoadFromStorage}
+            className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+          >
+            <Download className="h-5 w-5 mr-2" />
+            Load from Storage
+          </button>
+          {units.length > 0 && (
+            <>
+              <button
+                onClick={handleDownloadProgress}
+                className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+              >
+                <Save className="h-5 w-5 mr-2" />
+                Download Progress
+              </button>
+              <button
+                onClick={handleSaveToStorage}
+                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+              >
+                <Save className="h-5 w-5 mr-2" />
+                Save to Storage
+              </button>
+            </>
+          )}
+        </div>
+        <button
+          onClick={onOpenSettings}
+          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-lg"
+        >
+          <Settings className="h-5 w-5 mr-2" />
+          Settings
+        </button>
+      </div>
+    </div>
+  );
+};
+
         <button
           onClick={onAddUnit}
           className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
