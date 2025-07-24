@@ -449,7 +449,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 Save
               </button>
             )}
-            {answer && !answer.isGoodEnough && (
+            {content.trim() && (!answer || !answer.isGoodEnough) && (
               <button
                 onClick={handleRequestFeedback}
                 disabled={isRequestingFeedback}
@@ -459,7 +459,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
               </button>
             )}
-            {answer && !answer.isGoodEnough && (
+            {content.trim() && (!answer || !answer.isGoodEnough) && (
               <button
                 onClick={onMarkComplete}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
