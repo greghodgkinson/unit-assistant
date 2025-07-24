@@ -90,6 +90,17 @@ export const TaskView: React.FC<TaskViewProps> = ({
         outcomeTaskId: task.id,
         question: studentQuestion,
         feedbackType: 'student-question',
+        answerText: content || '',
+        taskDetails: {
+          description: task.description,
+          type: task.type,
+          acceptance_criteria: task.acceptance_criteria
+        },
+        learningOutcome: {
+          id: learningOutcome.id,
+          description: learningOutcome.description,
+          indicative_content: learningOutcome.indicative_content
+        },
         context: {
           currentAnswer: content,
           taskDescription: task.description,

@@ -60,6 +60,22 @@ export interface StudentQuestionRequest {
   outcomeTaskId: string;
   question: string;
   feedbackType: string;
+  answerText?: string;
+  taskDetails?: {
+    description: string;
+    type: string;
+    acceptance_criteria: Array<{
+      id: string;
+      criteria: string;
+    }>;
+  };
+  learningOutcome?: {
+    id: string;
+    description: string;
+    indicative_content: Array<{
+      description: string;
+    }>;
+  };
   context: {
     currentAnswer?: string;
     taskDescription: string;
