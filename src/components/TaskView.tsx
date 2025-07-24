@@ -335,26 +335,139 @@ export const TaskView: React.FC<TaskViewProps> = ({
         </div>
 
         {/* Fullscreen Answer Section */}
-        <div className="flex-1 p-6 overflow-hidden flex flex-col">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h2>
-          <div className="flex-1 flex flex-col">
-            <ReactQuill
-              theme="snow"
-              value={content}
-              onChange={handleContentChange}
-              modules={quillModules}
-              formats={quillFormats}
-              placeholder="Enter your answer here..."
-              className="flex-1"
-              style={{ height: 'calc(100% - 42px)' }}
-            />
-          </div>
-          {answer && (
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Last saved: {answer.lastModified.toLocaleString()}</p>
-              <p>Version: {answer.version}</p>
+        <div className="flex-1 p-6 overflow-hidden flex">
+          {/* Answer Section */}
+          <div className="flex-1 flex flex-col mr-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h2>
+            <div className="flex-1 flex flex-col">
+              <ReactQuill
+                theme="snow"
+                value={content}
+                onChange={handleContentChange}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Enter your answer here..."
+                className="flex-1"
+                style={{ height: 'calc(100% - 42px)' }}
+              />
             </div>
-          )}
+            {answer && (
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Last saved: {answer.lastModified.toLocaleString()}</p>
+                <p>Version: {answer.version}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Ask Assistant Section in Fullscreen */}
+          <div className={`bg-gray-50 rounded-xl border transition-all duration-300 ${
+            showAskAssistant ? 'w-80' : 'w-16'
+          }`}>
+            {!showAskAssistant ? (
+              /* Collapsed state - just icon */
+              <div className="p-4 flex justify-center">
+                <button
+                  onClick={() => setShowAskAssistant(true)}
+                  className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                  title="Ask Assistant"
+                >
+                  <HelpCircle className="h-6 w-6" />
+                </button>
+              </div>
+            ) : (
+              /* Expanded state - full content */
+              <div className="p-6 h-full overflow-y-auto">
+                <button
+                  onClick={() => setShowAskAssistant(false)}
+                  className="flex items-center justify-between w-full text-left mb-4"
+                >
+                  <div className="flex items-center">
+                    <HelpCircle className="h-5 w-5 text-purple-600 mr-2" />
+                    <h2 className="text-lg font-semibold text-gray-900">Ask Assistant</h2>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500" />
+                </button>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="student-question-fullscreen" className="block text-sm font-medium text-gray-700 mb-2">
+                      What would you like to ask?
+                    </label>
+                    <textarea
+                      id="student-question-fullscreen"
+                      value={studentQuestion}
+                      onChange={(e) => setStudentQuestion(e.target.value)}
+                      placeholder="Ask a question about this task, need clarification on requirements, or want help getting started..."
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={handleAskQuestion}
+                    disabled={!studentQuestion.trim() || isAskingQuestion}
+                    className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isAskingQuestion ? 'Asking...' : 'Ask Question'}
+                  </button>
+                  
+                  {assistantResponse && (
+                    <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
+                      <div className="text-sm text-purple-800 space-y-2">
+                        <p>{assistantResponse.response}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {assistantResponse && (
+                    <button
+                      onClick={() => {
+                        setStudentQuestion('');
+                        setAssistantResponse(null);
+                      }}
+                      className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Ask another question
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onNavigateBack}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </button>
+          
+          <div className="flex items-center space-x-4">
+            {/* Current Task Status */}
+            <div className={`flex items-center px-3 py-1 rounded-full border ${getStatusColor(taskStatus)}`}>
+              {getStatusIcon(taskStatus)}
+              <span className="ml-2 text-sm font-medium">{getStatusText(taskStatus)}</span>
+            </div>
+            
+            {/* Overall Progress */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <BookOpen className="h-4 w-4" />
+              <span>Task {currentTaskNumber} of {totalTasks}</span>
+              <span className="text-gray-400">•</span>
+              <span>{progressPercentage}% Complete</span>
+            </div>
+          </div>
         </div>
       </div>
     );
