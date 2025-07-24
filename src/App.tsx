@@ -27,6 +27,7 @@ function App() {
     refreshProgress,
     updateAnswer,
     markTaskComplete,
+    markTaskIncomplete,
     markAsGoodEnough,
     addFeedback,
     setCurrentTask,
@@ -164,14 +165,30 @@ function App() {
   };
 
   const handleMarkComplete = () => {
-    markAsGoodEnough(progress.currentTask, true);
-    markTaskComplete(progress.currentTask);
+    const currentAnswer = getCurrentAnswer();
+    const isCurrentlyComplete = currentAnswer?.isGoodEnough || false;
     
-    // Update unit progress in the manager
-    if (currentUnitId) {
-      updateUnitProgress(currentUnitId, progress.completedTasks.length + 1);
+    if (isCurrentlyComplete) {
+      // Mark as incomplete
+      markAsGoodEnough(progress.currentTask, false);
+      markTaskIncomplete(progress.currentTask);
+      // Remove from completed tasks
+      if (currentUnitId) {
+        const newCompletedCount = Math.max(0, progress.completedTasks.length - 1);
+        updateUnitProgress(currentUnitId, newCompletedCount);
+      }
+    } else {
+      // Mark as complete
+      markAsGoodEnough(progress.currentTask, true);
+      markTaskComplete(progress.currentTask);
+      
+      // Update unit progress in the manager
+      if (currentUnitId) {
+        updateUnitProgress(currentUnitId, progress.completedTasks.length + 1);
+      }
     }
   };
+    
 
   const handleNavigateNext = () => {
     const nextTask = getNextTask(unitData?.learning_outcomes || []);

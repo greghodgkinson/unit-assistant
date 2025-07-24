@@ -103,6 +103,14 @@ export const useProgress = (unitId: string) => {
     }));
   };
 
+  const markTaskIncomplete = (taskId: string) => {
+    setProgress(prev => ({
+      ...prev,
+      completedTasks: prev.completedTasks.filter(id => id !== taskId),
+      lastActivity: new Date()
+    }));
+  };
+
   const markAsGoodEnough = (taskId: string, isGoodEnough: boolean) => {
     setProgress(prev => ({
       ...prev,
@@ -163,6 +171,7 @@ export const useProgress = (unitId: string) => {
     refreshProgress,
     updateAnswer,
     markTaskComplete,
+    markTaskIncomplete,
     markAsGoodEnough,
     addFeedback,
     setCurrentTask,
