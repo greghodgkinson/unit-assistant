@@ -486,15 +486,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 Mark Incomplete
               </button>
             )}
-            {answer && answer.isGoodEnough && (
-              <button
-                onClick={() => onMarkComplete()}
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Mark Incomplete
-              </button>
-            )}
           </div>
         </div>
         
