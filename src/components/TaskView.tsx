@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 
 interface TaskViewProps {
@@ -38,6 +38,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [isRequestingFeedback, setIsRequestingFeedback] = useState(false);
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [showIndicativeContent, setShowIndicativeContent] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Update content when task changes
   useEffect(() => {
@@ -218,6 +219,74 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const taskStatus = getTaskStatus();
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        {/* Fullscreen Header */}
+        <div className="bg-white border-b p-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <Minimize2 className="h-5 w-5 mr-2" />
+              Exit Fullscreen
+            </button>
+            <div className="text-sm text-gray-600">
+              {learningOutcome.id}: {task.id}
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {hasUnsavedChanges && (
+              <button
+                onClick={handleSave}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save
+              </button>
+            )}
+            {answer && !answer.isGoodEnough && (
+              <button
+                onClick={handleRequestFeedback}
+                disabled={isRequestingFeedback}
+                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+              </button>
+            )}
+            {answer && !answer.isGoodEnough && (
+              <button
+                onClick={onMarkComplete}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark Complete
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Fullscreen Answer Section */}
+        <div className="flex-1 p-6 overflow-hidden flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h2>
+          <textarea
+            value={content}
+            onChange={(e) => handleContentChange(e.target.value)}
+            placeholder="Enter your answer here..."
+            className="flex-1 w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+          />
+          {answer && (
+            <div className="mt-4 text-sm text-gray-600">
+              <p>Last saved: {answer.lastModified.toLocaleString()}</p>
+              <p>Version: {answer.version}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -335,7 +404,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
       {/* Answer Section */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
+            <button
+              onClick={() => setIsFullscreen(true)}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Fullscreen view"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          </div>
           <div className="flex space-x-3">
             {hasUnsavedChanges && (
               <button
