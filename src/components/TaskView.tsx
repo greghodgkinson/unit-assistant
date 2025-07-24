@@ -474,9 +474,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Answer Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex gap-6">
         {/* Your Answer Section */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex-1 bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
@@ -550,67 +550,79 @@ export const TaskView: React.FC<TaskViewProps> = ({
         </div>
 
         {/* Ask Assistant Section */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <button
-            onClick={() => setShowAskAssistant(!showAskAssistant)}
-            className="flex items-center justify-between w-full text-left mb-4"
-          >
-            <div className="flex items-center">
-              <HelpCircle className="h-5 w-5 text-purple-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Ask Assistant</h2>
-            </div>
-            {showAskAssistant ? (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-gray-500" />
-            )}
-          </button>
-          
-          {showAskAssistant && (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="student-question" className="block text-sm font-medium text-gray-700 mb-2">
-                  What would you like to ask?
-                </label>
-                <textarea
-                  id="student-question"
-                  value={studentQuestion}
-                  onChange={(e) => setStudentQuestion(e.target.value)}
-                  placeholder="Ask a question about this task, need clarification on requirements, or want help getting started..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
-                  rows={4}
-                />
-              </div>
-              
+        <div className={`bg-white rounded-xl shadow-sm border transition-all duration-300 ${
+          showAskAssistant ? 'w-80' : 'w-16'
+        }`}>
+          {!showAskAssistant ? (
+            /* Collapsed state - just icon */
+            <div className="p-4 flex justify-center">
               <button
-                onClick={handleAskQuestion}
-                disabled={!studentQuestion.trim() || isAskingQuestion}
-                className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowAskAssistant(true)}
+                className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                title="Ask Assistant"
               >
-                <Send className="h-4 w-4 mr-2" />
-                {isAskingQuestion ? 'Asking...' : 'Ask Question'}
+                <HelpCircle className="h-6 w-6" />
+              </button>
+            </div>
+          ) : (
+            /* Expanded state - full content */
+            <div className="p-6">
+              <button
+                onClick={() => setShowAskAssistant(false)}
+                className="flex items-center justify-between w-full text-left mb-4"
+              >
+                <div className="flex items-center">
+                  <HelpCircle className="h-5 w-5 text-purple-600 mr-2" />
+                  <h2 className="text-lg font-semibold text-gray-900">Ask Assistant</h2>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-500" />
               </button>
               
-              {assistantResponse && (
-                <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
-                  <div className="text-sm text-purple-800 space-y-2">
-                    <p>{assistantResponse.response}</p>
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="student-question" className="block text-sm font-medium text-gray-700 mb-2">
+                    What would you like to ask?
+                  </label>
+                  <textarea
+                    id="student-question"
+                    value={studentQuestion}
+                    onChange={(e) => setStudentQuestion(e.target.value)}
+                    placeholder="Ask a question about this task, need clarification on requirements, or want help getting started..."
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                    rows={4}
+                  />
                 </div>
-              )}
-              
-              {assistantResponse && (
+                
                 <button
-                  onClick={() => {
-                    setStudentQuestion('');
-                    setAssistantResponse(null);
-                  }}
-                  className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  onClick={handleAskQuestion}
+                  disabled={!studentQuestion.trim() || isAskingQuestion}
+                  className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Ask another question
+                  <Send className="h-4 w-4 mr-2" />
+                  {isAskingQuestion ? 'Asking...' : 'Ask Question'}
                 </button>
-              )}
+                
+                {assistantResponse && (
+                  <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
+                    <div className="text-sm text-purple-800 space-y-2">
+                      <p>{assistantResponse.response}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {assistantResponse && (
+                  <button
+                    onClick={() => {
+                      setStudentQuestion('');
+                      setAssistantResponse(null);
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    Ask another question
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
