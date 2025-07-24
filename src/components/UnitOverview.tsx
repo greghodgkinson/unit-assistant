@@ -59,11 +59,11 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
 
       {/* Learning Outcomes Preview */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Learning Outcomes</h2>
+            {unit.guided_learning_hours > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {unit.learning_outcomes.map((lo) => (
             <div key={lo.id} className="p-4 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">{lo.id}</h3>
+            {unit.credits > 0 && (
               <p className="text-sm text-gray-600 mb-3">{lo.description}</p>
               <div className="text-xs text-gray-500">
                 {lo.outcome_tasks.length} task{lo.outcome_tasks.length !== 1 ? 's' : ''}

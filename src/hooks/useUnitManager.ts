@@ -31,6 +31,17 @@ export const useUnitManager = () => {
             lastActivity: unit.lastActivity ? new Date(unit.lastActivity) : undefined,
             dateAdded: new Date(unit.dateAdded)
           }));
+          
+          // Add default values for missing fields in existing units
+          Object.keys(loadedUnits).forEach(unitId => {
+            const unit = loadedUnits[unitId];
+            if (unit.credits === undefined) {
+              unit.credits = 0;
+            }
+            if (unit.guided_learning_hours === undefined) {
+              unit.guided_learning_hours = 0;
+            }
+          });
         }
 
         console.log('Loaded units from storage:', loadedUnits);
@@ -60,19 +71,26 @@ export const useUnitManager = () => {
   const addUnit = (unit: Unit) => {
     const totalTasks = unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
     
+    // Ensure backwards compatibility by adding default values for missing fields
+    const unitWithDefaults: Unit = {
+      ...unit,
+      credits: unit.credits ?? 0,
+      guided_learning_hours: unit.guided_learning_hours ?? 0
+    };
+    
     const unitSummary: UnitSummary = {
-      id: unit.id,
-      title: unit.title,
+      id: unitWithDefaults.id,
+      title: unitWithDefaults.title,
       totalTasks,
       completedTasks: 0,
       dateAdded: new Date()
     };
 
-    setUnits(prev => ({ ...prev, [unit.id]: unit }));
+    setUnits(prev => ({ ...prev, [unitWithDefaults.id]: unitWithDefaults }));
     setUnitList(prev => {
-      const existing = prev.find(u => u.id === unit.id);
+      const existing = prev.find(u => u.id === unitWithDefaults.id);
       if (existing) {
-        return prev.map(u => u.id === unit.id ? unitSummary : u);
+        return prev.map(u => u.id === unitWithDefaults.id ? unitSummary : u);
       }
       return [...prev, unitSummary];
     });
