@@ -47,6 +47,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
   const [assistantResponse, setAssistantResponse] = useState<StudentQuestionResponse | null>(null);
 
+  // Load example questions from localStorage
+  const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const savedQuestions = localStorage.getItem('learning-assistant-example-questions');
+    if (savedQuestions) {
+      setExampleQuestions(JSON.parse(savedQuestions));
+    }
+  }, []);
+
   // Rich text editor configuration
   const quillModules = {
     toolbar: [
@@ -119,6 +129,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
     } finally {
       setIsRequestingFeedback(false);
     }
+  };
+
+  const handleExampleQuestionClick = (question: string) => {
+    setStudentQuestion(question);
   };
 
   const getTaskTypeColor = (type: string) => {
@@ -412,6 +426,24 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     {isAskingQuestion ? 'Asking...' : 'Ask Question'}
                   </button>
                   
+                  {/* Example Questions in Fullscreen */}
+                  {exampleQuestions.length > 0 && !assistantResponse && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Quick Questions:</h4>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {exampleQuestions.map((question, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleExampleQuestionClick(question)}
+                            className="w-full text-left text-xs text-gray-600 hover:text-purple-600 hover:bg-purple-50 p-2 rounded border border-gray-200 hover:border-purple-200 transition-colors"
+                          >
+                            {question}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   {assistantResponse && (
                     <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
@@ -683,6 +715,24 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   <Send className="h-4 w-4 mr-2" />
                   {isAskingQuestion ? 'Asking...' : 'Ask Question'}
                 </button>
+                
+                {/* Example Questions */}
+                {exampleQuestions.length > 0 && !assistantResponse && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Quick Questions:</h4>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {exampleQuestions.map((question, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleExampleQuestionClick(question)}
+                          className="w-full text-left text-xs text-gray-600 hover:text-purple-600 hover:bg-purple-50 p-2 rounded border border-gray-200 hover:border-purple-200 transition-colors"
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {assistantResponse && (
                   <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
