@@ -31,7 +31,11 @@ const FEEDBACK_SERVICE_URL = import.meta.env.VITE_FEEDBACK_SERVICE_URL || 'https
 
 export const requestFeedback = async (request: FeedbackRequest): Promise<FeedbackResponse> => {
   try {
-    const response = await fetch(FEEDBACK_SERVICE_URL, {
+    // Get the service URL from localStorage or use default
+    const savedUrl = localStorage.getItem('learning-assistant-feedback-service-url');
+    const serviceUrl = savedUrl || FEEDBACK_SERVICE_URL;
+    
+    const response = await fetch(serviceUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,5 +52,54 @@ export const requestFeedback = async (request: FeedbackRequest): Promise<Feedbac
   } catch (error) {
     console.error('Error requesting feedback:', error);
     throw new Error('Failed to get feedback from service. Please try again later.');
+  }
+};
+
+export interface StudentQuestionRequest {
+  unitId: string;
+  outcomeTaskId: string;
+  question: string;
+  context: {
+    currentAnswer?: string;
+    taskDescription: string;
+    acceptanceCriteria: Array<{
+      id: string;
+      criteria: string;
+    }>;
+  };
+}
+
+export interface StudentQuestionResponse {
+  answer: string;
+  suggestions?: string[];
+  relatedResources?: string[];
+}
+
+export const askStudentQuestion = async (request: StudentQuestionRequest): Promise<StudentQuestionResponse> => {
+  try {
+    // Get the service URL from localStorage or use default
+    const savedUrl = localStorage.getItem('learning-assistant-feedback-service-url');
+    const serviceUrl = savedUrl || FEEDBACK_SERVICE_URL;
+    
+    const response = await fetch(serviceUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...request,
+        operation: 'student-question'
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Student question service error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error asking student question:', error);
+    throw new Error('Failed to get answer from assistant. Please try again later.');
   }
 };

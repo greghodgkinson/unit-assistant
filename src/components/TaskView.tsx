@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
+import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -41,6 +42,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [showIndicativeContent, setShowIndicativeContent] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAskAssistant, setShowAskAssistant] = useState(false);
+  const [studentQuestion, setStudentQuestion] = useState('');
+  const [isAskingQuestion, setIsAskingQuestion] = useState(false);
+  const [assistantResponse, setAssistantResponse] = useState<StudentQuestionResponse | null>(null);
 
   // Rich text editor configuration
   const quillModules = {
@@ -73,6 +78,34 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const handleSave = () => {
     onAnswerUpdate(content);
     setHasUnsavedChanges(false);
+  };
+
+  const handleAskQuestion = async () => {
+    if (!studentQuestion.trim()) return;
+    
+    setIsAskingQuestion(true);
+    try {
+      const questionRequest: StudentQuestionRequest = {
+        unitId: unitId,
+        outcomeTaskId: task.id,
+        question: studentQuestion,
+        context: {
+          currentAnswer: content,
+          taskDescription: task.description,
+          acceptanceCriteria: task.acceptance_criteria
+        }
+      };
+      
+      const response = await askStudentQuestion(questionRequest);
+      setAssistantResponse(response);
+    } catch (error) {
+      console.error('Error asking question:', error);
+      setAssistantResponse({
+        answer: `Error: ${error instanceof Error ? error.message : 'Failed to get response from assistant'}`
+      });
+    } finally {
+      setIsAskingQuestion(false);
+    }
   };
 
   const handleRequestFeedback = async () => {
@@ -436,75 +469,166 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Answer Section */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
-            <button
-              onClick={() => setIsFullscreen(true)}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-              title="Fullscreen view"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Your Answer Section */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Fullscreen view"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex space-x-3">
+              {hasUnsavedChanges && (
+                <button
+                  onClick={handleSave}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </button>
+              )}
+              {content.trim() && (!answer || !answer.isGoodEnough) && (
+                <button
+                  onClick={handleRequestFeedback}
+                  disabled={isRequestingFeedback}
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+                </button>
+              )}
+              {content.trim() && (!answer || !answer.isGoodEnough) && (
+                <button
+                  onClick={onMarkComplete}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Mark Complete
+                </button>
+              )}
+              {answer && answer.isGoodEnough && (
+                <button
+                  onClick={() => onMarkComplete()}
+                  className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Mark Incomplete
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex space-x-3">
-            {hasUnsavedChanges && (
-              <button
-                onClick={handleSave}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save
-              </button>
-            )}
-            {content.trim() && (!answer || !answer.isGoodEnough) && (
-              <button
-                onClick={handleRequestFeedback}
-                disabled={isRequestingFeedback}
-                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
-              </button>
-            )}
-            {content.trim() && (!answer || !answer.isGoodEnough) && (
-              <button
-                onClick={onMarkComplete}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark Complete
-              </button>
-            )}
-            {answer && answer.isGoodEnough && (
-              <button
-                onClick={() => onMarkComplete()}
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Mark Incomplete
-              </button>
-            )}
+          
+          <div className="h-64">
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={handleContentChange}
+              modules={quillModules}
+              formats={quillFormats}
+              placeholder="Enter your answer here..."
+              style={{ height: '200px' }}
+            />
           </div>
+          
+          {answer && (
+            <div className="mt-4 text-sm text-gray-600">
+              <p>Last saved: {answer.lastModified.toLocaleString()}</p>
+              <p>Version: {answer.version}</p>
+            </div>
+          )}
         </div>
-        
-        <div className="h-64">
-          <ReactQuill
-            theme="snow"
-            value={content}
-           onChange={handleContentChange}
-            modules={quillModules}
-            formats={quillFormats}
-            placeholder="Enter your answer here..."
-            style={{ height: '200px' }}
-          />
-        </div>
-        
-        {answer && (
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Last saved: {answer.lastModified.toLocaleString()}</p>
-            <p>Version: {answer.version}</p>
+
+        {/* Ask Assistant Section */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <button
+            onClick={() => setShowAskAssistant(!showAskAssistant)}
+            className="flex items-center justify-between w-full text-left mb-4"
+          >
+            <div className="flex items-center">
+              <HelpCircle className="h-5 w-5 text-purple-600 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Ask Assistant</h2>
+            </div>
+            {showAskAssistant ? (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+          
+          {showAskAssistant && (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="student-question" className="block text-sm font-medium text-gray-700 mb-2">
+                  What would you like to ask?
+                </label>
+                <textarea
+                  id="student-question"
+                  value={studentQuestion}
+                  onChange={(e) => setStudentQuestion(e.target.value)}
+                  placeholder="Ask a question about this task, need clarification on requirements, or want help getting started..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                  rows={4}
+                />
+              </div>
+              
+              <button
+                onClick={handleAskQuestion}
+                disabled={!studentQuestion.trim() || isAskingQuestion}
+                className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {isAskingQuestion ? 'Asking...' : 'Ask Question'}
+              </button>
+              
+              {assistantResponse && (
+                <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
+                  <div className="text-sm text-purple-800 space-y-2">
+                    <p>{assistantResponse.answer}</p>
+                    
+                    {assistantResponse.suggestions && assistantResponse.suggestions.length > 0 && (
+                      <div>
+                        <h5 className="font-medium mt-3 mb-1">Suggestions:</h5>
+                        <ul className="list-disc list-inside space-y-1">
+                          {assistantResponse.suggestions.map((suggestion, index) => (
+                            <li key={index}>{suggestion}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {assistantResponse.relatedResources && assistantResponse.relatedResources.length > 0 && (
+                      <div>
+                        <h5 className="font-medium mt-3 mb-1">Related Resources:</h5>
+                        <ul className="list-disc list-inside space-y-1">
+                          {assistantResponse.relatedResources.map((resource, index) => (
+                            <li key={index}>{resource}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {assistantResponse && (
+                <button
+                  onClick={() => {
+                    setStudentQuestion('');
+                    setAssistantResponse(null);
+                  }}
+                  className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Ask another question
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
