@@ -440,38 +440,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
     );
   }
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={onNavigateBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </button>
-          
-          <div className="flex items-center space-x-4">
-            {/* Current Task Status */}
-            <div className={`flex items-center px-3 py-1 rounded-full border ${getStatusColor(taskStatus)}`}>
-              {getStatusIcon(taskStatus)}
-              <span className="ml-2 text-sm font-medium">{getStatusText(taskStatus)}</span>
-            </div>
-            
-            {/* Overall Progress */}
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <BookOpen className="h-4 w-4" />
-              <span>Task {currentTaskNumber} of {totalTasks}</span>
-              <span className="text-gray-400">•</span>
-              <span>{progressPercentage}% Complete</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
