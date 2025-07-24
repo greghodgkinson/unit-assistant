@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2 } from 'lucide-react';
 
 interface SettingsProps {
   onBack: () => void;
@@ -7,17 +7,33 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [feedbackServiceUrl, setFeedbackServiceUrl] = useState('');
+  const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
+  const [newQuestion, setNewQuestion] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const DEFAULT_URL = 'https://unit-assistant-service.fly.dev/feedback';
   const STORAGE_KEY = 'learning-assistant-feedback-service-url';
+  const QUESTIONS_STORAGE_KEY = 'learning-assistant-example-questions';
+
+  const DEFAULT_QUESTIONS = [
+    "Can you help me understand what this task is asking for?",
+    "What are the key points I should cover in my answer?",
+    "How should I structure my response?",
+    "Can you give me an example of what a good answer might include?",
+    "What does this acceptance criteria mean exactly?",
+    "How much detail is expected for this type of task?"
+  ];
 
   useEffect(() => {
     // Load saved URL or use default
     const savedUrl = localStorage.getItem(STORAGE_KEY);
     setFeedbackServiceUrl(savedUrl || DEFAULT_URL);
+    
+    // Load saved questions or use defaults
+    const savedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
+    setExampleQuestions(savedQuestions ? JSON.parse(savedQuestions) : DEFAULT_QUESTIONS);
   }, []);
 
   const validateUrl = (url: string): boolean => {
@@ -45,6 +61,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
     try {
       localStorage.setItem(STORAGE_KEY, feedbackServiceUrl);
+      localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(exampleQuestions));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -56,10 +73,21 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
   const handleReset = () => {
     setFeedbackServiceUrl(DEFAULT_URL);
+    setExampleQuestions(DEFAULT_QUESTIONS);
     setError(null);
     setSaved(false);
   };
 
+  const handleAddQuestion = () => {
+    if (newQuestion.trim() && !exampleQuestions.includes(newQuestion.trim())) {
+      setExampleQuestions([...exampleQuestions, newQuestion.trim()]);
+      setNewQuestion('');
+    }
+  };
+
+  const handleRemoveQuestion = (index: number) => {
+    setExampleQuestions(exampleQuestions.filter((_, i) => i !== index));
+  };
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
@@ -139,6 +167,60 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               Reset to Default
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Example Questions Management */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Example Questions</h2>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Manage example questions that students can quickly select when asking the assistant for help.
+          </p>
+          
+          {/* Add New Question */}
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="Enter a new example question..."
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddQuestion()}
+            />
+            <button
+              onClick={handleAddQuestion}
+              disabled={!newQuestion.trim()}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </button>
+          </div>
+          
+          {/* Questions List */}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {exampleQuestions.map((question, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                <span className="text-sm text-gray-800 flex-1">{question}</span>
+                <button
+                  onClick={() => handleRemoveQuestion(index)}
+                  className="ml-3 p-1 text-red-600 hover:text-red-800 transition-colors"
+                  title="Remove question"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          {exampleQuestions.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>No example questions configured.</p>
+              <p className="text-sm">Add some questions above to help students get started.</p>
+            </div>
+          )}
         </div>
       </div>
 
