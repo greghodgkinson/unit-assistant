@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, List } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 
@@ -592,7 +592,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           className="flex items-center justify-between w-full text-left"
         >
           <div className="flex items-center">
-            <List className="h-6 w-6 text-gray-600 mr-3" />
+            <Compass className="h-6 w-6 text-gray-600 mr-3" />
             <h2 className="text-lg font-semibold text-gray-900">Indicative Content</h2>
           </div>
           {showIndicativeContent ? (
