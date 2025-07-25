@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 
 interface ProgressDashboardProps {
@@ -107,7 +107,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
         {unit.learning_outcomes.map((lo) => (
           <div key={lo.id} className="bg-white rounded-xl shadow-sm border p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
+              <div className="flex items-center mb-2">
+                <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
+              </div>
               <p className="text-gray-600 mt-1">{lo.description}</p>
             </div>
             
@@ -125,7 +128,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                     onClick={() => onTaskSelect(lo.id, task.id)}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <span className="font-medium text-gray-900">{task.id}</span>
+                      <div className="flex items-center">
+                        <Target className="h-4 w-4 text-blue-600 mr-2" />
+                        <span className="font-medium text-gray-900">{task.id}</span>
+                      </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTaskTypeColor(task.type)}`}>
                         {task.type}
                       </span>
