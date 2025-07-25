@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, Lightbulb, FileText, CheckSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, List } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 
@@ -526,10 +526,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <Target className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
-            <div className="flex items-center">
-              <Lightbulb className="h-5 w-5 text-yellow-600 mr-2" />
-              <p className="text-gray-600">{learningOutcome.description}</p>
-            </div>
+            <p className="text-gray-600 ml-11">{learningOutcome.description}</p>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
             {task.type}
@@ -595,7 +592,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           className="flex items-center justify-between w-full text-left"
         >
           <div className="flex items-center">
-            <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
+            <List className="h-6 w-6 text-gray-600 mr-3" />
             <h2 className="text-lg font-semibold text-gray-900">Indicative Content</h2>
           </div>
           {showIndicativeContent ? (
