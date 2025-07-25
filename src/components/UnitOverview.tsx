@@ -68,10 +68,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {unit.learning_outcomes.map((lo) => (
             <div key={lo.id} className="p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center mb-2">
-                <Target className="h-5 w-5 text-blue-600 mr-2" />
-                <h3 className="font-medium text-gray-900">{lo.id}</h3>
-              </div>
+              <h3 className="font-medium text-gray-900 mb-2">{lo.id}</h3>
               <p className="text-sm text-gray-600 mb-3">{lo.description}</p>
               <div className="flex items-center text-xs text-gray-500">
                 <CheckSquare className="h-3 w-3 mr-1" />
