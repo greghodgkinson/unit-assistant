@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical } from 'lucide-react';
 
 interface SettingsProps {
   onBack: () => void;
@@ -12,6 +12,8 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const DEFAULT_URL = 'https://unit-assistant-service.fly.dev/feedback';
   const STORAGE_KEY = 'learning-assistant-feedback-service-url';
@@ -88,6 +90,47 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const handleRemoveQuestion = (index: number) => {
     setExampleQuestions(exampleQuestions.filter((_, i) => i !== index));
   };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null) return;
+    
+    const newQuestions = [...exampleQuestions];
+    const draggedQuestion = newQuestions[draggedIndex];
+    
+    // Remove the dragged item
+    newQuestions.splice(draggedIndex, 1);
+    
+    // Insert at the new position
+    const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newQuestions.splice(insertIndex, 0, draggedQuestion);
+    
+    setExampleQuestions(newQuestions);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
@@ -204,13 +247,33 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             {exampleQuestions.map((question, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                 <span className="text-sm text-gray-800 flex-1">{question}</span>
-                <button
-                  onClick={() => handleRemoveQuestion(index)}
-                  className="ml-3 p-1 text-red-600 hover:text-red-800 transition-colors"
-                  title="Remove question"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 cursor-move ${
+                  draggedIndex === index 
+                    ? 'bg-blue-100 border-blue-300 opacity-50' 
+                    : dragOverIndex === index
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                <div className="flex items-center flex-1">
+                  <GripVertical className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
+                  <span className="text-sm text-gray-800 flex-1">{question}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                    {index + 1}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveQuestion(index)}
+                    className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                    title="Remove question"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -221,25 +284,6 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               <p className="text-sm">Add some questions above to help students get started.</p>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Information */}
-      <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-3">About Feedback Service</h3>
-        <div className="text-sm text-blue-800 space-y-2">
-          <p>
-            The feedback service provides AI-powered evaluation of your task responses. 
-            It analyzes your answers against the acceptance criteria and provides detailed feedback.
-          </p>
-          <p>
-            <span className="font-medium">Default Service:</span> The default service is hosted on Fly.dev 
-            and provides reliable feedback for all task types.
-          </p>
-          <p>
-            <span className="font-medium">Custom Service:</span> You can configure a custom feedback service 
-            URL if you're running your own instance or using a different provider.
-          </p>
         </div>
       </div>
     </div>
