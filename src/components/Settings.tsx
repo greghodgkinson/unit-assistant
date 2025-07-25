@@ -149,6 +149,41 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
           <SettingsIcon className="h-12 w-12 text-blue-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
           <p className="text-gray-600">Configure your learning assistant preferences</p>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-center space-x-3 mt-6">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+            
+            <button
+              onClick={handleReset}
+              className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset to Default
+            </button>
+          </div>
+          
+          {/* Status Messages */}
+          {error && (
+            <div className="flex items-center justify-center p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800 text-sm">{error}</span>
+            </div>
+          )}
+
+          {saved && (
+            <div className="flex items-center justify-center p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+              <span className="text-green-800 text-sm">Settings saved successfully!</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -255,41 +290,6 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             </div>
           )}
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex justify-center space-x-3 mt-6">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
-          
-          <button
-            onClick={handleReset}
-            className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset to Default
-          </button>
-        </div>
-        
-        {/* Status Messages */}
-        {error && (
-          <div className="flex items-center justify-center p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
-            <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-            <span className="text-red-800 text-sm">{error}</span>
-          </div>
-        )}
-
-        {saved && (
-          <div className="flex items-center justify-center p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
-            <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-            <span className="text-green-800 text-sm">Settings saved successfully!</span>
-          </div>
-        )}
       </div>
     </div>
   );
