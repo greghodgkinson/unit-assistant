@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
-import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText } from 'lucide-react';
+import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText, Play } from 'lucide-react';
 
 interface UnitOverviewProps {
   unit: Unit;
@@ -112,6 +112,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
           onClick={onStartLearning}
           className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg"
         >
+          <Play className="h-6 w-6 mr-3 inline" />
           Start Learning
         </button>
       </div>
