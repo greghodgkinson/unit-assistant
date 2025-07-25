@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, Lightbulb, FileText, CheckSquare } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 
@@ -522,8 +522,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
         
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
-            <p className="text-gray-600 mt-2">{learningOutcome.description}</p>
+            <div className="flex items-center mb-2">
+              <Target className="h-8 w-8 text-blue-600 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
+            </div>
+            <div className="flex items-center">
+              <Lightbulb className="h-5 w-5 text-yellow-600 mr-2" />
+              <p className="text-gray-600">{learningOutcome.description}</p>
+            </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
             {task.type}
@@ -547,7 +553,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
       {/* Task Description */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Description</h2>
+        <div className="flex items-center mb-4">
+          <CheckSquare className="h-6 w-6 text-green-600 mr-3" />
+          <h2 className="text-lg font-semibold text-gray-900">Task Description</h2>
+        </div>
         <p className="text-gray-700 leading-relaxed">{task.description}</p>
       </div>
 
@@ -557,7 +566,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
           onClick={() => setShowAcceptanceCriteria(!showAcceptanceCriteria)}
           className="flex items-center justify-between w-full text-left"
         >
-          <h2 className="text-lg font-semibold text-gray-900">Acceptance Criteria</h2>
+          <div className="flex items-center">
+            <CheckCircle className="h-6 w-6 text-blue-600 mr-3" />
+            <h2 className="text-lg font-semibold text-gray-900">Acceptance Criteria</h2>
+          </div>
           {showAcceptanceCriteria ? (
             <ChevronDown className="h-5 w-5 text-gray-500" />
           ) : (
@@ -582,7 +594,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
           onClick={() => setShowIndicativeContent(!showIndicativeContent)}
           className="flex items-center justify-between w-full text-left"
         >
-          <h2 className="text-lg font-semibold text-gray-900">Indicative Content</h2>
+          <div className="flex items-center">
+            <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
+            <h2 className="text-lg font-semibold text-gray-900">Indicative Content</h2>
+          </div>
           {showIndicativeContent ? (
             <ChevronDown className="h-5 w-5 text-gray-500" />
           ) : (
@@ -610,6 +625,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         <div className="flex-1 bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
+              <FileText className="h-6 w-6 text-purple-600" />
               <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
               <button
                 onClick={() => setIsFullscreen(true)}
@@ -780,7 +796,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
       {/* Feedback Section */}
       {answer?.feedback && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Feedback</h2>
+          <div className="flex items-center mb-4">
+            <MessageCircle className="h-6 w-6 text-orange-600 mr-3" />
+            <h2 className="text-lg font-semibold text-gray-900">Feedback</h2>
+          </div>
           <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
             {formatFeedback(answer.feedback)}
           </div>
