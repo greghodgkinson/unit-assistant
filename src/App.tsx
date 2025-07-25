@@ -301,7 +301,7 @@ function App() {
               )}
             </div>
             
-            {currentView !== 'list' && currentView !== 'upload' && currentView !== 'overview' && (
+            {currentView !== 'list' && currentView !== 'upload' && currentView !== 'overview' && currentView !== 'settings' && (
               <nav className="flex space-x-4">
                 <button
                   onClick={() => setCurrentView('dashboard')}
