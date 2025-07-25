@@ -245,8 +245,8 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
           {/* Questions List */}
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {exampleQuestions.map((question, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                <span className="text-sm text-gray-800 flex-1">{question}</span>
+              <div
+                key={index}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 cursor-move ${
                   draggedIndex === index 
                     ? 'bg-blue-100 border-blue-300 opacity-50' 
@@ -258,6 +258,9 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+              >
                 <div className="flex items-center flex-1">
                   <GripVertical className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
                   <span className="text-sm text-gray-800 flex-1">{question}</span>
