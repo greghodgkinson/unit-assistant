@@ -115,6 +115,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       const questionRequest: StudentQuestionRequest = {
         unitId: unitId,
         studentQuestion: studentQuestion,
+        currentAnswer: content.trim() || undefined,
         taskDetails: {
           description: task.description,
           acceptance_criteria: task.acceptance_criteria.map(ac => ({

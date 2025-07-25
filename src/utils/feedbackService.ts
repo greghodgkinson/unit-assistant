@@ -58,6 +58,7 @@ export const requestFeedback = async (request: FeedbackRequest): Promise<Feedbac
 export interface StudentQuestionRequest {
   unitId: string;
   studentQuestion: string;
+  currentAnswer?: string;
   taskDetails?: {
     description: string;
     acceptance_criteria: Array<{
