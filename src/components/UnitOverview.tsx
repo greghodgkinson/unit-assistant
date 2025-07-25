@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
-import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock } from 'lucide-react';
+import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText } from 'lucide-react';
 
 interface UnitOverviewProps {
   unit: Unit;
@@ -41,7 +41,10 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
 
       {/* Scenario */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Scenario</h2>
+        <div className="flex items-center mb-4">
+          <MapPin className="h-6 w-6 text-blue-600 mr-3" />
+          <h2 className="text-xl font-semibold text-gray-900">Scenario</h2>
+        </div>
         <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
           <p className="text-gray-800 leading-relaxed">{unit.scenario}</p>
         </div>
@@ -49,13 +52,19 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
 
       {/* Task */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Task</h2>
+        <div className="flex items-center mb-4">
+          <CheckSquare className="h-6 w-6 text-green-600 mr-3" />
+          <h2 className="text-xl font-semibold text-gray-900">Your Task</h2>
+        </div>
         <p className="text-gray-700 leading-relaxed">{unit.task}</p>
       </div>
 
       {/* Learning Outcomes Preview */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Learning Outcomes</h2>
+        <div className="flex items-center mb-4">
+          <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
+          <h2 className="text-xl font-semibold text-gray-900">Learning Outcomes</h2>
+        </div>
         {unit.guided_learning_hours > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {unit.learning_outcomes.map((lo) => (
@@ -79,7 +88,10 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
           onClick={() => setShowInstructions(!showInstructions)}
           className="flex items-center justify-between w-full text-left"
         >
-          <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+          <div className="flex items-center">
+            <FileText className="h-6 w-6 text-purple-600 mr-3" />
+            <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+          </div>
           {showInstructions ? (
             <ChevronDown className="h-5 w-5 text-gray-500" />
           ) : (
