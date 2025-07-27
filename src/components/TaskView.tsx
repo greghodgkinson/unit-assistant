@@ -141,7 +141,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
     // Schedule new autosave in 60 seconds
     autosaveTimerRef.current = setTimeout(() => {
       performAutoSave();
-    }, 60000); // 60 seconds
+    }, 30000); // 30 seconds
   };
 
   const handleContentChange = (value: string) => {
