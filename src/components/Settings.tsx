@@ -160,17 +160,25 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
         workingHours
       };
       
-      await saveSettingsToStorage(settings);
-      
-      // Also update localStorage for backward compatibility and immediate use
+      // Save to localStorage (primary storage)
       localStorage.setItem('learning-assistant-feedback-service-url', feedbackServiceUrl);
       localStorage.setItem('learning-assistant-example-questions', JSON.stringify(exampleQuestions));
       localStorage.setItem('learning-assistant-working-hours', JSON.stringify(workingHours));
       
+      // Try to save to storage file (secondary, silent failure)
+      try {
+        await saveSettingsToStorage(settings);
+        console.log('Settings also saved to storage file');
+      } catch (storageError) {
+        console.warn('Failed to save settings to storage file (continuing anyway):', storageError);
+        // Don't show error to user, just log it
+      }
+      
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to save settings');
+      // This should only catch localStorage errors now
+      setError('Failed to save settings to browser memory');
     } finally {
       setSaving(false);
     }
