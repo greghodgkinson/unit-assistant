@@ -608,7 +608,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">Overall Progress</span>
+            <span className="text-sm text-gray-600">Tasks Completed for Unit</span>
             <span className="text-sm text-gray-600">{completedTasks} of {totalTasks} tasks completed</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
