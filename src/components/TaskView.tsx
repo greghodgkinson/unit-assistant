@@ -310,7 +310,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 bg-white z-50 flex flex-col">
+      <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden">
         {/* Fullscreen Header */}
         <div className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -367,11 +367,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
         </div>
 
         {/* Fullscreen Answer Section */}
-        <div className="flex-1 p-6 overflow-hidden flex">
+        <div className="flex-1 p-6 overflow-y-auto flex min-h-0">
           {/* Answer Section */}
-          <div className="flex-1 flex flex-col mr-6">
+          <div className="flex-1 flex flex-col mr-6 min-h-0">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h2>
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               <ReactQuill
                 theme="snow"
                 value={content}
@@ -379,8 +379,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 modules={quillModules}
                 formats={quillFormats}
                 placeholder="Enter your answer here..."
-                className="flex-1"
-                style={{ height: 'calc(100% - 42px)' }}
+                className="flex-1 min-h-0"
+                style={{ height: '100%' }}
               />
             </div>
             {answer && (
@@ -392,7 +392,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
 
           {/* Ask Assistant Section in Fullscreen */}
-          <div className={`bg-gray-50 rounded-xl border transition-all duration-300 ${
+          <div className={`bg-gray-50 rounded-xl border transition-all duration-300 flex-shrink-0 ${
             showAskAssistant ? 'w-80' : 'w-16'
           }`}>
             {!showAskAssistant ? (
@@ -408,7 +408,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               </div>
             ) : (
               /* Expanded state - full content */
-              <div className="p-6 h-full overflow-y-auto">
+              <div className="p-6 h-full overflow-y-auto flex flex-col">
                 <button
                   onClick={() => setShowAskAssistant(false)}
                   className="flex items-center justify-between w-full text-left mb-4"
@@ -420,7 +420,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   <ChevronRight className="h-5 w-5 text-gray-500" />
                 </button>
                 
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1 overflow-y-auto">
                   <div>
                     <label htmlFor="student-question-fullscreen" className="block text-sm font-medium text-gray-700 mb-2">
                       What would you like to ask?
@@ -446,7 +446,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   
                   {/* Example Questions in Fullscreen */}
                   {exampleQuestions.length > 0 && !assistantResponse && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-shrink-0">
                       <h4 className="text-sm font-medium text-gray-700">Quick Questions:</h4>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
                         {exampleQuestions.map((question, index) => (
@@ -463,10 +463,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   )}
                   
                   {assistantResponse && (
-                    <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200 flex-shrink-0">
                       <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
                       <div className="text-sm text-purple-800 space-y-2">
-                        <p>{assistantResponse.response}</p>
+                        <p>{assistantResponse.answer}</p>
                       </div>
                     </div>
                   )}
@@ -477,7 +477,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                         setStudentQuestion('');
                         setAssistantResponse(null);
                       }}
-                      className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                      className="text-sm text-gray-600 hover:text-gray-800 transition-colors flex-shrink-0"
                     >
                       Ask another question
                     </button>
@@ -769,7 +769,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
                     <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
                     <div className="text-sm text-purple-800 space-y-2">
-                      <p>{assistantResponse.response}</p>
+                      <p>{assistantResponse.answer}</p>
                     </div>
                   </div>
                 )}
