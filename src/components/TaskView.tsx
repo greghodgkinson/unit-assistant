@@ -305,6 +305,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
+  const getCleanTaskDescription = (description: string) => {
+    // Remove number at the beginning if it starts with a number followed by a period and space
+    return description.replace(/^\d+\.\d+\s+/, '');
+  };
+
   const formatFeedback = (feedback: string) => {
     let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
     cleanFeedback = cleanFeedback
@@ -596,7 +601,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <Target className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
-            <p className="text-gray-600 ml-11">{task.description}</p>
+            <p className="text-gray-600 ml-11">{getCleanTaskDescription(task.description)}</p>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
             {task.type}
