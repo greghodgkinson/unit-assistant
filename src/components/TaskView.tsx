@@ -545,7 +545,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200 flex-shrink-0">
                       <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
                       <div className="text-sm text-purple-800 space-y-2">
-                        <p>{assistantResponse.answer}</p>
+                        <div className="whitespace-pre-line">
+                          {assistantResponse.answer.replace(/(\d+\))/g, '\n$1')}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -855,7 +857,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
                     <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
                     <div className="text-sm text-purple-800 space-y-2">
-                      <p>{assistantResponse.answer}</p>
+                      <div className="whitespace-pre-line">
+                        {assistantResponse.answer.replace(/(\d+\))/g, '\n$1')}
+                      </div>
                     </div>
                   </div>
                 )}
