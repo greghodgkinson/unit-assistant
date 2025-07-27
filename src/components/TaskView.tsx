@@ -38,6 +38,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
 }) => {
   const [content, setContent] = useState(answer?.content || '');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [isRequestingFeedback, setIsRequestingFeedback] = useState(false);
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [showIndicativeContent, setShowIndicativeContent] = useState(false);
@@ -46,6 +48,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [studentQuestion, setStudentQuestion] = useState('');
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
   const [assistantResponse, setAssistantResponse] = useState<StudentQuestionResponse | null>(null);
+
+  // Autosave timer ref
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load example questions from localStorage
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
@@ -95,16 +100,66 @@ export const TaskView: React.FC<TaskViewProps> = ({
   useEffect(() => {
     setContent(answer?.content || '');
     setHasUnsavedChanges(false);
+    setLastAutoSave(null);
+    // Clear any existing autosave timer when task changes
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
   }, [answer, task.id]);
+
+  // Cleanup autosave timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const performAutoSave = async () => {
+    if (!hasUnsavedChanges) return;
+    
+    setIsAutoSaving(true);
+    try {
+      onAnswerUpdate(content);
+      setHasUnsavedChanges(false);
+      setLastAutoSave(new Date());
+    } catch (error) {
+      console.error('Autosave failed:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  const scheduleAutoSave = () => {
+    // Clear existing timer
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+    
+    // Schedule new autosave in 60 seconds
+    autosaveTimerRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 60000); // 60 seconds
+  };
 
   const handleContentChange = (value: string) => {
     setContent(value);
     setHasUnsavedChanges(true);
+    scheduleAutoSave();
   };
 
   const handleSave = () => {
+    // Clear autosave timer since we're manually saving
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    
     onAnswerUpdate(content);
     setHasUnsavedChanges(false);
+    setLastAutoSave(new Date());
   };
 
   const handleAskQuestion = async () => {
@@ -329,11 +384,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
             {hasUnsavedChanges && (
               <button
                 onClick={handleSave}
+                disabled={isAutoSaving}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save
+                {isAutoSaving ? 'Auto-saving...' : 'Save'}
               </button>
+            )}
+            {isAutoSaving && !hasUnsavedChanges && (
+              <div className="flex items-center text-sm text-gray-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                Auto-saving...
+              </div>
+            )}
+            {lastAutoSave && !hasUnsavedChanges && !isAutoSaving && (
+              <div className="text-sm text-green-600">
+                Auto-saved at {lastAutoSave.toLocaleTimeString()}
+              </div>
             )}
             {answer && !answer.isGoodEnough && (
               <button
@@ -637,11 +704,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
               {hasUnsavedChanges && (
                 <button
                   onClick={handleSave}
+                  disabled={isAutoSaving}
                   className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isAutoSaving ? 'Auto-saving...' : 'Save'}
                 </button>
+              )}
+              {isAutoSaving && !hasUnsavedChanges && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Auto-saving...
+                </div>
+              )}
+              {lastAutoSave && !hasUnsavedChanges && !isAutoSaving && (
+                <div className="text-sm text-green-600">
+                  Auto-saved at {lastAutoSave.toLocaleTimeString()}
+                </div>
               )}
               {content.trim() && (!answer || !answer.isGoodEnough) && (
                 <button
@@ -689,6 +768,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
           {answer && (
             <div className="mt-4 text-sm text-gray-600">
               <p>Last saved: {answer.lastModified.toLocaleString()}</p>
+            {lastAutoSave && (
+              <p>Last auto-save: {lastAutoSave.toLocaleString()}</p>
+            )}
+             {lastAutoSave && (
+               <p>Last auto-save: {lastAutoSave.toLocaleString()}</p>
+             )}
               <p>Version: {answer.version}</p>
             </div>
           )}
