@@ -74,7 +74,8 @@ export interface StudentQuestionRequest {
 }
 
 export interface StudentQuestionResponse {
-  studentQuestion: string;
+  answer: string;
+  response?: string; // Support both formats
   response: string;
 }
 
@@ -100,7 +101,12 @@ export const askStudentQuestion = async (request: StudentQuestionRequest): Promi
     }
 
     const data = await response.json();
-    return data;
+    
+    // Handle both response formats - some services return 'response', others 'answer'
+    return {
+      answer: data.answer || data.response || 'No response received',
+      response: data.response
+    };
   } catch (error) {
     console.error('Error asking student question:', error);
     throw new Error('Failed to get answer from assistant. Please try again later.');
