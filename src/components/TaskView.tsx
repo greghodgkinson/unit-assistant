@@ -586,8 +586,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <BookOpen className="h-4 w-4" />
               <span>Task {currentTaskNumber} of {totalTasks}</span>
-              <span className="text-gray-400">•</span>
-              <span>{progressPercentage}% Complete</span>
             </div>
           </div>
         </div>
