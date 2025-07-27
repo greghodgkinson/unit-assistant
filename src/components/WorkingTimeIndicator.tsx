@@ -232,7 +232,7 @@ export const WorkingTimeIndicator: React.FC = () => {
             {/* Progress Bar */}
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-600">Daily Progress</span>
+                <span className="text-xs text-gray-600">Time Elapsed</span>
                 <span className="text-xs text-gray-600">
                   {Math.round(workingTimeInfo.progressPercentage)}%
                 </span>
