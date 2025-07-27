@@ -307,7 +307,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   const getCleanTaskDescription = (description: string) => {
     // Remove number at the beginning if it starts with a number followed by a period and space
-    return description.replace(/^\d+\.\d+\s+/, '');
+    // Also remove (LO#) pattern at the end if it exists
+    return description
+      .replace(/^\d+\.\d+\s+/, '')
+      .replace(/\s*\(LO\d+\)\s*$/, '');
   };
 
   const formatFeedback = (feedback: string) => {
