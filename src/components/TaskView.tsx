@@ -4,6 +4,7 @@ import 'react-quill/dist/quill.snow.css';
 import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
+import { WorkingTimeIndicator } from './WorkingTimeIndicator';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -366,6 +367,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden">
+        {/* Working Time Indicator */}
+        <WorkingTimeIndicator />
+        
         {/* Fullscreen Header */}
         <div className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
