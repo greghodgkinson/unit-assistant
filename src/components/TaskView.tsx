@@ -620,28 +620,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
         </div>
       </div>
 
-      {/* Learning Outcome and Task Description */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center mb-3">
-              <Target className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-lg font-semibold text-gray-900">{learningOutcome.id}</h2>
-            </div>
-            <p className="text-gray-600 mb-4 ml-9">{learningOutcome.description}</p>
-            
-            <div className="flex items-center mb-3">
-              <CheckSquare className="h-6 w-6 text-green-600 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900">Task {task.id}</h3>
-            </div>
-            <p className="text-gray-700 leading-relaxed ml-9">{task.description}</p>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)} ml-4 flex-shrink-0`}>
-            {task.type}
-          </span>
-        </div>
-      </div>
-
       {/* Acceptance Criteria */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <button
