@@ -78,10 +78,13 @@ export const WorkingTimeIndicator: React.FC = () => {
         elapsedMinutes: 0,
         remainingMinutes: 0,
         minutesUntilEnd: 0,
+        currentPeriodElapsed: 0,
+        currentPeriodTotal: 0,
         currentPeriod: null,
         nextPeriod: null,
         isCurrentlyWorking: false,
-        progressPercentage: 0
+        progressPercentage: 0,
+        currentPeriodProgressPercentage: 0
       };
     }
 
@@ -100,6 +103,8 @@ export const WorkingTimeIndicator: React.FC = () => {
     let elapsedMinutes = 0;
     let remainingMinutes = totalWorkingMinutes;
     let minutesUntilEnd = 0;
+    let currentPeriodElapsed = 0;
+    let currentPeriodTotal = 0;
     let currentPeriod: WorkingPeriod | null = null;
     let nextPeriod: WorkingPeriod | null = null;
     let isCurrentlyWorking = false;
@@ -124,6 +129,8 @@ export const WorkingTimeIndicator: React.FC = () => {
         currentPeriod = period;
         isCurrentlyWorking = true;
         const elapsedInCurrentPeriod = currentMinutes - startMinutes;
+        currentPeriodElapsed = elapsedInCurrentPeriod;
+        currentPeriodTotal = periodDuration;
         elapsedMinutes += elapsedInCurrentPeriod;
         remainingMinutes = totalWorkingMinutes - elapsedMinutes;
         minutesUntilEnd = endMinutes - currentMinutes;
@@ -157,6 +164,7 @@ export const WorkingTimeIndicator: React.FC = () => {
     }
 
     const progressPercentage = totalWorkingMinutes > 0 ? (elapsedMinutes / totalWorkingMinutes) * 100 : 0;
+    const currentPeriodProgressPercentage = currentPeriodTotal > 0 ? (currentPeriodElapsed / currentPeriodTotal) * 100 : 0;
 
     return {
       isWorkingDay: true,
@@ -164,10 +172,13 @@ export const WorkingTimeIndicator: React.FC = () => {
       elapsedMinutes,
       remainingMinutes,
       minutesUntilEnd,
+      currentPeriodElapsed,
+      currentPeriodTotal,
       currentPeriod,
       nextPeriod,
       isCurrentlyWorking,
-      progressPercentage: Math.min(100, Math.max(0, progressPercentage))
+      progressPercentage: Math.min(100, Math.max(0, progressPercentage)),
+      currentPeriodProgressPercentage: Math.min(100, Math.max(0, currentPeriodProgressPercentage))
     };
   };
 
@@ -229,10 +240,10 @@ export const WorkingTimeIndicator: React.FC = () => {
 
         {workingTimeInfo.isWorkingDay && (
           <>
-            {/* Progress Bar */}
+            {/* Daily Progress Bar */}
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-600">Time Elapsed</span>
+                <span className="text-xs text-gray-600">Daily Time Elapsed</span>
                 <span className="text-xs text-gray-600">
                   {Math.round(workingTimeInfo.progressPercentage)}%
                 </span>
@@ -245,16 +256,40 @@ export const WorkingTimeIndicator: React.FC = () => {
               </div>
             </div>
 
+            {/* Current Period Progress Bar */}
+            {workingTimeInfo.isCurrentlyWorking && (
+              <div className="mb-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-gray-600">Current Period</span>
+                  <span className="text-xs text-gray-600">
+                    {Math.round(workingTimeInfo.currentPeriodProgressPercentage)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-300 bg-green-500"
+                    style={{ width: `${workingTimeInfo.currentPeriodProgressPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
             {/* Time Information */}
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Elapsed:</span>
+                <span className="text-gray-600">Daily Elapsed:</span>
                 <span className="font-medium">{formatMinutes(workingTimeInfo.elapsedMinutes)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Remaining:</span>
+                <span className="text-gray-600">Daily Remaining:</span>
                 <span className="font-medium">{formatMinutes(workingTimeInfo.remainingMinutes)}</span>
               </div>
+              {workingTimeInfo.isCurrentlyWorking && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Period Elapsed:</span>
+                  <span className="font-medium">{formatMinutes(workingTimeInfo.currentPeriodElapsed)}</span>
+                </div>
+              )}
               {workingTimeInfo.isCurrentlyWorking && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Until break:</span>
