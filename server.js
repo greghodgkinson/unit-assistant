@@ -58,17 +58,23 @@ app.get('/api/load-progress/:filename', async (req, res) => {
     const storageDir = path.join(__dirname, 'storage');
     const filePath = path.join(storageDir, filename);
     
+    // Check if file exists before attempting to read
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      throw error;
+    }
+    
     const content = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(content);
     
     res.json({ success: true, data });
   } catch (error) {
     console.error('Error loading progress file:', error);
-    if (error.code === 'ENOENT') {
-      res.status(404).json({ error: 'File not found' });
-    } else {
-      res.status(500).json({ error: 'Failed to load progress file' });
-    }
+    res.status(500).json({ error: 'Failed to load progress file' });
   }
 });
 
