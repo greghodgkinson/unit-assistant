@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical, Clock } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical, Clock, Download, Monitor, Apple, Smartphone } from 'lucide-react';
 
 interface SettingsProps {
   onBack: () => void;
@@ -277,6 +277,168 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     return periods.map(period => `${period.startTime} - ${period.endTime}`).join(', ');
   };
 
+  const downloadRunScript = (platform: 'windows' | 'macos' | 'linux') => {
+    let scriptContent = '';
+    let filename = '';
+    
+    switch (platform) {
+      case 'windows':
+        filename = 'run-unit-assistant.bat';
+        scriptContent = `@echo off
+setlocal
+
+REM Configuration
+set IMAGE_NAME=unit-assistant
+set CONTAINER_NAME=unit-assistant-app
+set PORT=3001
+
+REM Start Podman Desktop (if not already running)
+echo Checking if Podman Desktop is running...
+tasklist /FI "IMAGENAME eq Podman Desktop.exe" | find /I "Podman Desktop.exe" >nul
+
+IF %ERRORLEVEL% NEQ 0 (
+    echo Starting Podman Desktop...
+    start "" "C:\\Program Files\\Podman Desktop\\Podman Desktop.exe"
+) ELSE (
+    echo Podman Desktop is already running.
+)
+
+REM Start Podman machine
+echo Starting Podman machine...
+podman machine start
+
+IF %ERRORLEVEL% NEQ 0 (
+    echo Failed to start Podman machine. Exiting...
+    exit /b 1
+)
+
+REM Check if container exists and start or run it
+echo Checking if container "%CONTAINER_NAME%" exists...
+podman container inspect %CONTAINER_NAME% >nul 2>&1
+
+IF %ERRORLEVEL% EQU 0 (
+    echo Container exists. Starting it...
+    podman start %CONTAINER_NAME%
+) ELSE (
+    echo Container does not exist. Running new container...
+    podman run -d --name %CONTAINER_NAME% -p %PORT%:3001 %IMAGE_NAME%
+)
+
+REM Open browser
+echo Launching http://localhost:%PORT% in browser...
+start http://localhost:%PORT%
+
+echo Done.
+endlocal`;
+        break;
+        
+      case 'macos':
+        filename = 'run-unit-assistant.sh';
+        scriptContent = `#!/bin/bash
+
+# Configuration
+IMAGE_NAME="unit-assistant"
+CONTAINER_NAME="unit-assistant-app"
+PORT="3001"
+
+# Start Podman Desktop (if not already running)
+echo "Checking if Podman Desktop is running..."
+if ! pgrep -f "Podman Desktop" > /dev/null; then
+    echo "Starting Podman Desktop..."
+    open -a "Podman Desktop"
+    sleep 5  # Wait for Podman Desktop to start
+else
+    echo "Podman Desktop is already running."
+fi
+
+# Start Podman machine
+echo "Starting Podman machine..."
+podman machine start
+
+if [ $? -ne 0 ]; then
+    echo "Failed to start Podman machine. Exiting..."
+    exit 1
+fi
+
+# Check if container exists and start or run it
+echo "Checking if container '$CONTAINER_NAME' exists..."
+if podman container inspect $CONTAINER_NAME > /dev/null 2>&1; then
+    echo "Container exists. Starting it..."
+    podman start $CONTAINER_NAME
+else
+    echo "Container does not exist. Running new container..."
+    podman run -d --name $CONTAINER_NAME -p $PORT:3001 $IMAGE_NAME
+fi
+
+# Open browser
+echo "Launching http://localhost:$PORT in browser..."
+open "http://localhost:$PORT"
+
+echo "Done."`;
+        break;
+        
+      case 'linux':
+        filename = 'run-unit-assistant.sh';
+        scriptContent = `#!/bin/bash
+
+# Configuration
+IMAGE_NAME="unit-assistant"
+CONTAINER_NAME="unit-assistant-app"
+PORT="3001"
+
+# Start Podman Desktop (if available)
+echo "Checking if Podman Desktop is available..."
+if command -v podman-desktop > /dev/null; then
+    if ! pgrep -f "podman-desktop" > /dev/null; then
+        echo "Starting Podman Desktop..."
+        podman-desktop &
+        sleep 5  # Wait for Podman Desktop to start
+    else
+        echo "Podman Desktop is already running."
+    fi
+else
+    echo "Podman Desktop not found. Using CLI mode."
+fi
+
+# Start Podman machine (if using machine-based setup)
+echo "Starting Podman machine..."
+podman machine start 2>/dev/null || echo "No machine setup detected, continuing with system Podman..."
+
+# Check if container exists and start or run it
+echo "Checking if container '$CONTAINER_NAME' exists..."
+if podman container inspect $CONTAINER_NAME > /dev/null 2>&1; then
+    echo "Container exists. Starting it..."
+    podman start $CONTAINER_NAME
+else
+    echo "Container does not exist. Running new container..."
+    podman run -d --name $CONTAINER_NAME -p $PORT:3001 $IMAGE_NAME
+fi
+
+# Open browser
+echo "Launching http://localhost:$PORT in browser..."
+if command -v xdg-open > /dev/null; then
+    xdg-open "http://localhost:$PORT"
+elif command -v gnome-open > /dev/null; then
+    gnome-open "http://localhost:$PORT"
+else
+    echo "Please open http://localhost:$PORT in your browser manually."
+fi
+
+echo "Done."`;
+        break;
+    }
+    
+    const blob = new Blob([scriptContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
@@ -511,6 +673,79 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Download Run Scripts */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Download className="h-5 w-5 mr-2" />
+          Download Run Scripts
+        </h2>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Download platform-specific scripts to easily run the Unit Assistant application on your local machine using Podman.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Windows */}
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <Monitor className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-medium text-gray-900 mb-2">Windows</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Batch script for Windows with Podman Desktop
+              </p>
+              <button
+                onClick={() => downloadRunScript('windows')}
+                className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download .bat
+              </button>
+            </div>
+            
+            {/* macOS */}
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <Apple className="h-8 w-8 text-gray-800 mx-auto mb-3" />
+              <h3 className="font-medium text-gray-900 mb-2">macOS</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Shell script for macOS with Podman Desktop
+              </p>
+              <button
+                onClick={() => downloadRunScript('macos')}
+                className="w-full flex items-center justify-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download .sh
+              </button>
+            </div>
+            
+            {/* Linux */}
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <Smartphone className="h-8 w-8 text-orange-600 mx-auto mb-3" />
+              <h3 className="font-medium text-gray-900 mb-2">Linux</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Shell script for Linux with optional Podman Desktop
+              </p>
+              <button
+                onClick={() => downloadRunScript('linux')}
+                className="w-full flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download .sh
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 rounded-lg p-4 mt-4">
+            <h4 className="font-medium text-blue-900 mb-2">Usage Instructions:</h4>
+            <div className="text-sm text-blue-800 space-y-1">
+              <p><strong>Windows:</strong> Double-click the downloaded .bat file to run</p>
+              <p><strong>macOS/Linux:</strong> Make executable with <code className="bg-blue-100 px-1 rounded">chmod +x filename.sh</code> then run <code className="bg-blue-100 px-1 rounded">./filename.sh</code></p>
+              <p className="mt-2"><strong>Prerequisites:</strong> Podman and Podman Desktop must be installed on your system</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
