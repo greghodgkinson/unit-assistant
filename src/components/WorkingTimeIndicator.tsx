@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Coffee, AlertTriangle } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface WorkingPeriod {
   id: string;
@@ -188,21 +188,6 @@ export const WorkingTimeIndicator: React.FC = () => {
     return 'bg-green-100 text-green-700';
   };
 
-  const getProgressColor = (info: ReturnType<typeof getCurrentWorkingTimeInfo>) => {
-    if (!info.isWorkingDay) return 'bg-gray-300';
-    if (!info.isCurrentlyWorking) return 'bg-blue-500';
-    if (info.minutesUntilEnd <= 30) return 'bg-red-500';
-    if (info.minutesUntilEnd <= 60) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  const getStatusIcon = (info: ReturnType<typeof getCurrentWorkingTimeInfo>) => {
-    if (!info.isWorkingDay) return <Coffee className="h-4 w-4" />;
-    if (!info.isCurrentlyWorking) return <Clock className="h-4 w-4" />;
-    if (info.minutesUntilEnd <= 30) return <AlertTriangle className="h-4 w-4" />;
-    return <Clock className="h-4 w-4" />;
-  };
-
   const workingTimeInfo = getCurrentWorkingTimeInfo();
 
   if (!isVisible) {
@@ -221,11 +206,10 @@ export const WorkingTimeIndicator: React.FC = () => {
 
   return (
     <div className="fixed top-4 right-4 z-50">
-      <div className={`rounded-lg shadow-lg border p-4 min-w-64 ${getStatusColor(workingTimeInfo)} bg-white`}>
+      <div className="rounded-lg shadow-lg border p-4 min-w-64 bg-white">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon(workingTimeInfo)}
-            <span className="font-medium text-sm">
+          <div>
+            <span className="font-medium text-sm text-gray-900">
               {!workingTimeInfo.isWorkingDay 
                 ? 'Non-working day' 
                 : workingTimeInfo.isCurrentlyWorking 
@@ -255,7 +239,7 @@ export const WorkingTimeIndicator: React.FC = () => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(workingTimeInfo)}`}
+                  className="h-2 rounded-full transition-all duration-300 bg-blue-500"
                   style={{ width: `${workingTimeInfo.progressPercentage}%` }}
                 ></div>
               </div>
@@ -274,10 +258,7 @@ export const WorkingTimeIndicator: React.FC = () => {
               {workingTimeInfo.isCurrentlyWorking && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Until break:</span>
-                  <span className={`font-medium ${
-                    workingTimeInfo.minutesUntilEnd <= 30 ? 'text-red-600' : 
-                    workingTimeInfo.minutesUntilEnd <= 60 ? 'text-yellow-600' : 'text-green-600'
-                  }`}>
+                  <span className="font-medium text-gray-900">
                     {formatMinutes(workingTimeInfo.minutesUntilEnd)}
                   </span>
                 </div>
@@ -304,7 +285,6 @@ export const WorkingTimeIndicator: React.FC = () => {
 
         {!workingTimeInfo.isWorkingDay && (
           <div className="text-center text-sm text-gray-600">
-            <Coffee className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p>Enjoy your day off!</p>
           </div>
         )}
