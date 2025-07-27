@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical, Clock } from 'lucide-react';
 
 interface SettingsProps {
   onBack: () => void;
+}
+
+interface WorkingPeriod {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface WorkingHours {
+  [key: string]: WorkingPeriod[];
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [feedbackServiceUrl, setFeedbackServiceUrl] = useState('');
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
+  const [workingHours, setWorkingHours] = useState<WorkingHours>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +29,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const DEFAULT_URL = 'https://unit-assistant-service.fly.dev/feedback';
   const STORAGE_KEY = 'learning-assistant-feedback-service-url';
   const QUESTIONS_STORAGE_KEY = 'learning-assistant-example-questions';
+  const WORKING_HOURS_STORAGE_KEY = 'learning-assistant-working-hours';
 
   const DEFAULT_QUESTIONS = [
     "Can you help me understand what this task is asking for?",
@@ -28,6 +40,26 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     "How much detail is expected for this type of task?"
   ];
 
+  const DAYS_OF_WEEK = [
+    { key: 'monday', label: 'Monday' },
+    { key: 'tuesday', label: 'Tuesday' },
+    { key: 'wednesday', label: 'Wednesday' },
+    { key: 'thursday', label: 'Thursday' },
+    { key: 'friday', label: 'Friday' },
+    { key: 'saturday', label: 'Saturday' },
+    { key: 'sunday', label: 'Sunday' }
+  ];
+
+  const DEFAULT_WORKING_HOURS: WorkingHours = {
+    monday: [{ id: '1', startTime: '09:00', endTime: '17:00' }],
+    tuesday: [{ id: '1', startTime: '09:00', endTime: '17:00' }],
+    wednesday: [{ id: '1', startTime: '09:00', endTime: '17:00' }],
+    thursday: [{ id: '1', startTime: '09:00', endTime: '17:00' }],
+    friday: [{ id: '1', startTime: '09:00', endTime: '17:00' }],
+    saturday: [],
+    sunday: []
+  };
+
   useEffect(() => {
     // Load saved URL or use default
     const savedUrl = localStorage.getItem(STORAGE_KEY);
@@ -36,6 +68,10 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     // Load saved questions or use defaults
     const savedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
     setExampleQuestions(savedQuestions ? JSON.parse(savedQuestions) : DEFAULT_QUESTIONS);
+    
+    // Load saved working hours or use defaults
+    const savedWorkingHours = localStorage.getItem(WORKING_HOURS_STORAGE_KEY);
+    setWorkingHours(savedWorkingHours ? JSON.parse(savedWorkingHours) : DEFAULT_WORKING_HOURS);
   }, []);
 
   const validateUrl = (url: string): boolean => {
@@ -64,6 +100,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     try {
       localStorage.setItem(STORAGE_KEY, feedbackServiceUrl);
       localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(exampleQuestions));
+      localStorage.setItem(WORKING_HOURS_STORAGE_KEY, JSON.stringify(workingHours));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -76,6 +113,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const handleReset = () => {
     setFeedbackServiceUrl(DEFAULT_URL);
     setExampleQuestions(DEFAULT_QUESTIONS);
+    setWorkingHours(DEFAULT_WORKING_HOURS);
     setError(null);
     setSaved(false);
   };
@@ -129,6 +167,40 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+  };
+
+  const addWorkingPeriod = (day: string) => {
+    const newPeriod: WorkingPeriod = {
+      id: Date.now().toString(),
+      startTime: '09:00',
+      endTime: '17:00'
+    };
+    
+    setWorkingHours(prev => ({
+      ...prev,
+      [day]: [...(prev[day] || []), newPeriod]
+    }));
+  };
+
+  const removeWorkingPeriod = (day: string, periodId: string) => {
+    setWorkingHours(prev => ({
+      ...prev,
+      [day]: prev[day]?.filter(period => period.id !== periodId) || []
+    }));
+  };
+
+  const updateWorkingPeriod = (day: string, periodId: string, field: 'startTime' | 'endTime', value: string) => {
+    setWorkingHours(prev => ({
+      ...prev,
+      [day]: prev[day]?.map(period => 
+        period.id === periodId ? { ...period, [field]: value } : period
+      ) || []
+    }));
+  };
+
+  const formatWorkingHoursSummary = (periods: WorkingPeriod[]) => {
+    if (!periods || periods.length === 0) return 'No working hours';
+    return periods.map(period => `${period.startTime} - ${period.endTime}`).join(', ');
   };
 
   return (
@@ -289,6 +361,82 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               <p className="text-sm">Add some questions above to help students get started.</p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Working Hours Configuration */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Clock className="h-5 w-5 mr-2" />
+          Working Hours
+        </h2>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Define your working hours for each day of the week. You can add multiple working periods per day.
+          </p>
+          
+          {DAYS_OF_WEEK.map(day => (
+            <div key={day.key} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-medium text-gray-900">{day.label}</h3>
+                  <p className="text-sm text-gray-500">
+                    {formatWorkingHoursSummary(workingHours[day.key] || [])}
+                  </p>
+                </div>
+                <button
+                  onClick={() => addWorkingPeriod(day.key)}
+                  className="flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Period
+                </button>
+              </div>
+              
+              {workingHours[day.key] && workingHours[day.key].length > 0 && (
+                <div className="space-y-2">
+                  {workingHours[day.key].map((period, index) => (
+                    <div key={period.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm text-gray-600">From:</label>
+                        <input
+                          type="time"
+                          value={period.startTime}
+                          onChange={(e) => updateWorkingPeriod(day.key, period.id, 'startTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm text-gray-600">To:</label>
+                        <input
+                          type="time"
+                          value={period.endTime}
+                          onChange={(e) => updateWorkingPeriod(day.key, period.id, 'endTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      
+                      <button
+                        onClick={() => removeWorkingPeriod(day.key, period.id)}
+                        className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                        title="Remove working period"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {(!workingHours[day.key] || workingHours[day.key].length === 0) && (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  No working hours set for {day.label}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
