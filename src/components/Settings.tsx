@@ -15,6 +15,11 @@ interface WorkingHours {
   [key: string]: WorkingPeriod[];
 }
 
+interface SettingsData {
+  feedbackServiceUrl: string;
+  exampleQuestions: string[];
+  workingHours: WorkingHours;
+}
 export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [feedbackServiceUrl, setFeedbackServiceUrl] = useState('');
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
@@ -27,9 +32,6 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const DEFAULT_URL = 'https://unit-assistant-service.fly.dev/feedback';
-  const STORAGE_KEY = 'learning-assistant-feedback-service-url';
-  const QUESTIONS_STORAGE_KEY = 'learning-assistant-example-questions';
-  const WORKING_HOURS_STORAGE_KEY = 'learning-assistant-working-hours';
 
   const DEFAULT_QUESTIONS = [
     "Can you help me understand what this task is asking for?",
@@ -60,18 +62,72 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     sunday: []
   };
 
+  const loadSettingsFromStorage = async (): Promise<SettingsData | null> => {
+    try {
+      const response = await fetch('/api/load-progress/settings.json');
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Settings file doesn't exist yet
+        }
+        throw new Error(`Failed to load settings: ${response.status}`);
+      }
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.warn('Failed to load settings from storage:', error);
+      return null;
+    }
+  };
+
+  const saveSettingsToStorage = async (settings: SettingsData): Promise<void> => {
+    try {
+      const response = await fetch('/api/save-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: 'settings.json',
+          content: JSON.stringify(settings, null, 2)
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorData}`);
+      }
+    } catch (error) {
+      console.error('Error saving settings to storage:', error);
+      if (error.message.includes('fetch') || error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        throw new Error('Backend server not running. Please open a second terminal and run "npm run server" to start the Express server, then try again.');
+      }
+      throw error;
+    }
+  };
   useEffect(() => {
-    // Load saved URL or use default
-    const savedUrl = localStorage.getItem(STORAGE_KEY);
-    setFeedbackServiceUrl(savedUrl || DEFAULT_URL);
-    
-    // Load saved questions or use defaults
-    const savedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
-    setExampleQuestions(savedQuestions ? JSON.parse(savedQuestions) : DEFAULT_QUESTIONS);
-    
-    // Load saved working hours or use defaults
-    const savedWorkingHours = localStorage.getItem(WORKING_HOURS_STORAGE_KEY);
-    setWorkingHours(savedWorkingHours ? JSON.parse(savedWorkingHours) : DEFAULT_WORKING_HOURS);
+    const loadSettings = async () => {
+      try {
+        const settings = await loadSettingsFromStorage();
+        if (settings) {
+          setFeedbackServiceUrl(settings.feedbackServiceUrl || DEFAULT_URL);
+          setExampleQuestions(settings.exampleQuestions || DEFAULT_QUESTIONS);
+          setWorkingHours(settings.workingHours || DEFAULT_WORKING_HOURS);
+        } else {
+          // Use defaults if no settings file exists
+          setFeedbackServiceUrl(DEFAULT_URL);
+          setExampleQuestions(DEFAULT_QUESTIONS);
+          setWorkingHours(DEFAULT_WORKING_HOURS);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        // Fall back to defaults on error
+        setFeedbackServiceUrl(DEFAULT_URL);
+        setExampleQuestions(DEFAULT_QUESTIONS);
+        setWorkingHours(DEFAULT_WORKING_HOURS);
+      }
+    };
+
+    loadSettings();
   }, []);
 
   const validateUrl = (url: string): boolean => {
@@ -83,7 +139,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!feedbackServiceUrl.trim()) {
       setError('URL cannot be empty');
       return;
@@ -98,13 +154,23 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     setError(null);
 
     try {
-      localStorage.setItem(STORAGE_KEY, feedbackServiceUrl);
-      localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(exampleQuestions));
-      localStorage.setItem(WORKING_HOURS_STORAGE_KEY, JSON.stringify(workingHours));
+      const settings: SettingsData = {
+        feedbackServiceUrl,
+        exampleQuestions,
+        workingHours
+      };
+      
+      await saveSettingsToStorage(settings);
+      
+      // Also update localStorage for backward compatibility and immediate use
+      localStorage.setItem('learning-assistant-feedback-service-url', feedbackServiceUrl);
+      localStorage.setItem('learning-assistant-example-questions', JSON.stringify(exampleQuestions));
+      localStorage.setItem('learning-assistant-working-hours', JSON.stringify(workingHours));
+      
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
-      setError('Failed to save settings');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to save settings');
     } finally {
       setSaving(false);
     }
