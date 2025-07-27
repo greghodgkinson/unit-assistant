@@ -6,6 +6,7 @@ import { Settings } from './components/Settings';
 import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
+import { WorkingTimeIndicator } from './components/WorkingTimeIndicator';
 import { useProgress } from './hooks/useProgress';
 import { useUnitManager } from './hooks/useUnitManager';
 import { requestFeedback } from './utils/feedbackService';
@@ -286,6 +287,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Working Time Indicator */}
+      <WorkingTimeIndicator />
+      
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
