@@ -28,9 +28,12 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
       setError(null);
       const storageFiles = await getStorageFiles();
       
+      // Filter out settings.json file
+      const progressFiles = storageFiles.filter(file => file.name !== 'settings.json');
+      
       // Load preview data for each file
       const filesWithPreview = await Promise.all(
-        storageFiles.map(async (file) => {
+        progressFiles.map(async (file) => {
           try {
             const progressData = await loadProgressFromStorage(file.name);
             const totalTasks = Object.values(progressData.units).reduce(
