@@ -146,16 +146,17 @@ export const WorkingTimeIndicator: React.FC = () => {
         }
         
         // Calculate elapsed time: all completed periods + elapsed in current period
-        elapsedMinutes = 0;
+        // Calculate elapsed time: all completed periods + elapsed in current period
+        let totalElapsedMinutes = 0;
         for (let j = 0; j < i; j++) {
           const completedPeriod = sortedPeriods[j];
           const compStart = parseTime(completedPeriod.startTime);
           const compEnd = parseTime(completedPeriod.endTime);
           const compStartMinutes = timeToMinutes(compStart.hours, compStart.minutes);
           const compEndMinutes = timeToMinutes(compEnd.hours, compEnd.minutes);
-          elapsedMinutes += (compEndMinutes - compStartMinutes);
+          totalElapsedMinutes += (compEndMinutes - compStartMinutes);
         }
-        elapsedMinutes += elapsedInCurrentPeriod;
+        elapsedMinutes = totalElapsedMinutes + elapsedInCurrentPeriod;
         break;
       } else if (currentMinutes < startMinutes) {
         // Before this period starts
