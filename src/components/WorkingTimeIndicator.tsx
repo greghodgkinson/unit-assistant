@@ -159,6 +159,7 @@ export const WorkingTimeIndicator: React.FC = () => {
            const remEndMinutes = timeToMinutes(remEnd.hours, remEnd.minutes);
            remainingMinutes += (remEndMinutes - remStartMinutes);
          }
+        }
         remainingMinutes = totalWorkingMinutes - elapsedMinutes;
         break;
       } else {
