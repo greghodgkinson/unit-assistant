@@ -300,6 +300,10 @@ export const WorkingTimeIndicator: React.FC = () => {
             {/* Time Information */}
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-gray-600">Total Daily:</span>
+                <span className="font-medium">{formatMinutes(workingTimeInfo.totalWorkingMinutes)}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-600">Daily Elapsed:</span>
                 <span className="font-medium">{formatMinutes(workingTimeInfo.elapsedMinutes)}</span>
               </div>
