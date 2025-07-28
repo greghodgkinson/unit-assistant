@@ -131,10 +131,10 @@ export const WorkingTimeIndicator: React.FC = () => {
         const elapsedInCurrentPeriod = currentMinutes - startMinutes;
         currentPeriodElapsed = elapsedInCurrentPeriod;
         currentPeriodTotal = periodDuration;
-        elapsedMinutes += elapsedInCurrentPeriod;
         remainingMinutes = totalWorkingMinutes - elapsedMinutes;
         minutesUntilEnd = endMinutes - currentMinutes;
-        
+         // Calculate remaining time: time left in current period + all future periods
+         remainingMinutes = minutesUntilEnd;
         // Add remaining time from future periods
         for (let j = i + 1; j < sortedPeriods.length; j++) {
           const futurePeriod = sortedPeriods[j];
@@ -149,7 +149,16 @@ export const WorkingTimeIndicator: React.FC = () => {
         // Before this period starts
         if (!nextPeriod) {
           nextPeriod = period;
-        }
+         // Calculate remaining time: all remaining periods (including this one)
+         remainingMinutes = 0;
+         for (let j = i; j < sortedPeriods.length; j++) {
+           const remainingPeriod = sortedPeriods[j];
+           const remStart = parseTime(remainingPeriod.startTime);
+           const remEnd = parseTime(remainingPeriod.endTime);
+           const remStartMinutes = timeToMinutes(remStart.hours, remStart.minutes);
+           const remEndMinutes = timeToMinutes(remEnd.hours, remEnd.minutes);
+           remainingMinutes += (remEndMinutes - remStartMinutes);
+         }
         remainingMinutes = totalWorkingMinutes - elapsedMinutes;
         break;
       } else {
