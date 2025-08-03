@@ -61,9 +61,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
   
   useEffect(() => {
+    // Default questions are now managed in Settings component
     const DEFAULT_QUESTIONS = [
       "Can you help me understand what this task is asking for?",
-      "What are the key points I should cover in my answer?",
+      "What are the key points I should cover in my answer?", 
       "How should I structure my response?",
       "Can you give me an example of what a good answer might include?",
       "What does this acceptance criteria mean exactly?",
