@@ -68,7 +68,7 @@ export const saveProgressToStorageFolder = async () => {
   const exportData = exportAllProgress();
   const jsonString = JSON.stringify(exportData, null, 2);
   const fileSizeInBytes = new Blob([jsonString]).size;
-  const maxSizeInBytes = 1024 * 1024; // 1MB limit
+  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB limit
   
   const now = new Date();
   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
