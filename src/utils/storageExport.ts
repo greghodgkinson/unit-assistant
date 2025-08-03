@@ -67,34 +67,107 @@ export const downloadProgressAsJson = () => {
 export const saveProgressToStorageFolder = async () => {
   const exportData = exportAllProgress();
   const jsonString = JSON.stringify(exportData, null, 2);
+  const fileSizeInBytes = new Blob([jsonString]).size;
+  const maxSizeInBytes = 1024 * 1024; // 1MB limit
+  
   const now = new Date();
   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
-  const fileName = `learning-progress-${timestamp}.json`;
   
   try {
     console.log('Attempting to save to storage folder...');
-    const response = await fetch('/api/save-progress', {
+    
+    // If file is small enough, save as single file
+    if (fileSizeInBytes <= maxSizeInBytes) {
+      const fileName = `learning-progress-${timestamp}.json`;
+      const response = await fetch('/api/save-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName,
+          content: jsonString
+        })
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server response:', errorData);
+        throw new Error(`Server error: ${response.status} - ${errorData}`);
+      }
+      
+      const result = await response.json();
+      console.log('Save successful:', result);
+      return result;
+    }
+    
+    // File is too large, save in chunks
+    console.log(`File size (${(fileSizeInBytes / 1024 / 1024).toFixed(2)}MB) exceeds limit, saving in chunks...`);
+    
+    // Create metadata file
+    const metadata = {
+      originalFileName: `learning-progress-${timestamp}.json`,
+      timestamp,
+      totalUnits: exportData.totalUnits,
+      exportDate: exportData.exportDate,
+      isChunked: true,
+      unitIds: Object.keys(exportData.units)
+    };
+    
+    const metadataResponse = await fetch('/api/save-progress', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        fileName,
-        content: jsonString
+        fileName: `learning-progress-${timestamp}-metadata.json`,
+        content: JSON.stringify(metadata, null, 2)
       })
     });
     
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Server response:', errorData);
-      throw new Error(`Server error: ${response.status} - ${errorData}`);
+    if (!metadataResponse.ok) {
+      throw new Error(`Failed to save metadata: ${metadataResponse.status}`);
     }
     
-    const result = await response.json();
-    console.log('Save successful:', result);
-    return result;
+    // Save each unit separately
+    const savedChunks = [];
+    for (const [unitId, unitData] of Object.entries(exportData.units)) {
+      const chunkData = {
+        exportDate: exportData.exportDate,
+        totalUnits: 1,
+        units: { [unitId]: unitData }
+      };
+      
+      const chunkFileName = `learning-progress-${timestamp}-unit-${unitId}.json`;
+      const chunkResponse = await fetch('/api/save-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: chunkFileName,
+          content: JSON.stringify(chunkData, null, 2)
+        })
+      });
+      
+      if (!chunkResponse.ok) {
+        throw new Error(`Failed to save unit ${unitId}: ${chunkResponse.status}`);
+      }
+      
+      savedChunks.push(chunkFileName);
+      console.log(`Saved chunk: ${chunkFileName}`);
+    }
+    
+    console.log('All chunks saved successfully');
+    return {
+      success: true,
+      message: `Progress saved in ${savedChunks.length + 1} files (chunked due to size)`,
+      fileName: `learning-progress-${timestamp}-metadata.json`,
+      chunks: savedChunks
+    };
+    
   } catch (error) {
     console.error('Error saving to storage folder:', error);
     if (error.message.includes('fetch') || error.message.includes('Failed to fetch') || error.name === 'TypeError') {
@@ -135,10 +208,30 @@ export const getStorageFiles = async (): Promise<StorageFile[]> => {
     }
     
     const data = await response.json();
-    return data.files.map((file: any) => ({
+    const allFiles = data.files.map((file: any) => ({
       ...file,
       modified: new Date(file.modified)
     }));
+    
+    // Filter out chunk files and metadata files, only show main progress files
+    const progressFiles = allFiles.filter((file: StorageFile) => {
+      // Skip chunk files (contain "-unit-" in the name)
+      if (file.name.includes('-unit-') && file.name.includes('learning-progress-')) {
+        return false;
+      }
+      // Skip metadata files
+      if (file.name.includes('-metadata.json')) {
+        return false;
+      }
+      // Skip settings files
+      if (file.name === 'settings.json') {
+        return false;
+      }
+      // Only include learning progress files
+      return file.name.startsWith('learning-progress-') && file.name.endsWith('.json');
+    });
+    
+    return progressFiles;
   } catch (error) {
     if (error.name === 'TypeError' || error.message.includes('fetch')) {
       console.warn('Backend server not running - returning empty file list');
@@ -151,12 +244,65 @@ export const getStorageFiles = async (): Promise<StorageFile[]> => {
 
 export const loadProgressFromStorage = async (filename: string): Promise<ExportedProgress> => {
   try {
-    const response = await fetch(`/api/load-progress/${encodeURIComponent(filename)}`);
-    if (!response.ok) {
-      throw new Error(`Failed to load progress file: ${response.status}`);
+    // Check if this might be a chunked file by looking for metadata
+    const metadataFilename = filename.replace('.json', '-metadata.json');
+    
+    // Try to load metadata first
+    let metadataResponse;
+    try {
+      metadataResponse = await fetch(`/api/load-progress/${encodeURIComponent(metadataFilename)}`);
+    } catch (error) {
+      // Metadata doesn't exist, treat as regular file
+      metadataResponse = null;
     }
-    const result = await response.json();
-    return result.data;
+    
+    if (metadataResponse && metadataResponse.ok) {
+      // This is a chunked file, load all chunks
+      console.log('Loading chunked progress file...');
+      const metadataResult = await metadataResponse.json();
+      const metadata = metadataResult.data;
+      
+      if (!metadata.isChunked || !metadata.unitIds) {
+        throw new Error('Invalid metadata format');
+      }
+      
+      // Load all unit chunks
+      const units: Record<string, any> = {};
+      const timestamp = metadata.timestamp;
+      
+      for (const unitId of metadata.unitIds) {
+        const chunkFilename = `learning-progress-${timestamp}-unit-${unitId}.json`;
+        const chunkResponse = await fetch(`/api/load-progress/${encodeURIComponent(chunkFilename)}`);
+        
+        if (!chunkResponse.ok) {
+          throw new Error(`Failed to load chunk for unit ${unitId}: ${chunkResponse.status}`);
+        }
+        
+        const chunkResult = await chunkResponse.json();
+        const chunkData = chunkResult.data;
+        
+        // Merge the unit data
+        Object.assign(units, chunkData.units);
+      }
+      
+      // Reconstruct the full progress data
+      const reconstructedData: ExportedProgress = {
+        exportDate: metadata.exportDate,
+        totalUnits: metadata.totalUnits,
+        units
+      };
+      
+      console.log('Successfully loaded chunked progress file');
+      return reconstructedData;
+    } else {
+      // Regular single file
+      const response = await fetch(`/api/load-progress/${encodeURIComponent(filename)}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load progress file: ${response.status}`);
+      }
+      const result = await response.json();
+      return result.data;
+    }
   } catch (error) {
     console.error('Error loading progress from storage:', error);
     throw error;

@@ -43,7 +43,11 @@ export const UnitList: React.FC<UnitListProps> = ({
   const handleSaveToStorage = async () => {
     try {
       const result = await saveProgressToStorageFolder();
-      alert(`Progress saved successfully to storage/${result.fileName}`);
+      if (result.chunks) {
+        alert(`Progress saved successfully in ${result.chunks.length + 1} files due to large size:\n- ${result.fileName} (metadata)\n- ${result.chunks.length} unit files`);
+      } else {
+        alert(`Progress saved successfully to storage/${result.fileName}`);
+      }
     } catch (error) {
       console.error('Save failed:', error);
       alert(`Failed to save to storage folder: ${error.message}`);
