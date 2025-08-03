@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
@@ -49,9 +49,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [studentQuestion, setStudentQuestion] = useState('');
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
   const [assistantResponse, setAssistantResponse] = useState<StudentQuestionResponse | null>(null);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const [isUndoRedoAction, setIsUndoRedoAction] = useState(false);
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const quillRef = useRef<ReactQuill>(null);
 
   // Load example questions from localStorage
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
@@ -83,6 +87,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Rich text editor configuration
   const quillModules = {
     toolbar: [
+      ['undo', 'redo'],
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
@@ -90,6 +95,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
       ['link'],
       ['clean']
     ],
+    history: {
+      delay: 1000,
+      maxStack: 50,
+      userOnly: true
+    }
   };
 
   const quillFormats = [
@@ -100,6 +110,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Update content when task changes
   useEffect(() => {
     setContent(answer?.content || '');
+    setUndoStack([]);
+    setRedoStack([]);
     setHasUnsavedChanges(false);
     setLastAutoSave(null);
     // Clear any existing autosave timer when task changes
@@ -117,6 +129,29 @@ export const TaskView: React.FC<TaskViewProps> = ({
       }
     };
   }, []);
+
+  // Initialize undo stack when content is first loaded
+  useEffect(() => {
+    if (content && undoStack.length === 0) {
+      setUndoStack([content]);
+    }
+  }, [content]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (((e.ctrlKey || e.metaKey) && e.key === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z')) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [undoStack, redoStack, content]);
 
   const performAutoSave = async () => {
     if (!hasUnsavedChanges) return;
@@ -146,9 +181,59 @@ export const TaskView: React.FC<TaskViewProps> = ({
   };
 
   const handleContentChange = (value: string) => {
+    // Don't add to undo stack if this is an undo/redo action
+    if (!isUndoRedoAction && value !== content) {
+      setUndoStack(prev => {
+        const newStack = [...prev, content];
+        // Limit stack size to prevent memory issues
+        return newStack.length > 50 ? newStack.slice(-50) : newStack;
+      });
+      setRedoStack([]); // Clear redo stack when new content is added
+    }
+    
+    setIsUndoRedoAction(false);
     setContent(value);
     setHasUnsavedChanges(true);
     scheduleAutoSave();
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length > 1) {
+      const newUndoStack = [...undoStack];
+      const currentContent = newUndoStack.pop()!; // Remove current state
+      const previousContent = newUndoStack[newUndoStack.length - 1]; // Get previous state
+      
+      setRedoStack(prev => [...prev, currentContent]);
+      setUndoStack(newUndoStack);
+      setIsUndoRedoAction(true);
+      setContent(previousContent);
+      setHasUnsavedChanges(true);
+      
+      // Focus the editor after undo
+      if (quillRef.current) {
+        const editor = quillRef.current.getEditor();
+        editor.focus();
+      }
+    }
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const newRedoStack = [...redoStack];
+      const nextContent = newRedoStack.pop()!;
+      
+      setUndoStack(prev => [...prev, content]);
+      setRedoStack(newRedoStack);
+      setIsUndoRedoAction(true);
+      setContent(nextContent);
+      setHasUnsavedChanges(true);
+      
+      // Focus the editor after redo
+      if (quillRef.current) {
+        const editor = quillRef.current.getEditor();
+        editor.focus();
+      }
+    }
   };
 
   const handleSave = () => {
@@ -449,9 +534,32 @@ export const TaskView: React.FC<TaskViewProps> = ({
         <div className="flex-1 p-6 overflow-y-auto flex min-h-0">
           {/* Answer Section */}
           <div className="flex-1 flex flex-col mr-6 min-h-0">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Your Answer</h2>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleUndo}
+                  disabled={undoStack.length <= 1}
+                  className="flex items-center px-3 py-1 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-300 rounded-lg hover:bg-gray-50"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo className="h-4 w-4 mr-1" />
+                  Undo
+                </button>
+                <button
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="flex items-center px-3 py-1 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-300 rounded-lg hover:bg-gray-50"
+                  title="Redo (Ctrl+Y)"
+                >
+                  <Redo className="h-4 w-4 mr-1" />
+                  Redo
+                </button>
+              </div>
+            </div>
             <div className="flex-1 flex flex-col min-h-0">
               <ReactQuill
+                ref={quillRef}
                 theme="snow"
                 value={content}
                 onChange={handleContentChange}
@@ -695,6 +803,24 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <div className="flex items-center space-x-3">
               <FileText className="h-6 w-6 text-purple-600" />
               <h2 className="text-lg font-semibold text-gray-900">Your Answer</h2>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={handleUndo}
+                  disabled={undoStack.length <= 1}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Redo (Ctrl+Y)"
+                >
+                  <Redo className="h-4 w-4" />
+                </button>
+              </div>
               <button
                 onClick={() => setIsFullscreen(true)}
                 className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -758,6 +884,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           
           <div className="h-64">
             <ReactQuill
+              ref={quillRef}
               theme="snow"
               value={content}
               onChange={handleContentChange}

@@ -24,3 +24,20 @@
   border-right: 1px solid #ccc;
   border-top: none;
 }
+
+/* Custom styles for undo/redo buttons in Quill toolbar */
+.ql-toolbar .ql-undo:after {
+  content: "↶";
+  font-size: 16px;
+}
+
+.ql-toolbar .ql-redo:after {
+  content: "↷";
+  font-size: 16px;
+}
+
+.ql-toolbar .ql-undo,
+.ql-toolbar .ql-redo {
+  width: 28px;
+  height: 24px;
+}
