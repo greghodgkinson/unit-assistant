@@ -68,11 +68,16 @@ export const saveProgressToStorageFolder = async () => {
   const exportData = exportAllProgress();
   const jsonString = JSON.stringify(exportData, null, 2);
   const fileSizeInBytes = new Blob([jsonString]).size;
-  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB limit
+  const maxSizeInBytes = 10 * 1024 * 1024; // 10MB limit (increased)
   
   // Debug: Log file size breakdown
   console.log('=== FILE SIZE BREAKDOWN ===');
   console.log(`Total file size: ${(fileSizeInBytes / 1024 / 1024).toFixed(2)}MB`);
+  console.log(`JSON string length: ${jsonString.length} characters`);
+  console.log(`Request body size estimate: ${(JSON.stringify({
+    fileName: 'test.json',
+    content: jsonString
+  }).length / 1024 / 1024).toFixed(2)}MB`);
   console.log(`Total units: ${exportData.totalUnits}`);
   
   // Analyze each unit's contribution to file size
@@ -100,6 +105,10 @@ export const saveProgressToStorageFolder = async () => {
     // If file is small enough, save as single file
     if (fileSizeInBytes <= maxSizeInBytes) {
       const fileName = `learning-progress-${timestamp}.json`;
+      
+      console.log(`Sending request with fileName: ${fileName}`);
+      console.log(`Content length: ${jsonString.length} characters`);
+      
       const response = await fetch('/api/save-progress', {
         method: 'POST',
         headers: {
@@ -112,9 +121,15 @@ export const saveProgressToStorageFolder = async () => {
       });
       
       console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
-        const errorData = await response.text();
+        let errorData;
+        try {
+          errorData = await response.text();
+        } catch (e) {
+          errorData = `Failed to read error response: ${e.message}`;
+        }
         console.error('Server response:', errorData);
         throw new Error(`Server error: ${response.status} - ${errorData}`);
       }
