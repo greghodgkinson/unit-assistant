@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo, Volume2, VolumeX } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
@@ -53,6 +53,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
   const [isUndoRedoAction, setIsUndoRedoAction] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -61,6 +63,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Load example questions from localStorage
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
   
+  // Check for speech synthesis support
+  useEffect(() => {
+    setSpeechSupported('speechSynthesis' in window);
+  }, []);
+
   useEffect(() => {
     // Default questions are now managed in Settings component
     const savedQuestions = localStorage.getItem('learning-assistant-example-questions');
@@ -285,6 +292,45 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   const handleExampleQuestionClick = (question: string) => {
     setStudentQuestion(question);
+  };
+
+  const handleSpeakResponse = (text: string) => {
+    if (!speechSupported) {
+      alert('Text-to-speech is not supported in your browser');
+      return;
+    }
+
+    if (isSpeaking) {
+      // Stop current speech
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Clean up the text for better speech
+    const cleanText = text
+      .replace(/\*\*/g, '') // Remove markdown bold
+      .replace(/\n+/g, '. ') // Replace line breaks with pauses
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Configure speech settings
+    utterance.rate = 0.9; // Slightly slower for better comprehension
+    utterance.pitch = 1;
+    utterance.volume = 0.8;
+
+    // Event handlers
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      console.error('Speech synthesis error');
+    };
+
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
   };
 
   const getTaskTypeColor = (type: string) => {
@@ -644,7 +690,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   
                   {assistantResponse && (
                     <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200 flex-shrink-0">
-                      <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-purple-900">Assistant Response:</h4>
+                        {speechSupported && (
+                          <button
+                            onClick={() => handleSpeakResponse(assistantResponse.answer)}
+                            className={`p-1 rounded transition-colors ${
+                              isSpeaking 
+                                ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
+                                : 'text-purple-600 hover:text-purple-700 hover:bg-purple-100'
+                            }`}
+                            title={isSpeaking ? 'Stop reading' : 'Read aloud'}
+                          >
+                            {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                          </button>
+                        )}
+                      </div>
                       <div className="text-sm text-purple-800 space-y-2">
                         <div className="whitespace-pre-line">
                           {assistantResponse.answer.replace(/(\d+[\).])/g, '\n$1').replace(/\n\s*\n\s*\n/g, '\n\n')}
@@ -975,7 +1036,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 
                 {assistantResponse && (
                   <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <h4 className="font-medium text-purple-900 mb-2">Assistant Response:</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-purple-900">Assistant Response:</h4>
+                      {speechSupported && (
+                        <button
+                          onClick={() => handleSpeakResponse(assistantResponse.answer)}
+                          className={`p-1 rounded transition-colors ${
+                            isSpeaking 
+                              ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
+                              : 'text-purple-600 hover:text-purple-700 hover:bg-purple-100'
+                          }`}
+                          title={isSpeaking ? 'Stop reading' : 'Read aloud'}
+                        >
+                          {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        </button>
+                      )}
+                    </div>
                     <div className="text-sm text-purple-800 space-y-2">
                       <div className="whitespace-pre-line">
                         {assistantResponse.answer.replace(/(\d+[\).])/g, '\n$1').replace(/\n\s*\n\s*\n/g, '\n\n')}
