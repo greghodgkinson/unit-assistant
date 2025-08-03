@@ -26,6 +26,21 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
     return allTaskIds.size;
   };
   
+  // Create a map of task ID to the last learning outcome it appears in
+  const getTaskToLastLearningOutcomeMap = () => {
+    const taskToLastLO = new Map<string, string>();
+    
+    unit.learning_outcomes.forEach(lo => {
+      lo.outcome_tasks.forEach(task => {
+        taskToLastLO.set(task.id, lo.id);
+      });
+    });
+    
+    return taskToLastLO;
+  };
+  
+  const taskToLastLO = getTaskToLastLearningOutcomeMap();
+  
   const totalTasks = getUniqueTaskCount();
   const completionRate = (metrics.completedTasks / totalTasks) * 100;
 
@@ -126,7 +141,9 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lo.outcome_tasks.map((task) => {
+              {lo.outcome_tasks
+                .filter((task) => taskToLastLO.get(task.id) === lo.id)
+                .map((task) => {
                 const status = getTaskStatus(task.id);
                 const isCurrent = progress.currentTask === task.id;
                 
