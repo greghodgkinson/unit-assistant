@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, C
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
+import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -62,26 +63,17 @@ export const TaskView: React.FC<TaskViewProps> = ({
   
   useEffect(() => {
     // Default questions are now managed in Settings component
-    const DEFAULT_QUESTIONS = [
-      "Can you help me understand what this task is asking for?",
-      "What are the key points I should cover in my answer?", 
-      "How should I structure my response?",
-      "Can you give me an example of what a good answer might include?",
-      "What does this acceptance criteria mean exactly?",
-      "How much detail is expected for this type of task?"
-    ];
-    
     const savedQuestions = localStorage.getItem('learning-assistant-example-questions');
     if (savedQuestions) {
       try {
         const parsed = JSON.parse(savedQuestions);
-        setExampleQuestions(parsed.length > 0 ? parsed : DEFAULT_QUESTIONS);
+        setExampleQuestions(parsed.length > 0 ? parsed : DEFAULT_EXAMPLE_QUESTIONS);
       } catch (error) {
         console.error('Error parsing saved questions:', error);
-        setExampleQuestions(DEFAULT_QUESTIONS);
+        setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
       }
     } else {
-      setExampleQuestions(DEFAULT_QUESTIONS);
+      setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
     }
   }, []);
 

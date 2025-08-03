@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Settings as SettingsIcon, Save, RotateCcw, CheckCircle, AlertCircle, Plus, Trash2, GripVertical, Clock, Download, Monitor, Apple, Smartphone } from 'lucide-react';
+import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
 
 interface SettingsProps {
   onBack: () => void;
@@ -32,15 +33,6 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const DEFAULT_URL = 'https://unit-assistant-service.fly.dev/feedback';
-
-  const DEFAULT_QUESTIONS = [
-    "Can you help me understand what this task is asking for?",
-    "What are the key points I should cover in my answer?",
-    "How should I structure my response?",
-    "Can you give me an example of what a good answer might include?",
-    "What does this acceptance criteria mean exactly?",
-    "How much detail is expected for this type of task?"
-  ];
 
   const DAYS_OF_WEEK = [
     { key: 'monday', label: 'Monday' },
@@ -115,14 +107,14 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
         } else {
           // Use defaults if no settings file exists
           setFeedbackServiceUrl(DEFAULT_URL);
-          setExampleQuestions(DEFAULT_QUESTIONS);
+          setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
           setWorkingHours(DEFAULT_WORKING_HOURS);
         }
       } catch (error) {
         console.error('Error loading settings:', error);
         // Fall back to defaults on error
         setFeedbackServiceUrl(DEFAULT_URL);
-        setExampleQuestions(DEFAULT_QUESTIONS);
+        setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
         setWorkingHours(DEFAULT_WORKING_HOURS);
       }
     };
@@ -186,7 +178,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
   const handleReset = () => {
     setFeedbackServiceUrl(DEFAULT_URL);
-    setExampleQuestions(DEFAULT_QUESTIONS);
+    setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
     setWorkingHours(DEFAULT_WORKING_HOURS);
     setError(null);
     setSaved(false);
