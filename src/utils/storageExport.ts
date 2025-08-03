@@ -70,6 +70,27 @@ export const saveProgressToStorageFolder = async () => {
   const fileSizeInBytes = new Blob([jsonString]).size;
   const maxSizeInBytes = 5 * 1024 * 1024; // 5MB limit
   
+  // Debug: Log file size breakdown
+  console.log('=== FILE SIZE BREAKDOWN ===');
+  console.log(`Total file size: ${(fileSizeInBytes / 1024 / 1024).toFixed(2)}MB`);
+  console.log(`Total units: ${exportData.totalUnits}`);
+  
+  // Analyze each unit's contribution to file size
+  Object.entries(exportData.units).forEach(([unitId, unitData]) => {
+    const unitJsonString = JSON.stringify(unitData, null, 2);
+    const unitSize = new Blob([unitJsonString]).size;
+    const answers = unitData.progress?.answers || [];
+    const totalAnswerLength = answers.reduce((sum: number, answer: any) => sum + (answer.content?.length || 0), 0);
+    const totalFeedbackLength = answers.reduce((sum: number, answer: any) => sum + (answer.feedback?.length || 0), 0);
+    
+    console.log(`Unit ${unitId}:`);
+    console.log(`  - Unit size: ${(unitSize / 1024).toFixed(1)}KB`);
+    console.log(`  - Answers: ${answers.length}`);
+    console.log(`  - Total answer content: ${(totalAnswerLength / 1024).toFixed(1)}KB`);
+    console.log(`  - Total feedback content: ${(totalFeedbackLength / 1024).toFixed(1)}KB`);
+  });
+  console.log('========================');
+  
   const now = new Date();
   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
   
