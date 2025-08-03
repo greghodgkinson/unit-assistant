@@ -15,7 +15,18 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
   metrics,
   onTaskSelect
 }) => {
-  const totalTasks = unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
+  // Calculate unique tasks across all learning outcomes
+  const getUniqueTaskCount = () => {
+    const allTaskIds = new Set<string>();
+    unit.learning_outcomes.forEach(lo => {
+      lo.outcome_tasks.forEach(task => {
+        allTaskIds.add(task.id);
+      });
+    });
+    return allTaskIds.size;
+  };
+  
+  const totalTasks = getUniqueTaskCount();
   const completionRate = (metrics.completedTasks / totalTasks) * 100;
 
   const getTaskStatus = (taskId: string) => {

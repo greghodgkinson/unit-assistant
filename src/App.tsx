@@ -249,7 +249,20 @@ function App() {
         const task = getCurrentTask();
         const answer = getCurrentAnswer();
         const nextTask = getNextTask(unitData?.learning_outcomes || []);
-        const totalTasks = unitData.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
+        
+        // Calculate unique tasks across all learning outcomes
+        const getUniqueTaskCount = () => {
+          if (!unitData) return 0;
+          const allTaskIds = new Set<string>();
+          unitData.learning_outcomes.forEach(lo => {
+            lo.outcome_tasks.forEach(task => {
+              allTaskIds.add(task.id);
+            });
+          });
+          return allTaskIds.size;
+        };
+        
+        const totalTasks = getUniqueTaskCount();
         const metrics = getVelocityMetrics(totalTasks);
         
         // Calculate current task number

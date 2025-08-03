@@ -10,6 +10,17 @@ interface UnitOverviewProps {
 export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearning }) => {
   const [showInstructions, setShowInstructions] = useState(false);
 
+  // Calculate unique tasks across all learning outcomes
+  const getUniqueTaskCount = () => {
+    const allTaskIds = new Set<string>();
+    unit.learning_outcomes.forEach(lo => {
+      lo.outcome_tasks.forEach(task => {
+        allTaskIds.add(task.id);
+      });
+    });
+    return allTaskIds.size;
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -22,7 +33,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
           </div>
           <div className="flex items-center">
             <Target className="h-6 w-6 mr-2" />
-            <span>Tasks: {unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0)}</span>
+            <span>Tasks: {getUniqueTaskCount()}</span>
           </div>
           <div className="flex items-center">
             <Users className="h-6 w-6 mr-2" />

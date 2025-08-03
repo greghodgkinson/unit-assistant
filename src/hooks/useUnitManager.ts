@@ -69,7 +69,14 @@ export const useUnitManager = () => {
   }, [units, unitList, loading]);
 
   const addUnit = (unit: Unit) => {
-    const totalTasks = unit.learning_outcomes.reduce((sum, lo) => sum + lo.outcome_tasks.length, 0);
+    // Count unique tasks across all learning outcomes
+    const allTaskIds = new Set<string>();
+    unit.learning_outcomes.forEach(lo => {
+      lo.outcome_tasks.forEach(task => {
+        allTaskIds.add(task.id);
+      });
+    });
+    const totalTasks = allTaskIds.size;
     
     // Ensure backwards compatibility by adding default values for missing fields
     const unitWithDefaults: Unit = {

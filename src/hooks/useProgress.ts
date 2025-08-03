@@ -156,9 +156,18 @@ export const useProgress = (unitId: string) => {
   };
 
   const getNextTask = (learningOutcomes: any[] = []) => {
-    const allTasks = learningOutcomes.flatMap(lo => 
+    // Create a map to avoid duplicate tasks and get unique tasks only
+    const taskMap = new Map();
+    learningOutcomes.forEach(lo => 
       lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id, task }))
+        .forEach(taskInfo => {
+          if (!taskMap.has(taskInfo.taskId)) {
+            taskMap.set(taskInfo.taskId, taskInfo);
+          }
+        })
     );
+    
+    const allTasks = Array.from(taskMap.values());
     
     const currentIndex = allTasks.findIndex(t => t.taskId === progress.currentTask);
     const nextTask = allTasks[currentIndex + 1];
