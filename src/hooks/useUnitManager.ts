@@ -69,14 +69,18 @@ export const useUnitManager = () => {
   }, [units, unitList, loading]);
 
   const addUnit = (unit: Unit) => {
-    // Count unique tasks across all learning outcomes
-    const allTaskIds = new Set<string>();
-    unit.learning_outcomes.forEach(lo => {
-      lo.outcome_tasks.forEach(task => {
-        allTaskIds.add(task.id);
+    // Count unique tasks across all learning outcomes using the same logic as dashboard
+    const getUniqueTaskCount = (unitData: Unit) => {
+      const allTaskIds = new Set<string>();
+      unitData.learning_outcomes.forEach(lo => {
+        lo.outcome_tasks.forEach(task => {
+          allTaskIds.add(task.id);
+        });
       });
-    });
-    const totalTasks = allTaskIds.size;
+      return allTaskIds.size;
+    };
+    
+    const totalTasks = getUniqueTaskCount(unit);
     
     // Ensure backwards compatibility by adding default values for missing fields
     const unitWithDefaults: Unit = {
@@ -102,6 +106,38 @@ export const useUnitManager = () => {
       return [...prev, unitSummary];
     });
   };
+
+  const recalculateTaskCounts = () => {
+    // Helper function to recalculate task counts for existing units
+    const getUniqueTaskCount = (unitData: Unit) => {
+      const allTaskIds = new Set<string>();
+      unitData.learning_outcomes.forEach(lo => {
+        lo.outcome_tasks.forEach(task => {
+          allTaskIds.add(task.id);
+        });
+      });
+      return allTaskIds.size;
+    };
+
+    setUnitList(prev => prev.map(unitSummary => {
+      const unitData = units[unitSummary.id];
+      if (unitData) {
+        const correctTotalTasks = getUniqueTaskCount(unitData);
+        if (correctTotalTasks !== unitSummary.totalTasks) {
+          console.log(`Correcting task count for ${unitSummary.id}: ${unitSummary.totalTasks} -> ${correctTotalTasks}`);
+          return { ...unitSummary, totalTasks: correctTotalTasks };
+        }
+      }
+      return unitSummary;
+    }));
+  };
+
+  // Recalculate task counts when units are loaded (for existing data)
+  useEffect(() => {
+    if (!loading && Object.keys(units).length > 0 && unitList.length > 0) {
+      recalculateTaskCounts();
+    }
+  }, [loading, units, unitList.length]);
 
   const removeUnit = (unitId: string) => {
     setUnits(prev => {
