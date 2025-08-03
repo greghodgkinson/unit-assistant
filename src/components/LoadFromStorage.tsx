@@ -268,8 +268,8 @@ export const LoadFromStorage: React.FC<LoadFromStorageProps> = ({ onBack, onProg
             <div>
               <h3 className="font-medium text-yellow-800 mb-1">Important Notice</h3>
               <p className="text-sm text-yellow-700">
-                Loading this file will replace your current progress. Your current progress has been automatically 
-                saved to storage before this preview.
+                Loading this file will replace your current progress. Your current progress will be automatically 
+                saved to storage as a backup before loading.
               </p>
             </div>
           </div>
