@@ -169,8 +169,8 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
-      // This should only catch localStorage errors now
-      setError('Failed to save settings to browser memory');
+      console.error('Error in handleSave:', error);
+      setError('Failed to save settings');
     } finally {
       setSaving(false);
     }

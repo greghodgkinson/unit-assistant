@@ -100,7 +100,7 @@ export const saveProgressToStorageFolder = async () => {
   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
   
   try {
-    console.log('Attempting to save to storage folder...');
+    console.log('Attempting to save to storage folder (single save operation)...');
     
     // If file is small enough, save as single file
     if (fileSizeInBytes <= maxSizeInBytes) {
@@ -152,6 +152,7 @@ export const saveProgressToStorageFolder = async () => {
       unitIds: Object.keys(exportData.units)
     };
     
+    console.log('Saving metadata file...');
     const metadataResponse = await fetch('/api/save-progress', {
       method: 'POST',
       headers: {
@@ -166,6 +167,7 @@ export const saveProgressToStorageFolder = async () => {
     if (!metadataResponse.ok) {
       throw new Error(`Failed to save metadata: ${metadataResponse.status}`);
     }
+    console.log('Metadata file saved successfully');
     
     // Save each unit separately
     const savedChunks = [];
@@ -177,6 +179,7 @@ export const saveProgressToStorageFolder = async () => {
       };
       
       const chunkFileName = `learning-progress-${timestamp}-unit-${unitId}.json`;
+      console.log(`Saving chunk: ${chunkFileName}`);
       const chunkResponse = await fetch('/api/save-progress', {
         method: 'POST',
         headers: {
@@ -196,7 +199,7 @@ export const saveProgressToStorageFolder = async () => {
       console.log(`Saved chunk: ${chunkFileName}`);
     }
     
-    console.log('All chunks saved successfully');
+    console.log(`All chunks saved successfully: 1 metadata + ${savedChunks.length} unit files`);
     return {
       success: true,
       message: `Progress saved in ${savedChunks.length + 1} files (chunked due to size)`,
