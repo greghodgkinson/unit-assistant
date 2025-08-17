@@ -436,6 +436,21 @@ export const TaskView: React.FC<TaskViewProps> = ({
       .replace(/^\d+\.\d+\s+/, '')
       .replace(/\s*\(LO\d+\)\s*$/, '');
   };
+  
+  // Get unit task context if available
+  const getUnitTaskContext = () => {
+    if (!unitData?.unit_tasks) return null;
+    
+    // Find which unit task contains this outcome task
+    for (const unitTask of unitData.unit_tasks) {
+      if (unitTask.outcome_tasks.includes(task.id)) {
+        return unitTask;
+      }
+    }
+    return null;
+  };
+  
+  const unitTaskContext = getUnitTaskContext();
 
   const formatFeedback = (feedback: string) => {
     let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
@@ -768,7 +783,18 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <Target className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
-            <p className="text-gray-600 ml-11">{getCleanTaskDescription(task.description)}</p>
+            <div className="ml-11">
+              <p className="text-gray-600">{getCleanTaskDescription(task.description)}</p>
+              {unitTaskContext && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center mb-1">
+                    <List className="h-4 w-4 text-blue-600 mr-2" />
+                    <span className="text-sm font-medium text-blue-900">Part of: {unitTaskContext.id}</span>
+                  </div>
+                  <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
+                </div>
+              )}
+            </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
             {task.type}

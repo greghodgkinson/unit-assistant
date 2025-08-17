@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
-import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText, Play } from 'lucide-react';
+import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText, Play, List } from 'lucide-react';
 
 interface UnitOverviewProps {
   unit: Unit;
@@ -9,6 +9,7 @@ interface UnitOverviewProps {
 
 export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearning }) => {
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showUnitTasks, setShowUnitTasks] = useState(false);
 
   // Calculate unique tasks across all learning outcomes
   const getUniqueTaskCount = () => {
@@ -61,14 +62,75 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
         </div>
       </div>
 
-      {/* Task */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex items-center mb-4">
-          <CheckSquare className="h-6 w-6 text-green-600 mr-3" />
-          <h2 className="text-xl font-semibold text-gray-900">Your Task</h2>
+      {/* Task or Unit Tasks */}
+      {unit.task && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center mb-4">
+            <CheckSquare className="h-6 w-6 text-green-600 mr-3" />
+            <h2 className="text-xl font-semibold text-gray-900">Your Task</h2>
+          </div>
+          <p className="text-gray-700 leading-relaxed">{unit.task}</p>
         </div>
-        <p className="text-gray-700 leading-relaxed">{unit.task}</p>
-      </div>
+      )}
+
+      {/* Unit Tasks */}
+      {unit.unit_tasks && unit.unit_tasks.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <button
+            onClick={() => setShowUnitTasks(!showUnitTasks)}
+            className="flex items-center justify-between w-full text-left mb-4"
+          >
+            <div className="flex items-center">
+              <List className="h-6 w-6 text-green-600 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">Unit Tasks ({unit.unit_tasks.length})</h2>
+            </div>
+            {showUnitTasks ? (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+          
+          {showUnitTasks && (
+            <div className="space-y-4">
+              {unit.unit_tasks.map((unitTask, index) => (
+                <div key={unitTask.id} className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-semibold text-green-900">{unitTask.id}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-green-700">
+                      <span>{unitTask.learning_outcomes.length} LO{unitTask.learning_outcomes.length !== 1 ? 's' : ''}</span>
+                      <span>{unitTask.outcome_tasks.length} task{unitTask.outcome_tasks.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed mb-3">{unitTask.description}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Learning Outcomes:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {unitTask.learning_outcomes.map((lo) => (
+                          <span key={lo} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            {lo}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Outcome Tasks:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {unitTask.outcome_tasks.map((task) => (
+                          <span key={task} className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                            {task}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Learning Outcomes Preview */}
       <div className="bg-white rounded-xl shadow-sm border p-6">

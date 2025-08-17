@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 
 interface ProgressDashboardProps {
@@ -130,6 +130,38 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
       {/* Learning Outcomes */}
       <div className="space-y-6">
+        {/* Unit Tasks Summary (if present) */}
+        {unit.unit_tasks && unit.unit_tasks.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="mb-4">
+              <div className="flex items-center mb-2">
+                <List className="h-6 w-6 text-green-600 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Unit Tasks Overview</h3>
+              </div>
+              <p className="text-gray-600">This unit contains {unit.unit_tasks.length} main task{unit.unit_tasks.length !== 1 ? 's' : ''} covering multiple learning outcomes.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {unit.unit_tasks.map((unitTask) => (
+                <div key={unitTask.id} className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-medium text-green-900 mb-2">{unitTask.id}</h4>
+                  <p className="text-sm text-gray-700 mb-3 line-clamp-3">{unitTask.description}</p>
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="font-medium text-gray-600">LOs: </span>
+                      <span className="text-gray-800">{unitTask.learning_outcomes.join(', ')}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Tasks: </span>
+                      <span className="text-gray-800">{unitTask.outcome_tasks.join(', ')}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         {unit.learning_outcomes.map((lo) => (
           <div key={lo.id} className="bg-white rounded-xl shadow-sm border p-6">
             <div className="mb-4">

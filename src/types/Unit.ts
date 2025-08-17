@@ -26,10 +26,18 @@ export interface Unit {
   title: string;
   instructions: string;
   scenario: string;
-  task: string;
+  task?: string; // Optional for backwards compatibility
+  unit_tasks?: UnitTask[]; // New field for multiple tasks
   learning_outcomes: LearningOutcome[];
   credits?: number;
   guided_learning_hours?: number;
+}
+
+export interface UnitTask {
+  id: string;
+  description: string;
+  learning_outcomes: string[];
+  outcome_tasks: string[];
 }
 
 export interface StudentAnswer {
