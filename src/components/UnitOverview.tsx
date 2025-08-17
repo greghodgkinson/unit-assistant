@@ -7,6 +7,32 @@ interface UnitOverviewProps {
   onStartLearning: () => void;
 }
 
+function SmartScenarioInline({ text }: { text?: string }) {
+  if (!text) return null;
+
+  // Normalize newlines
+  let t = text.replace(/\r\n?/g, "\n");
+
+  // Force bullets (only if they start a line)
+  t = t
+    .replace(/(^|\n)\s*(Firstly|Secondly|Thirdly)\b/gi, "\n$2")
+    .replace(/(^|\n)\s*[•]\s+/g, "\n• ")
+    .replace(/(^|\n)\s*-\s+/g, "\n- "); // only dash at line start
+
+  // If a bullet line has extra trailing sentence → split
+  t = t.replace(/([.!?])\s+([A-Z])/g, "$1\n$2");
+
+  // Collapse multiple newlines
+  t = t.replace(/\n{3,}/g, "\n\n").trim();
+
+  return (
+    <div className="text-gray-800 leading-relaxed whitespace-pre-line">
+      {t}
+    </div>
+  );
+}
+
+
 export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearning }) => {
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -57,7 +83,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
           <h2 className="text-xl font-semibold text-gray-900">Scenario</h2>
         </div>
         <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <p className="text-gray-800 leading-relaxed">{unit.scenario}</p>
+          <SmartScenarioInline text={unit.scenario} />
         </div>
       </div>
 
