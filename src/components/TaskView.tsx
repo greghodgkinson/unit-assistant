@@ -437,20 +437,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
       .replace(/\s*\(LO\d+\)\s*$/, '');
   };
   
-  // Get unit task context if available
-  const getUnitTaskContext = () => {
-    if (!unitData?.unit_tasks) return null;
-    
-    // Find which unit task contains this outcome task
-    for (const unitTask of unitData.unit_tasks) {
-      if (unitTask.outcome_tasks.includes(task.id)) {
-        return unitTask;
-      }
-    }
-    return null;
-  };
-  
-  const unitTaskContext = getUnitTaskContext();
 
   const formatFeedback = (feedback: string) => {
     let cleanFeedback = feedback.replace(/^Feedback\s*/i, '').trim();
