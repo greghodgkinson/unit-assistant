@@ -135,21 +135,9 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
           unit.unit_tasks.map((unitTask) => (
             <React.Fragment key={unitTask.id}>
               {/* Unit Task Banner */}
-              <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <List className="h-6 w-6 mr-3" />
-                    <div>
-                      <h3 className="text-xl font-semibold">{unitTask.id}</h3>
-                      <p className="text-green-100 mt-1">{unitTask.description}</p>
-                    </div>
-                  </div>
-                  <div className="text-right text-green-100">
-                    <div className="text-sm">
-                      {unitTask.learning_outcomes.length} LO{unitTask.learning_outcomes.length !== 1 ? 's' : ''} • {unitTask.outcome_tasks.length} task{unitTask.outcome_tasks.length !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-                </div>
+              <div className="bg-white rounded-xl shadow-sm border p-6 mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{unitTask.id}</h3>
+                <p className="text-gray-600">{unitTask.description}</p>
               </div>
               
               {/* Learning Outcomes for this Unit Task */}
