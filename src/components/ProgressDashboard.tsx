@@ -143,6 +143,13 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
               {/* Learning Outcomes for this Unit Task */}
               {unit.learning_outcomes
                 .filter(lo => unitTask.learning_outcomes.includes(lo.id))
+                .filter(lo => {
+                  // Only show LOs that have at least one task for this unit task
+                  return lo.outcome_tasks.some(task => 
+                    unitTask.outcome_tasks.includes(task.id) && 
+                    taskToLastLO.get(task.id) === lo.id
+                  );
+                })
                 .map((lo) => (
                   <div key={`${unitTask.id}-${lo.id}`} className="bg-white rounded-xl shadow-sm border p-6">
                     <div className="mb-4">
