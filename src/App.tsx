@@ -280,6 +280,7 @@ function App() {
             learningOutcome={lo}
             task={task}
             unitId={currentUnitId || ''}
+            unit={unitData}
             answer={answer}
             onAnswerUpdate={handleAnswerUpdate}
             onRequestFeedback={handleRequestFeedback}

@@ -22,11 +22,29 @@ export const UnitUpload: React.FC<UnitUploadProps> = ({ onUnitUploaded, onBack }
     if (!data.title || typeof data.title !== 'string') {
       throw new Error('Unit must have a valid title');
     }
+    
+    // Check for either task or unit_tasks
+    if (!data.task && (!data.unit_tasks || !Array.isArray(data.unit_tasks))) {
+      throw new Error('Unit must have either a task field or unit_tasks array');
+    }
+    
     if (!data.learning_outcomes || !Array.isArray(data.learning_outcomes)) {
       throw new Error('Unit must have learning_outcomes array');
     }
     if (data.learning_outcomes.length === 0) {
       throw new Error('Unit must have at least one learning outcome');
+    }
+    
+    // Validate unit_tasks if present
+    if (data.unit_tasks && Array.isArray(data.unit_tasks)) {
+      data.unit_tasks.forEach((unitTask: any, index: number) => {
+        if (!unitTask.id || !unitTask.description || !unitTask.learning_outcomes || !unitTask.outcome_tasks) {
+          throw new Error(`Unit task ${index + 1} is missing required fields (id, description, learning_outcomes, outcome_tasks)`);
+        }
+        if (!Array.isArray(unitTask.learning_outcomes) || !Array.isArray(unitTask.outcome_tasks)) {
+          throw new Error(`Unit task ${index + 1} learning_outcomes and outcome_tasks must be arrays`);
+        }
+      });
     }
 
     // Validate learning outcomes structure
@@ -209,13 +227,16 @@ export const UnitUpload: React.FC<UnitUploadProps> = ({ onUnitUploaded, onBack }
             <li><code className="bg-blue-100 px-1 rounded">title</code> - Unit title</li>
             <li><code className="bg-blue-100 px-1 rounded">instructions</code> - Learning instructions</li>
             <li><code className="bg-blue-100 px-1 rounded">scenario</code> - Learning scenario</li>
-            <li><code className="bg-blue-100 px-1 rounded">task</code> - Main task description</li>
+            <li><code className="bg-blue-100 px-1 rounded">task</code> - (Optional) Main task description for single-task units</li>
+            <li><code className="bg-blue-100 px-1 rounded">unit_tasks</code> - (Optional) Array of unit tasks for multi-task units</li>
             <li><code className="bg-blue-100 px-1 rounded">learning_outcomes</code> - Array of learning outcomes with tasks</li>
             <li><code className="bg-blue-100 px-1 rounded">credits</code> - (Optional) Number of credits for this unit</li>
             <li><code className="bg-blue-100 px-1 rounded">guided_learning_hours</code> - (Optional) Guided learning hours</li>
           </ul>
           <p className="mt-3">
-            <span className="font-medium">Tip:</span> You can use the existing unit-1.json as a template for the required structure.
+            <span className="font-medium">Note:</span> Units can have either a single <code className="bg-blue-100 px-1 rounded">task</code> field 
+            or multiple <code className="bg-blue-100 px-1 rounded">unit_tasks</code>. Each unit task should include id, description, 
+            learning_outcomes array, and outcome_tasks array.
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 
 interface ProgressDashboardProps {
@@ -130,55 +130,140 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
       {/* Learning Outcomes */}
       <div className="space-y-6">
-        {unit.learning_outcomes.map((lo) => (
-          <div key={lo.id} className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
+        {unit.unit_tasks && unit.unit_tasks.length > 0 ? (
+          /* Multi-task unit: organize by unit tasks */
+          unit.unit_tasks.map((unitTask) => (
+            <div key={unitTask.id} className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="mb-6">
+                <div className="flex items-center mb-3">
+                  <List className="h-6 w-6 text-green-600 mr-3" />
+                  <h3 className="text-xl font-semibold text-gray-900">{unitTask.id}</h3>
+                </div>
+                <p className="text-gray-600 mb-4">{unitTask.description}</p>
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span className="flex items-center">
+                    <Lightbulb className="h-4 w-4 mr-1" />
+                    {unitTask.learning_outcomes.length} Learning Outcome{unitTask.learning_outcomes.length !== 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center">
+                    <Target className="h-4 w-4 mr-1" />
+                    {unitTask.outcome_tasks.length} Task{unitTask.outcome_tasks.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
               </div>
-              <p className="text-gray-600 mt-1">{lo.description}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lo.outcome_tasks
-                .filter((task) => taskToLastLO.get(task.id) === lo.id)
-                .map((task) => {
-                const status = getTaskStatus(task.id);
-                const isCurrent = progress.currentTask === task.id;
-                
-                return (
-                  <div
-                    key={task.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      getStatusColor(status)
-                    } ${isCurrent ? 'ring-2 ring-blue-500' : ''}`}
-                    onClick={() => onTaskSelect(lo.id, task.id)}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center">
-                        <Target className="h-4 w-4 text-blue-600 mr-2" />
-                        <span className="font-medium text-gray-900">{task.id}</span>
+              
+              {/* Learning Outcomes for this Unit Task */}
+              <div className="space-y-4">
+                {unit.learning_outcomes
+                  .filter(lo => unitTask.learning_outcomes.includes(lo.id))
+                  .map((lo) => (
+                    <div key={`${unitTask.id}-${lo.id}`} className="ml-6 border-l-2 border-green-200 pl-6">
+                      <div className="mb-3">
+                        <div className="flex items-center mb-2">
+                          <Lightbulb className="h-5 w-5 text-yellow-600 mr-2" />
+                          <h4 className="text-lg font-medium text-gray-900">{lo.id}</h4>
+                        </div>
+                        <p className="text-gray-600 text-sm">{lo.description}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTaskTypeColor(task.type)}`}>
-                        {task.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
-                        {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
-                        <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {lo.outcome_tasks
+                          .filter((task) => {
+                            // Only show tasks that belong to this unit task AND are the last occurrence
+                            return unitTask.outcome_tasks.includes(task.id) && 
+                                   taskToLastLO.get(task.id) === lo.id;
+                          })
+                          .map((task) => {
+                            const status = getTaskStatus(task.id);
+                            const isCurrent = progress.currentTask === task.id;
+                            
+                            return (
+                              <div
+                                key={task.id}
+                                className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                  getStatusColor(status)
+                                } ${isCurrent ? 'ring-2 ring-blue-500' : ''}`}
+                                onClick={() => onTaskSelect(lo.id, task.id)}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center">
+                                    <Target className="h-3 w-3 text-blue-600 mr-1" />
+                                    <span className="font-medium text-gray-900 text-sm">{task.id}</span>
+                                  </div>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTaskTypeColor(task.type)}`}>
+                                    {task.type}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    {status === 'completed' && <CheckCircle className="h-3 w-3 text-green-600" />}
+                                    {status === 'in-progress' && <Clock className="h-3 w-3 text-yellow-600" />}
+                                    <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                                  </div>
+                                  {isCurrent && <span className="text-xs font-medium text-blue-600">Current</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
-                      {isCurrent && <span className="text-xs font-medium text-blue-600">Current</span>}
                     </div>
-                  </div>
-                );
-              })}
+                  ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          /* Single-task unit: organize by learning outcomes */
+          unit.learning_outcomes.map((lo) => (
+            <div key={lo.id} className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
+                </div>
+                <p className="text-gray-600 mt-1">{lo.description}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {lo.outcome_tasks
+                  .filter((task) => taskToLastLO.get(task.id) === lo.id)
+                  .map((task) => {
+                  const status = getTaskStatus(task.id);
+                  const isCurrent = progress.currentTask === task.id;
+                  
+                  return (
+                    <div
+                      key={task.id}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        getStatusColor(status)
+                      } ${isCurrent ? 'ring-2 ring-blue-500' : ''}`}
+                      onClick={() => onTaskSelect(lo.id, task.id)}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center">
+                          <Target className="h-4 w-4 text-blue-600 mr-2" />
+                          <span className="font-medium text-gray-900">{task.id}</span>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTaskTypeColor(task.type)}`}>
+                          {task.type}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                          {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
+                          <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                        </div>
+                        {isCurrent && <span className="text-xs font-medium text-blue-600">Current</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
