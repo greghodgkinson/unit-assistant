@@ -11,6 +11,7 @@ interface TaskViewProps {
   learningOutcome: LearningOutcome;
   task: TaskItem;
   unitId: string;
+  unit: Unit;
   answer?: StudentAnswer;
   onAnswerUpdate: (content: string) => void;
   onRequestFeedback: () => Promise<void>;
@@ -27,6 +28,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   learningOutcome,
   task,
   unitId,
+  unit,
   answer,
   onAnswerUpdate,
   onRequestFeedback,
@@ -59,6 +61,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const quillRef = useRef<ReactQuill>(null);
+
+  // Get unit task context
+  const unitTaskContext = unit.unit_tasks?.find(unitTask => 
+    unitTask.learning_outcomes.includes(learningOutcome.id) && 
+    unitTask.outcome_tasks.includes(task.id)
+  );
 
   // Load example questions from localStorage
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
