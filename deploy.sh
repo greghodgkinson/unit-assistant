@@ -10,6 +10,7 @@ IMAGE_NAME="unit-assistant"
 CONTAINER_NAME="unit-assistant-app"
 PORT="3001"
 STORAGE_DIR="$HOME/.learning-assistant"
+PODMAN_ROOT="$HOME/.local/share/containers/storage"
 
 echo "🚀 Starting deployment of Unit Assistant..."
 
@@ -22,6 +23,9 @@ else
     echo "   Storage directory already exists: $STORAGE_DIR"
 fi
 
+# Ensure podman storage root exists
+mkdir -p "$PODMAN_ROOT"
+
 # Check if podman is installed
 if ! command -v podman &> /dev/null; then
     echo "❌ Error: Podman is not installed. Please install podman first."
@@ -31,23 +35,23 @@ fi
 
 # Stop and remove existing container if it exists
 echo "🛑 Stopping existing container (if running)..."
-if podman ps -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman --root="$PODMAN_ROOT" ps -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "   Stopping container: $CONTAINER_NAME"
-    podman stop $CONTAINER_NAME
+    podman --root="$PODMAN_ROOT" stop $CONTAINER_NAME
 fi
 
-if podman ps -a -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman --root="$PODMAN_ROOT" ps -a -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "   Removing container: $CONTAINER_NAME"
-    podman rm $CONTAINER_NAME
+    podman --root="$PODMAN_ROOT" rm $CONTAINER_NAME
 fi
 
 # Build the Docker image
 echo "🔨 Building Docker image: $IMAGE_NAME"
-podman build -t $IMAGE_NAME .
+podman --root="$PODMAN_ROOT" build -t $IMAGE_NAME .
 
 # Run the new container
 echo "🏃 Starting new container..."
-podman run -d \
+podman --root="$PODMAN_ROOT" run -d \
     --name $CONTAINER_NAME \
     -p $PORT:3001 \
     -v "$STORAGE_DIR:/app/storage" \
@@ -56,21 +60,21 @@ podman run -d \
 
 # Check if container is running
 sleep 2
-if podman ps -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman --root="$PODMAN_ROOT" ps -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "✅ Deployment successful!"
     echo "🌐 Application is running at: http://localhost:3001"
     echo "📊 Container status:"
-    podman ps -f name=$CONTAINER_NAME
+    podman --root="$PODMAN_ROOT" ps -f name=$CONTAINER_NAME
 else
     echo "❌ Deployment failed! Container is not running."
     echo "📋 Container logs:"
-    podman logs $CONTAINER_NAME
+    podman --root="$PODMAN_ROOT" logs $CONTAINER_NAME
     exit 1
 fi
 
 echo ""
 echo "🔧 Useful commands:"
-echo "   View logs:    podman logs $CONTAINER_NAME"
-echo "   Stop app:     podman stop $CONTAINER_NAME"
-echo "   Restart app:  podman restart $CONTAINER_NAME"
-echo "   Remove app:   podman rm -f $CONTAINER_NAME"
+echo "   View logs:    podman --root=\"$PODMAN_ROOT\" logs $CONTAINER_NAME"
+echo "   Stop app:     podman --root=\"$PODMAN_ROOT\" stop $CONTAINER_NAME"
+echo "   Restart app:  podman --root=\"$PODMAN_ROOT\" restart $CONTAINER_NAME"
+echo "   Remove app:   podman --root=\"$PODMAN_ROOT\" rm -f $CONTAINER_NAME"
