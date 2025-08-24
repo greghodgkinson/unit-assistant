@@ -13,12 +13,21 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run server\" --names \"frontend,backend\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
+    "@tiptap/extension-color": "^3.3.0",
+    "@tiptap/extension-highlight": "^3.3.0",
+    "@tiptap/extension-link": "^3.3.0",
+    "@tiptap/extension-table": "^3.3.0",
+    "@tiptap/extension-table-cell": "^3.3.0",
+    "@tiptap/extension-table-header": "^3.3.0",
+    "@tiptap/extension-table-row": "^3.3.0",
+    "@tiptap/extension-text-style": "^3.3.0",
+    "@tiptap/extension-underline": "^3.3.0",
+    "@tiptap/react": "^3.3.0",
+    "@tiptap/starter-kit": "^3.3.0",
     "express": "^4.18.2",
     "lucide-react": "^0.344.0",
-    "quill": "^2.0.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-quill": "^2.0.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

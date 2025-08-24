@@ -2,42 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Rich text editor styles */
-.ql-editor {
-  min-height: 150px;
+/* Tiptap editor styles */
+.ProseMirror {
+  outline: none;
 }
 
-.ql-container {
-  font-family: inherit;
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
-.ql-toolbar {
-  border-top: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-bottom: none;
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1em;
+  border: 2px solid #ced4da;
+  padding: 3px 5px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.ql-container {
-  border-bottom: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-top: none;
+.ProseMirror th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f1f3f4;
 }
 
-/* Custom styles for undo/redo buttons in Quill toolbar */
-.ql-toolbar .ql-undo:after {
-  content: "↶";
-  font-size: 16px;
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
 }
 
-.ql-toolbar .ql-redo:after {
-  content: "↷";
-  font-size: 16px;
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #adf;
+  pointer-events: none;
 }
 
-.ql-toolbar .ql-undo,
-.ql-toolbar .ql-redo {
-  width: 28px;
-  height: 24px;
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+
+/* Table hover effects */
+.ProseMirror table:hover .column-resize-handle {
+  background-color: #68d391;
+}
+
+/* Blockquote styling */
+.ProseMirror blockquote {
+  padding-left: 1rem;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+}
+
+/* Code styling */
+.ProseMirror code {
+  background-color: #f7fafc;
+  color: #2d3748;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+/* Link styling */
+.ProseMirror a {
+  color: #3182ce;
+  text-decoration: underline;
+}
+
+.ProseMirror a:hover {
+  color: #2c5282;
 }

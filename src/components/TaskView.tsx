@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo, Volume2, VolumeX, List } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
 import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
+import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -60,7 +59,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const quillRef = useRef<ReactQuill>(null);
+  const editorRef = useRef<TiptapEditorRef>(null);
 
   // Get unit task context
   const unitTaskContext = unit.unit_tasks?.find(unitTask => 
@@ -91,29 +90,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
       setExampleQuestions(DEFAULT_EXAMPLE_QUESTIONS);
     }
   }, []);
-
-  // Rich text editor configuration
-  const quillModules = {
-    toolbar: [
-      ['undo', 'redo'],
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      ['link'],
-      ['clean']
-    ],
-    history: {
-      delay: 1000,
-      maxStack: 50,
-      userOnly: true
-    }
-  };
-
-  const quillFormats = [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent', 'link'
-  ];
 
   // Update content when task changes
   useEffect(() => {
@@ -218,9 +194,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
       setHasUnsavedChanges(true);
       
       // Focus the editor after undo
-      if (quillRef.current) {
-        const editor = quillRef.current.getEditor();
-        editor.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }
   };
@@ -237,9 +212,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
       setHasUnsavedChanges(true);
       
       // Focus the editor after redo
-      if (quillRef.current) {
-        const editor = quillRef.current.getEditor();
-        editor.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }
   };
@@ -606,16 +580,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
               </div>
             </div>
             <div className="flex-1 flex flex-col min-h-0">
-              <ReactQuill
-                ref={quillRef}
-                theme="snow"
+              <TiptapEditor
+                ref={editorRef}
                 value={content}
                 onChange={handleContentChange}
-                modules={quillModules}
-                formats={quillFormats}
                 placeholder="Enter your answer here..."
                 className="flex-1 min-h-0"
-                style={{ height: '100%' }}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={undoStack.length > 1}
+                canRedo={redoStack.length > 0}
               />
             </div>
             {answer && (
@@ -957,15 +931,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
           
           <div className="h-64">
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
+            <TiptapEditor
+              ref={editorRef}
               value={content}
               onChange={handleContentChange}
-              modules={quillModules}
-              formats={quillFormats}
               placeholder="Enter your answer here..."
-              style={{ height: '200px' }}
+              className="h-full"
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={undoStack.length > 1}
+              canRedo={redoStack.length > 0}
             />
           </div>
           
