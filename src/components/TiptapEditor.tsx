@@ -154,13 +154,48 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     if (!editor) return;
     
     try {
-      // Get HTML content from the editor to preserve formatting
-      const htmlContent = editor.getHTML();
+      // Get HTML content and clean it for better Word compatibility
+      let htmlContent = editor.getHTML();
       const textContent = editor.getText();
+      
+      // Enhance HTML for better Word compatibility
+      htmlContent = htmlContent
+        // Ensure proper paragraph structure
+        .replace(/<p><\/p>/g, '<p>&nbsp;</p>')
+        // Add Word-friendly table styling
+        .replace(/<table>/g, '<table border="1" cellpadding="4" cellspacing="0" style="border-collapse: collapse; width: 100%;">')
+        // Ensure proper list formatting
+        .replace(/<ul>/g, '<ul style="margin: 0; padding-left: 20px;">')
+        .replace(/<ol>/g, '<ol style="margin: 0; padding-left: 20px;">')
+        // Add proper styling for better Word interpretation
+        .replace(/<strong>/g, '<strong style="font-weight: bold;">')
+        .replace(/<em>/g, '<em style="font-style: italic;">')
+        .replace(/<u>/g, '<u style="text-decoration: underline;">');
+      
+      // Create a more comprehensive HTML document for Word
+      const fullHtmlContent = `
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; }
+              table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+              th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; font-weight: bold; }
+              ul, ol { margin: 10px 0; padding-left: 20px; }
+              p { margin: 10px 0; }
+              blockquote { margin: 10px 0; padding-left: 20px; border-left: 3px solid #ccc; }
+            </style>
+          </head>
+          <body>
+            ${htmlContent}
+          </body>
+        </html>
+      `;
       
       // Create clipboard data with both HTML and plain text
       const clipboardData = new ClipboardItem({
-        'text/html': new Blob([htmlContent], { type: 'text/html' }),
+        'text/html': new Blob([fullHtmlContent], { type: 'text/html' }),
         'text/plain': new Blob([textContent], { type: 'text/plain' })
       });
       
