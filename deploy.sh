@@ -35,23 +35,23 @@ fi
 
 # Stop and remove existing container if it exists
 echo "🛑 Stopping existing container (if running)..."
-if podman --root="$PODMAN_ROOT" ps -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman ps -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "   Stopping container: $CONTAINER_NAME"
-    podman --root="$PODMAN_ROOT" stop $CONTAINER_NAME
+    podman stop $CONTAINER_NAME
 fi
 
-if podman --root="$PODMAN_ROOT" ps -a -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman ps -a -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "   Removing container: $CONTAINER_NAME"
-    podman --root="$PODMAN_ROOT" rm $CONTAINER_NAME
+    podman rm $CONTAINER_NAME
 fi
 
 # Build the Docker image
 echo "🔨 Building Docker image: $IMAGE_NAME"
-podman --root="$PODMAN_ROOT" build -t $IMAGE_NAME .
+podman build -t $IMAGE_NAME .
 
 # Run the new container
 echo "🏃 Starting new container..."
-podman --root="$PODMAN_ROOT" run -d \
+podman run -d \
     --name $CONTAINER_NAME \
     -p $PORT:3001 \
     -v "$STORAGE_DIR:/app/storage" \
@@ -60,15 +60,15 @@ podman --root="$PODMAN_ROOT" run -d \
 
 # Check if container is running
 sleep 2
-if podman --root="$PODMAN_ROOT" ps -q -f name=$CONTAINER_NAME | grep -q .; then
+if podman ps -q -f name=$CONTAINER_NAME | grep -q .; then
     echo "✅ Deployment successful!"
     echo "🌐 Application is running at: http://localhost:3001"
     echo "📊 Container status:"
-    podman --root="$PODMAN_ROOT" ps -f name=$CONTAINER_NAME
+    podman ps -f name=$CONTAINER_NAME
 else
     echo "❌ Deployment failed! Container is not running."
     echo "📋 Container logs:"
-    podman --root="$PODMAN_ROOT" logs $CONTAINER_NAME
+    podman logs $CONTAINER_NAME
     exit 1
 fi
 
