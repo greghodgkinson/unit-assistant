@@ -154,14 +154,22 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     if (!editor) return;
     
     try {
-      // Get plain text content from the editor
+      // Get HTML content from the editor to preserve formatting
+      const htmlContent = editor.getHTML();
       const textContent = editor.getText();
-      await navigator.clipboard.writeText(textContent);
+      
+      // Create clipboard data with both HTML and plain text
+      const clipboardData = new ClipboardItem({
+        'text/html': new Blob([htmlContent], { type: 'text/html' }),
+        'text/plain': new Blob([textContent], { type: 'text/plain' })
+      });
+      
+      await navigator.clipboard.write([clipboardData]);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      // Fallback for older browsers
+      // Fallback for older browsers - copy as plain text
       try {
         const textArea = document.createElement('textarea');
         textArea.value = editor.getText();
@@ -300,7 +308,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
           className={`p-2 rounded hover:bg-gray-200 transition-colors ${
             copySuccess ? 'bg-green-100 text-green-700' : 'text-gray-700'
           }`}
-          title={copySuccess ? 'Copied!' : 'Copy all content to clipboard'}
+          title={copySuccess ? 'Copied with formatting!' : 'Copy all content with formatting to clipboard'}
         >
           <Copy className="h-4 w-4" />
         </button>
