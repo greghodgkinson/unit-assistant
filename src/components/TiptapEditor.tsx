@@ -27,7 +27,8 @@ import {
   Undo,
   Redo,
   Palette,
-  Highlighter
+  Highlighter,
+  Copy
 } from 'lucide-react';
 
 interface TiptapEditorProps {
@@ -56,6 +57,8 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   canUndo = false,
   canRedo = false
 }, ref) => {
+  const [copySuccess, setCopySuccess] = useState(false);
+
   // Migrate Quill content to Tiptap format if needed
   const migratedContent = React.useMemo(() => {
     if (isQuillContent(content)) {
@@ -145,6 +148,33 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
 
   const deleteRow = () => {
     editor.chain().focus().deleteRow().run();
+  };
+
+  const copyToClipboard = async () => {
+    if (!editor) return;
+    
+    try {
+      // Get plain text content from the editor
+      const textContent = editor.getText();
+      await navigator.clipboard.writeText(textContent);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = editor.getText();
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed: ', fallbackErr);
+      }
+    }
   };
 
   const setLink = () => {
@@ -260,6 +290,19 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
           title="Link"
         >
           <LinkIcon className="h-4 w-4" />
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        {/* Copy to Clipboard */}
+        <button
+          onClick={copyToClipboard}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            copySuccess ? 'bg-green-100 text-green-700' : 'text-gray-700'
+          }`}
+          title={copySuccess ? 'Copied!' : 'Copy all content to clipboard'}
+        >
+          <Copy className="h-4 w-4" />
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1"></div>
