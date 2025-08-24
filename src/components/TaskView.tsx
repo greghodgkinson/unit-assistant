@@ -933,7 +933,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           <div className="h-64">
             <TiptapEditor
               ref={editorRef}
-              value={content}
+              content={content}
               onChange={handleContentChange}
               placeholder="Enter your answer here..."
               className="h-full"
