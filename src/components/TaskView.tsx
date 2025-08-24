@@ -218,6 +218,25 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
+  // Save content before switching to fullscreen
+  const handleEnterFullscreen = () => {
+    // Force save current content
+    if (hasUnsavedChanges) {
+      onAnswerUpdate(content);
+      setHasUnsavedChanges(false);
+    }
+    setIsFullscreen(true);
+  };
+
+  // Save content before exiting fullscreen
+  const handleExitFullscreen = () => {
+    // Force save current content
+    if (hasUnsavedChanges) {
+      onAnswerUpdate(content);
+      setHasUnsavedChanges(false);
+    }
+    setIsFullscreen(false);
+  };
   const handleSave = () => {
     // Clear autosave timer since we're manually saving
     if (autosaveTimerRef.current) {
@@ -582,7 +601,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             <div className="flex-1 flex flex-col min-h-0">
               <TiptapEditor
                 ref={editorRef}
-                value={content}
+                content={content}
                 onChange={handleContentChange}
                 placeholder="Enter your answer here..."
                 className="flex-1 min-h-0"
@@ -870,7 +889,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 </button>
               </div>
               <button
-                onClick={() => setIsFullscreen(true)}
+                onClick={handleEnterFullscreen}
                 className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                 title="Fullscreen view"
               >
