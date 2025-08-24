@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { migrateQuillToTiptap, isQuillContent } from '../utils/contentMigration';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableHeader } from '@tiptap/extension-table-header';
@@ -55,6 +56,15 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   canUndo = false,
   canRedo = false
 }, ref) => {
+  // Migrate Quill content to Tiptap format if needed
+  const migratedContent = React.useMemo(() => {
+    if (isQuillContent(content)) {
+      console.log('Migrating Quill content to Tiptap format');
+      return migrateQuillToTiptap(content);
+    }
+    return content;
+  }, [content]);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -79,7 +89,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         },
       }),
     ],
-    content,
+    content: migratedContent,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -96,10 +106,10 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   }));
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && migratedContent !== editor.getHTML()) {
+      editor.commands.setContent(migratedContent);
     }
-  }, [content, editor]);
+  }, [migratedContent, editor]);
 
   if (!editor) {
     return null;

@@ -5,6 +5,7 @@ import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } f
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
 import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
+import { migrateQuillToTiptap, isQuillContent } from '../utils/contentMigration';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -93,7 +94,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   // Update content when task changes
   useEffect(() => {
-    setContent(answer?.content || '');
+    const rawContent = answer?.content || '';
+    // Migrate Quill content if needed
+    const migratedContent = isQuillContent(rawContent) ? migrateQuillToTiptap(rawContent) : rawContent;
+    setContent(migratedContent);
     setUndoStack([]);
     setRedoStack([]);
     setHasUnsavedChanges(false);
