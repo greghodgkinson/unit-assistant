@@ -229,6 +229,8 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }
+  )
 
   // Initial auto-resize when editor is ready
   useEffect(() => {
@@ -237,6 +239,8 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         autoResizeForModeSwitch();
       }, 300);
     }
+  }
+  )
 
   if (!editor) {
     return null;
