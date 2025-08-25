@@ -415,7 +415,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
       </div>
 
       {/* Editor */}
-      <div className="min-h-[200px] overflow-y-auto flex-1">
+      <div className="min-h-[200px] max-h-full overflow-y-auto flex-1">
         <EditorContent editor={editor} />
       </div>
     </div>
