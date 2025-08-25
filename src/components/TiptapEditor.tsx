@@ -112,28 +112,84 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     const editorElement = editor.view.dom;
     if (!editorElement) return;
     
-    // Calculate content height
-    const contentHeight = editorElement.scrollHeight;
-    const minHeight = 200; // Minimum height in pixels
-    const maxHeight = window.innerHeight * 0.8; // Maximum 80% of viewport height
+    // Force editor to update its view first
+    editor.view.updateState(editor.view.state);
     
-    // Calculate optimal height
-    let optimalHeight = Math.max(minHeight, contentHeight + 40); // Add padding
-    optimalHeight = Math.min(optimalHeight, maxHeight);
-    
-    setEditorHeight(`${optimalHeight}px`);
-    
-    // Force a re-render of the editor view
+    // Wait a moment for the view to update, then calculate height
     setTimeout(() => {
-      editor.commands.focus();
-      window.dispatchEvent(new Event('resize'));
+      // Calculate content height
+      const contentHeight = editorElement.scrollHeight;
+      const minHeight = 200; // Minimum height in pixels
+      const maxHeight = window.innerHeight * 0.8; // Maximum 80% of viewport height
+      
+      // Calculate optimal height with more padding for better visibility
+      let optimalHeight = Math.max(minHeight, contentHeight + 60); // Increased padding
+      optimalHeight = Math.min(optimalHeight, maxHeight);
+      
+      console.log('Auto-resize:', { contentHeight, optimalHeight, currentHeight: editorHeight });
+      
+      setEditorHeight(`${optimalHeight}px`);
+      
+      // Force a re-render of the editor view after height change
+      setTimeout(() => {
+        if (editor && editor.view) {
+          editor.commands.focus();
+          // Scroll to end to ensure all content is visible
+          const { state } = editor.view;
+          const endPos = state.doc.content.size;
+          editor.commands.setTextSelection(endPos);
+          editor.commands.scrollIntoView();
+        }
+      }, 50);
     }, 50);
+  };
+
+  // Enhanced auto-resize for mode switching
+  const autoResizeForModeSwitch = () => {
+    if (!editor) return;
+    
+    // Force multiple updates to ensure content is properly recognized
+    const performResize = () => {
+      const editorElement = editor.view.dom;
+      if (!editorElement) return;
+      
+      // Force editor to update and recognize all content
+      editor.view.updateState(editor.view.state);
+      editor.commands.focus();
+      
+      // Calculate height based on actual content
+      const contentHeight = editorElement.scrollHeight;
+      const minHeight = 200;
+      const maxHeight = window.innerHeight * 0.8;
+      
+      let optimalHeight = Math.max(minHeight, contentHeight + 80); // Extra padding for mode switches
+      optimalHeight = Math.min(optimalHeight, maxHeight);
+      
+      console.log('Mode switch resize:', { contentHeight, optimalHeight });
+      
+      setEditorHeight(`${optimalHeight}px`);
+      
+      // Ensure content is visible
+      setTimeout(() => {
+        if (editor && editor.view) {
+          const { state } = editor.view;
+          const endPos = state.doc.content.size;
+          editor.commands.setTextSelection(endPos);
+          editor.commands.scrollIntoView();
+        }
+      }, 100);
+    };
+    
+    // Perform resize multiple times to ensure it takes effect
+    performResize();
+    setTimeout(performResize, 100);
+    setTimeout(performResize, 300);
   };
 
   useImperativeHandle(ref, () => ({
     focus: () => editor?.commands.focus(),
     getEditor: () => editor,
-    autoResize,
+    autoResize: autoResizeForModeSwitch, // Use enhanced version for mode switches
   }));
 
   useEffect(() => {
@@ -164,24 +220,23 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   useEffect(() => {
     const handleResize = () => {
       if (editor) {
-        // Force editor to recalculate its dimensions and auto-resize
+        // Debounced resize to avoid excessive calculations
         setTimeout(() => {
-          editor.commands.focus();
-          autoResize();
-        }, 50);
+          autoResizeForModeSwitch();
+        }, 100);
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [editor]);
 
   // Initial auto-resize when editor is ready
   useEffect(() => {
     if (editor && content) {
-      setTimeout(autoResize, 200);
+      setTimeout(() => {
+        autoResizeForModeSwitch();
+      }, 300);
     }
-  }, [editor, content]);
 
   if (!editor) {
     return null;

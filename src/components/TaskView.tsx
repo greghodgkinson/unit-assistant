@@ -236,15 +236,17 @@ export const TaskView: React.FC<TaskViewProps> = ({
       if (editorRef.current) {
         const editor = editorRef.current.getEditor();
         if (editor) {
-          // Force editor to refresh its view and auto-resize
+          // Force editor to refresh its view
           editor.commands.focus();
-          // Trigger a layout recalculation and auto-resize
+          // Trigger a layout recalculation
           window.dispatchEvent(new Event('resize'));
-          // Auto-resize based on content
+          // Auto-resize based on content for fullscreen
           editorRef.current.autoResize();
+          // Force editor to recognize all content
+          editor.view.updateState(editor.view.state);
         }
       }
-    }, 150);
+    }, 200);
   };
 
   // Save content before exiting fullscreen
@@ -261,15 +263,17 @@ export const TaskView: React.FC<TaskViewProps> = ({
       if (editorRef.current) {
         const editor = editorRef.current.getEditor();
         if (editor) {
-          // Force editor to refresh its view and auto-resize
+          // Force editor to refresh its view
           editor.commands.focus();
-          // Trigger a layout recalculation and auto-resize
+          // Trigger a layout recalculation
           window.dispatchEvent(new Event('resize'));
-          // Auto-resize based on content
+          // Auto-resize based on content for normal mode
           editorRef.current.autoResize();
+          // Force editor to recognize all content
+          editor.view.updateState(editor.view.state);
         }
       }
-    }, 150);
+    }, 200);
   };
   const handleSave = () => {
     // Clear autosave timer since we're manually saving
