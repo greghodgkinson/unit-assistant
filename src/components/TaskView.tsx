@@ -612,7 +612,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         {/* Fullscreen Answer Section */}
         <div className="flex-1 p-6 overflow-y-auto flex min-h-0">
           {/* Answer Section */}
-          <div className="flex-1 flex flex-col mr-6 min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col mr-6 min-h-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Your Answer</h2>
               <div className="flex items-center space-x-2">
@@ -636,13 +636,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 </button>
               </div>
             </div>
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0">
               <TiptapEditor
                 ref={editorRef}
                 content={content}
                 onChange={handleContentChange}
                 placeholder="Enter your answer here..."
-                className="flex-1 min-h-0"
+                className="flex-1 min-h-0 max-h-full"
                 onUndo={handleUndo}
                 onRedo={handleRedo}
                 canUndo={undoStack.length > 1}

@@ -148,6 +148,26 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   const autoResizeForModeSwitch = () => {
     if (!editor) return;
     
+    // Check if we're in fullscreen mode (max-h-full class present)
+    const isFullscreen = className.includes('max-h-full');
+    
+    if (isFullscreen) {
+      // In fullscreen, don't auto-resize height - let it use available space
+      setEditorHeight('auto');
+      
+      // Just ensure content is visible
+      setTimeout(() => {
+        if (editor && editor.view) {
+          editor.commands.focus();
+          const { state } = editor.view;
+          const endPos = state.doc.content.size;
+          editor.commands.setTextSelection(endPos);
+          editor.commands.scrollIntoView();
+        }
+      }, 100);
+      return;
+    }
+    
     // Force multiple updates to ensure content is properly recognized
     const performResize = () => {
       const editorElement = editor.view.dom;
@@ -364,7 +384,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   const isTableActive = editor.isActive('table');
 
   return (
-    <div className={`border border-gray-300 rounded-lg ${className}`}>
+    <div className={`border border-gray-300 rounded-lg flex flex-col ${className}`}>
       {/* Toolbar */}
       <div className="border-b border-gray-300 p-2 flex flex-wrap gap-1 bg-gray-50">
         {/* Undo/Redo */}
@@ -541,11 +561,11 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
 
       {/* Editor */}
       <div 
-        className="flex-1 overflow-y-auto max-h-full transition-all duration-300" 
+        className="flex-1 overflow-y-auto transition-all duration-300" 
         style={{ 
           minHeight: '200px',
-          height: editorHeight,
-          maxHeight: '80vh'
+          height: className.includes('max-h-full') ? 'auto' : editorHeight,
+          maxHeight: className.includes('max-h-full') ? '100%' : '80vh'
         }}
       >
         <EditorContent editor={editor} />
