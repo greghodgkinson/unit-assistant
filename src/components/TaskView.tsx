@@ -953,13 +953,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
             </div>
           </div>
           
-          <div className="h-64 overflow-hidden">
+          <div className="h-64 overflow-hidden flex flex-col">
             <TiptapEditor
               ref={editorRef}
               content={content}
               onChange={handleContentChange}
               placeholder="Enter your answer here..."
-              className="h-full"
+              className="h-full flex flex-col"
               onUndo={handleUndo}
               onRedo={handleRedo}
               canUndo={undoStack.length > 1}
