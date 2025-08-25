@@ -230,6 +230,19 @@ export const TaskView: React.FC<TaskViewProps> = ({
       setHasUnsavedChanges(false);
     }
     setIsFullscreen(true);
+    
+    // Force editor to recalculate layout after fullscreen transition
+    setTimeout(() => {
+      if (editorRef.current) {
+        const editor = editorRef.current.getEditor();
+        if (editor) {
+          // Force editor to refresh its view
+          editor.commands.focus();
+          // Trigger a layout recalculation
+          window.dispatchEvent(new Event('resize'));
+        }
+      }
+    }, 100);
   };
 
   // Save content before exiting fullscreen
@@ -240,6 +253,19 @@ export const TaskView: React.FC<TaskViewProps> = ({
       setHasUnsavedChanges(false);
     }
     setIsFullscreen(false);
+    
+    // Force editor to recalculate layout after exiting fullscreen
+    setTimeout(() => {
+      if (editorRef.current) {
+        const editor = editorRef.current.getEditor();
+        if (editor) {
+          // Force editor to refresh its view
+          editor.commands.focus();
+          // Trigger a layout recalculation
+          window.dispatchEvent(new Event('resize'));
+        }
+      }
+    }, 100);
   };
   const handleSave = () => {
     // Clear autosave timer since we're manually saving

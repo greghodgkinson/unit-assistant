@@ -114,6 +114,21 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     }
   }, [migratedContent, editor]);
 
+  // Handle window resize to recalculate editor layout
+  useEffect(() => {
+    const handleResize = () => {
+      if (editor) {
+        // Force editor to recalculate its dimensions
+        setTimeout(() => {
+          editor.commands.focus();
+        }, 50);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
