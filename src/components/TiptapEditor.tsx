@@ -235,12 +235,9 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   // Initial auto-resize when editor is ready
   useEffect(() => {
     if (editor && content) {
-      setTimeout(() => {
-        autoResizeForModeSwitch();
-      }, 300);
+      setTimeout(autoResize, 200);
     }
-  }
-  )
+  }, [editor, content]);
 
   if (!editor) {
     return null;
