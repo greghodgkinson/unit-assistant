@@ -45,6 +45,7 @@ interface TiptapEditorProps {
 export interface TiptapEditorRef {
   focus: () => void;
   getEditor: () => any;
+  autoResize: () => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
@@ -58,6 +59,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   canRedo = false
 }, ref) => {
   const [copySuccess, setCopySuccess] = useState(false);
+  const [editorHeight, setEditorHeight] = useState<string>('200px');
 
   // Migrate Quill content to Tiptap format if needed
   const migratedContent = React.useMemo(() => {
@@ -103,9 +105,35 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     },
   });
 
+  const autoResize = () => {
+    if (!editor) return;
+    
+    // Get the editor element
+    const editorElement = editor.view.dom;
+    if (!editorElement) return;
+    
+    // Calculate content height
+    const contentHeight = editorElement.scrollHeight;
+    const minHeight = 200; // Minimum height in pixels
+    const maxHeight = window.innerHeight * 0.8; // Maximum 80% of viewport height
+    
+    // Calculate optimal height
+    let optimalHeight = Math.max(minHeight, contentHeight + 40); // Add padding
+    optimalHeight = Math.min(optimalHeight, maxHeight);
+    
+    setEditorHeight(`${optimalHeight}px`);
+    
+    // Force a re-render of the editor view
+    setTimeout(() => {
+      editor.commands.focus();
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
+  };
+
   useImperativeHandle(ref, () => ({
     focus: () => editor?.commands.focus(),
     getEditor: () => editor,
+    autoResize,
   }));
 
   useEffect(() => {
@@ -114,13 +142,32 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     }
   }, [migratedContent, editor]);
 
+  // Auto-resize when content changes
+  useEffect(() => {
+    if (editor) {
+      const handleUpdate = () => {
+        // Debounce auto-resize to avoid excessive calculations
+        setTimeout(autoResize, 100);
+      };
+      
+      editor.on('update', handleUpdate);
+      editor.on('focus', handleUpdate);
+      
+      return () => {
+        editor.off('update', handleUpdate);
+        editor.off('focus', handleUpdate);
+      };
+    }
+  }, [editor]);
+
   // Handle window resize to recalculate editor layout
   useEffect(() => {
     const handleResize = () => {
       if (editor) {
-        // Force editor to recalculate its dimensions
+        // Force editor to recalculate its dimensions and auto-resize
         setTimeout(() => {
           editor.commands.focus();
+          autoResize();
         }, 50);
       }
     };
@@ -128,6 +175,13 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [editor]);
+
+  // Initial auto-resize when editor is ready
+  useEffect(() => {
+    if (editor && content) {
+      setTimeout(autoResize, 200);
+    }
+  }, [editor, content]);
 
   if (!editor) {
     return null;
@@ -430,7 +484,14 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-y-auto max-h-full" style={{ minHeight: '200px' }}>
+      <div 
+        className="flex-1 overflow-y-auto max-h-full transition-all duration-300" 
+        style={{ 
+          minHeight: '200px',
+          height: editorHeight,
+          maxHeight: '80vh'
+        }}
+      >
         <EditorContent editor={editor} />
       </div>
     </div>
