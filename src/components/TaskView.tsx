@@ -811,34 +811,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
             </div>
             <div className="ml-11">
               <p className="text-lg font-semibold text-gray-800">{getCleanTaskDescription(task.description)}</p>
-              {/* Collapsible Unit Task Reference */}
-{unitTaskContext && (
-  <div className="mt-2">
-    <button
-      onClick={() => setShowUnitTaskContext(!showUnitTaskContext)}
-      className="flex items-center justify-between w-full text-left"
-    >
-      <div className="flex items-center">
-        <List className="h-4 w-4 text-blue-600 mr-2" />
-        <span className="text-sm font-medium text-blue-900">
-          Part of: {unitTaskContext.id}
-        </span>
-      </div>
-      {showUnitTaskContext ? (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-gray-500" />
-            )}
-          </button>
-
-          {showUnitTaskContext && (
-            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
-            </div>
-          )}
-        </div>
-      )}
-
             </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
@@ -860,6 +832,32 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Unit Task Context */}
+      {unitTaskContext && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <button
+            onClick={() => setShowUnitTaskContext(!showUnitTaskContext)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <div className="flex items-center">
+              <List className="h-6 w-6 text-blue-600 mr-3" />
+              <h2 className="text-base font-medium text-gray-900">Part of: {unitTaskContext.id}</h2>
+            </div>
+            {showUnitTaskContext ? (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+          
+          {showUnitTaskContext && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Acceptance Criteria */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
