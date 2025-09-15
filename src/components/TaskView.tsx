@@ -842,7 +842,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           >
             <div className="flex items-center">
               <List className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-base font-medium text-gray-900">Part of: {unitTaskContext.id}</h2>
+              <h2 className="text-sm font-medium text-gray-900">Part of: {unitTaskContext.id}</h2>
             </div>
             {showUnitTaskContext ? (
               <ChevronDown className="h-5 w-5 text-gray-500" />
@@ -853,7 +853,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           
           {showUnitTaskContext && (
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
+              <p className="text-xs text-blue-800">{unitTaskContext.description}</p>
             </div>
           )}
         </div>
@@ -867,7 +867,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         >
           <div className="flex items-center">
             <CheckCircle className="h-6 w-6 text-blue-600 mr-3" />
-            <h2 className="text-base font-medium text-gray-900">Acceptance Criteria</h2>
+            <h2 className="text-sm font-medium text-gray-900">Acceptance Criteria</h2>
           </div>
           {showAcceptanceCriteria ? (
             <ChevronDown className="h-5 w-5 text-gray-500" />
@@ -895,7 +895,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         >
           <div className="flex items-center">
             <Compass className="h-6 w-6 text-gray-600 mr-3" />
-            <h2 className="text-base font-medium text-gray-900">Indicative Content</h2>
+            <h2 className="text-sm font-medium text-gray-900">Indicative Content</h2>
           </div>
           {showIndicativeContent ? (
             <ChevronDown className="h-5 w-5 text-gray-500" />
@@ -910,7 +910,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               {learningOutcome.indicative_content.map((content, index) => (
                 <li key={index} className="flex items-start">
                   <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span className="text-sm text-gray-700">{content.description}</span>
+                  <span className="text-xs text-gray-700">{content.description}</span>
                 </li>
               ))}
             </ul>
