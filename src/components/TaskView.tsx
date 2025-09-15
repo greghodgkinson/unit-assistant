@@ -57,6 +57,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [isUndoRedoAction, setIsUndoRedoAction] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [showUnitTaskContext, setShowUnitTaskContext] = useState(false);
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -809,16 +810,35 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
             <div className="ml-11">
-              <p className="text-gray-600">{getCleanTaskDescription(task.description)}</p>
-              {unitTaskContext && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center mb-1">
-                    <List className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-sm font-medium text-blue-900">Part of: {unitTaskContext.id}</span>
-                  </div>
-                  <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
-                </div>
-              )}
+              <p className="font-semibold text-gray-800">{getCleanTaskDescription(task.description)}</p>
+              {/* Collapsible Unit Task Reference */}
+{unitTaskContext && (
+  <div className="mt-2">
+    <button
+      onClick={() => setShowUnitTaskContext(!showUnitTaskContext)}
+      className="flex items-center justify-between w-full text-left"
+    >
+      <div className="flex items-center">
+        <List className="h-4 w-4 text-blue-600 mr-2" />
+        <span className="text-sm font-medium text-blue-900">
+          Part of: {unitTaskContext.id}
+        </span>
+      </div>
+      {showUnitTaskContext ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+          </button>
+
+          {showUnitTaskContext && (
+            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">{unitTaskContext.description}</p>
+            </div>
+          )}
+        </div>
+      )}
+
             </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
