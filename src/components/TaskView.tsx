@@ -420,12 +420,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
       s.replace(/__PROTECT__(part\s+[a-z])\)__/gi, '$1)');
 
     return (
-      <div className="text-gray-800 space-y-3">
-        {intro && <p>{restore(intro)}</p>}
+      <div className="text-gray-800 space-y-3 text-xs">
+        {intro && <p className="text-xs">{restore(intro)}</p>}
         {items.length > 0 && (
           <ul className="list-none space-y-2 ml-4">
             {items.map((item, idx) => (
-              <li key={idx} className="flex items-start">
+              <li key={idx} className="flex items-start text-xs">
                 <span className="font-bold mr-2">{item.letter})</span>
                 <span>{restore(item.content)}</span>
               </li>
