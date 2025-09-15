@@ -479,8 +479,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
     // Force bullets to new lines
     cleanDescription = cleanDescription
       .replace(/([.!?])\s*([•·-]\s*)/g, '$1\n$2') // After sentence endings
-      .replace(/([a-z])\s+([•·-]\s*)/g, '$1\n$2') // After lowercase letters
-      .replace(/\s*([•·-])\s*/g, '\n$1 ') // Normalize bullet spacing
+      .replace(/([a-z])\s+([•·]\s*)/g, '$1\n$2') // After lowercase letters (only • and ·, not -)
+      .replace(/\s*([•·])\s*/g, '\n$1 ') // Normalize bullet spacing (only • and ·)
+      .replace(/([.!?])\s*(-\s+)/g, '$1\n$2') // Only treat - as bullet after sentence endings
       .replace(/^\n+/, '') // Remove leading newlines
       .replace(/\n{3,}/g, '\n\n'); // Collapse multiple newlines
     
