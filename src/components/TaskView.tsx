@@ -472,9 +472,19 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const getCleanTaskDescription = (description: string) => {
     // Remove number at the beginning if it starts with a number followed by a period and space
     // Also remove (LO#) pattern at the end if it exists
-    return description
+    let cleanDescription = description
       .replace(/^\d+\.\d+\s+/, '')
       .replace(/\s*\(LO\d+\)\s*$/, '');
+    
+    // Force bullets to new lines
+    cleanDescription = cleanDescription
+      .replace(/([.!?])\s*([•·-]\s*)/g, '$1\n$2') // After sentence endings
+      .replace(/([a-z])\s+([•·-]\s*)/g, '$1\n$2') // After lowercase letters
+      .replace(/\s*([•·-])\s*/g, '\n$1 ') // Normalize bullet spacing
+      .replace(/^\n+/, '') // Remove leading newlines
+      .replace(/\n{3,}/g, '\n\n'); // Collapse multiple newlines
+    
+    return cleanDescription;
   };
   
 
@@ -810,7 +820,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
             <div className="ml-11">
-              <p className="text-lg font-semibold text-gray-800">{getCleanTaskDescription(task.description)}</p>
+              <div className="text-lg font-semibold text-gray-800 whitespace-pre-line">
+                {getCleanTaskDescription(task.description)}
+              </div>
             </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
