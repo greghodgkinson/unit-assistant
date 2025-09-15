@@ -835,87 +835,93 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
       {/* Unit Task Context */}
       {unitTaskContext && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <button
-            onClick={() => setShowUnitTaskContext(!showUnitTaskContext)}
-            className="flex items-center justify-between w-full text-left"
-          >
-            <div className="flex items-center">
-              <List className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-sm font-medium text-gray-900">Part of: {unitTaskContext.id}</h2>
-            </div>
-            {showUnitTaskContext ? (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-gray-500" />
-            )}
-          </button>
+        <div className="bg-white rounded-xl shadow-sm border">
+          <div className={showUnitTaskContext ? "p-6" : "p-3"}>
+            <button
+              onClick={() => setShowUnitTaskContext(!showUnitTaskContext)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <div className="flex items-center">
+                <List className="h-5 w-5 text-blue-600 mr-2" />
+                <h2 className="text-sm font-medium text-gray-900">Part of: {unitTaskContext.id}</h2>
+              </div>
+              {showUnitTaskContext ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
           
-          {showUnitTaskContext && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-800">{unitTaskContext.description}</p>
-            </div>
-          )}
+            {showUnitTaskContext && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-800">{unitTaskContext.description}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* Acceptance Criteria */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <button
-          onClick={() => setShowAcceptanceCriteria(!showAcceptanceCriteria)}
-          className="flex items-center justify-between w-full text-left"
-        >
-          <div className="flex items-center">
-            <CheckCircle className="h-6 w-6 text-blue-600 mr-3" />
-            <h2 className="text-sm font-medium text-gray-900">Acceptance Criteria</h2>
-          </div>
-          {showAcceptanceCriteria ? (
-            <ChevronDown className="h-5 w-5 text-gray-500" />
-          ) : (
-            <ChevronRight className="h-5 w-5 text-gray-500" />
-          )}
-        </button>
+      <div className="bg-white rounded-xl shadow-sm border">
+        <div className={showAcceptanceCriteria ? "p-6" : "p-3"}>
+          <button
+            onClick={() => setShowAcceptanceCriteria(!showAcceptanceCriteria)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+              <h2 className="text-sm font-medium text-gray-900">Acceptance Criteria</h2>
+            </div>
+            {showAcceptanceCriteria ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+          </button>
         
-        {showAcceptanceCriteria && (
-          <div className="mt-4 space-y-3">
-            {task.acceptance_criteria.map((criteria, index) => (
-              <div key={criteria.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                {formatCriteriaText(criteria.criteria)}
-              </div>
-            ))}
-          </div>
-        )}
+          {showAcceptanceCriteria && (
+            <div className="mt-4 space-y-3">
+              {task.acceptance_criteria.map((criteria, index) => (
+                <div key={criteria.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  {formatCriteriaText(criteria.criteria)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Indicative Content */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <button
-          onClick={() => setShowIndicativeContent(!showIndicativeContent)}
-          className="flex items-center justify-between w-full text-left"
-        >
-          <div className="flex items-center">
-            <Compass className="h-6 w-6 text-gray-600 mr-3" />
-            <h2 className="text-sm font-medium text-gray-900">Indicative Content</h2>
-          </div>
-          {showIndicativeContent ? (
-            <ChevronDown className="h-5 w-5 text-gray-500" />
-          ) : (
-            <ChevronRight className="h-5 w-5 text-gray-500" />
-          )}
-        </button>
+      <div className="bg-white rounded-xl shadow-sm border">
+        <div className={showIndicativeContent ? "p-6" : "p-3"}>
+          <button
+            onClick={() => setShowIndicativeContent(!showIndicativeContent)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <div className="flex items-center">
+              <Compass className="h-5 w-5 text-gray-600 mr-2" />
+              <h2 className="text-sm font-medium text-gray-900">Indicative Content</h2>
+            </div>
+            {showIndicativeContent ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+          </button>
         
-        {showIndicativeContent && (
-          <div className="mt-4">
-            <ul className="space-y-2">
-              {learningOutcome.indicative_content.map((content, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span className="text-xs text-gray-700">{content.description}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {showIndicativeContent && (
+            <div className="mt-4">
+              <ul className="space-y-2">
+                {learningOutcome.indicative_content.map((content, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span className="text-xs text-gray-700">{content.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Answer Section */}
