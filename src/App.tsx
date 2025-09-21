@@ -6,13 +6,14 @@ import { Settings } from './components/Settings';
 import { UnitOverview } from './components/UnitOverview';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TaskView } from './components/TaskView';
+import { OverallProgress } from './components/OverallProgress';
 import { WorkingTimeIndicator } from './components/WorkingTimeIndicator';
 import { useProgress } from './hooks/useProgress';
 import { useUnitManager } from './hooks/useUnitManager';
 import { requestFeedback } from './utils/feedbackService';
 import { Unit } from './types/Unit';
 
-type View = 'list' | 'upload' | 'load-storage' | 'settings' | 'overview' | 'dashboard' | 'task';
+type View = 'list' | 'upload' | 'load-storage' | 'settings' | 'overview' | 'dashboard' | 'task' | 'overall-progress';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('list');
@@ -208,6 +209,7 @@ function App() {
             onAddUnit={handleAddUnit}
             onLoadFromStorage={handleLoadFromStorage}
             onOpenSettings={() => setCurrentView('settings')}
+            onViewOverallProgress={() => setCurrentView('overall-progress')}
             onRemoveUnit={removeUnit}
             getUnit={getUnit}
           />
@@ -221,6 +223,15 @@ function App() {
       
       case 'settings':
         return <Settings onBack={() => setCurrentView('list')} />;
+      
+      case 'overall-progress':
+        return (
+          <OverallProgress
+            units={unitList}
+            getUnit={getUnit}
+            onBack={() => setCurrentView('list')}
+          />
+        );
       
       case 'overview':
         return unitData ? (

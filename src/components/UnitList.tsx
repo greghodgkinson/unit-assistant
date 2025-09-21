@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save, Download, Settings } from 'lucide-react';
+import { BookOpen, Plus, Calendar, CheckCircle, Clock, Trash2, Save, Download, Settings, BarChart3 } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
 import { downloadProgressAsJson, saveProgressToStorageFolder } from '../utils/storageExport';
 
@@ -9,6 +9,7 @@ interface UnitListProps {
   onAddUnit: () => void;
   onLoadFromStorage: () => void;
   onOpenSettings: () => void;
+  onViewOverallProgress: () => void;
   onRemoveUnit: (unitId: string) => void;
   getUnit: (unitId: string) => any;
 }
@@ -19,6 +20,7 @@ export const UnitList: React.FC<UnitListProps> = ({
   onAddUnit,
   onLoadFromStorage,
   onOpenSettings,
+  onViewOverallProgress,
   onRemoveUnit,
   getUnit
 }) => {
@@ -97,6 +99,15 @@ export const UnitList: React.FC<UnitListProps> = ({
             >
               <Save className="h-5 w-5 mr-2" />
               Save to Storage
+            </button>
+          )}
+          {units.length > 0 && (
+            <button
+              onClick={onViewOverallProgress}
+              className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+            >
+              <BarChart3 className="h-5 w-5 mr-2" />
+              Overall Progress
             </button>
           )}
           <button
