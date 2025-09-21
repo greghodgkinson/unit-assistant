@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Zap, Target, TrendingUp, Clock, Activity, Cpu, Database, Wifi, Signal, BarChart3, LineChart, PieChart, Monitor, Code, Terminal, Gamepad2, Trophy, Star, Flame, ChevronRight, Play, Pause, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Zap, Target, TrendingUp, Clock, Activity, Cpu, Database, Wifi, Signal, BarChart3, LineChart, PieChart, Monitor, Code, Terminal, Gamepad2, Trophy, Star, Flame, ChevronRight, Play, Pause, RotateCcw, Radio, Gauge, Timer, Flag } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
 
 interface OverallProgressProps {
@@ -36,6 +36,8 @@ interface ProgressStats {
   weeklyProgress: { week: string; completed: number }[];
   velocity: number; // tasks per day
   efficiency: number; // completion rate trend
+  sessionTime: number; // minutes today
+  bestStreak: number;
 }
 
 export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit, onBack }) => {
@@ -47,12 +49,12 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
   useEffect(() => {
     calculateStats();
     
-    // Simulate live updates every 30 seconds
+    // Update every 10 seconds for live feel
     const interval = setInterval(() => {
       if (isLive) {
         calculateStats();
       }
-    }, 30000);
+    }, 10000);
     
     return () => clearInterval(interval);
   }, [units, isLive]);
@@ -148,6 +150,7 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
 
     // Calculate streak (consecutive days with activity)
     const streakDays = calculateStreak(allTasks);
+    const bestStreak = calculateBestStreak(allTasks);
 
     // Get recent activity (last 10 completed tasks)
     const recentActivity = allTasks
@@ -167,6 +170,9 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
     // Calculate efficiency (improvement in completion rate)
     const efficiency = calculateEfficiency(completionTrend);
 
+    // Simulate session time (would be tracked in real app)
+    const sessionTime = Math.floor(Math.random() * 120) + 30;
+
     setStats({
       totalTasks,
       completedTasks,
@@ -181,7 +187,9 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
       completionTrend,
       weeklyProgress,
       velocity,
-      efficiency
+      efficiency,
+      sessionTime,
+      bestStreak
     });
 
     setLoading(false);
@@ -227,6 +235,39 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
     }
 
     return streak;
+  };
+
+  const calculateBestStreak = (tasks: TaskAnalytics[]): number => {
+    const completedTasks = tasks
+      .filter(t => t.status === 'completed' && t.completedDate)
+      .sort((a, b) => (a.completedDate?.getTime() || 0) - (b.completedDate?.getTime() || 0));
+
+    if (completedTasks.length === 0) return 0;
+
+    let bestStreak = 0;
+    let currentStreak = 0;
+    let lastDate: Date | null = null;
+
+    completedTasks.forEach(task => {
+      const taskDate = new Date(task.completedDate!);
+      taskDate.setHours(0, 0, 0, 0);
+
+      if (lastDate) {
+        const daysDiff = Math.floor((taskDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysDiff === 1) {
+          currentStreak++;
+        } else if (daysDiff > 1) {
+          bestStreak = Math.max(bestStreak, currentStreak);
+          currentStreak = 1;
+        }
+      } else {
+        currentStreak = 1;
+      }
+
+      lastDate = taskDate;
+    });
+
+    return Math.max(bestStreak, currentStreak);
   };
 
   const calculateCompletionTrend = (tasks: TaskAnalytics[]) => {
@@ -304,37 +345,35 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
     return olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-400';
-      case 'in-progress': return 'text-yellow-400';
-      case 'not-started': return 'text-gray-400';
-      default: return 'text-gray-400';
-    }
+  const getPerformanceStatus = () => {
+    if (stats!.completionRate >= 80) return { status: 'EXCELLENT', color: 'text-green-400', bg: 'bg-green-500/20' };
+    if (stats!.completionRate >= 60) return { status: 'STRONG', color: 'text-blue-400', bg: 'bg-blue-500/20' };
+    if (stats!.completionRate >= 40) return { status: 'STEADY', color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
+    return { status: 'BUILDING', color: 'text-orange-400', bg: 'bg-orange-500/20' };
   };
 
-  const getMetricIcon = (metric: string) => {
-    switch (metric) {
-      case 'completion': return Target;
-      case 'velocity': return Zap;
-      case 'streak': return Flame;
-      case 'efficiency': return TrendingUp;
-      default: return Activity;
-    }
+  const getMotivationalMessage = () => {
+    if (!stats) return '';
+    
+    if (stats.completionRate >= 90) return 'Outstanding performance - you\'re in the zone!';
+    if (stats.completionRate >= 70) return 'Solid progress - keep up the momentum!';
+    if (stats.completionRate >= 50) return 'Good pace - you\'re building consistency!';
+    if (stats.completionRate >= 25) return 'Nice start - every expert was once a beginner!';
+    return 'Ready to begin your learning journey!';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-green-400">
+      <div className="min-h-screen bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-2 border-green-400 border-t-transparent mx-auto mb-4"></div>
-                <div className="absolute inset-0 rounded-full h-16 w-16 border border-green-400/20 animate-pulse"></div>
+              <div className="relative mb-8">
+                <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin border-t-blue-500 mx-auto"></div>
+                <div className="absolute inset-0 w-16 h-16 border-2 border-blue-400/20 rounded-full animate-pulse mx-auto"></div>
               </div>
-              <div className="font-mono text-lg mb-2">INITIALIZING TELEMETRY...</div>
-              <div className="text-green-400/60 text-sm">Analyzing performance data</div>
+              <div className="text-xl font-semibold mb-2">Analyzing Performance Data</div>
+              <div className="text-slate-400">Processing telemetry...</div>
             </div>
           </div>
         </div>
@@ -344,12 +383,13 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
 
   if (!stats) {
     return (
-      <div className="min-h-screen bg-gray-900 text-red-400">
+      <div className="min-h-screen bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
-              <Terminal className="h-16 w-16 mx-auto mb-4" />
-              <div className="font-mono text-lg">ERROR: DATA UNAVAILABLE</div>
+              <Radio className="h-16 w-16 mx-auto mb-4 text-red-400" />
+              <div className="text-xl font-semibold text-red-400">Telemetry Unavailable</div>
+              <div className="text-slate-400">Unable to process performance data</div>
             </div>
           </div>
         </div>
@@ -357,33 +397,35 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
     );
   }
 
+  const performanceStatus = getPerformanceStatus();
+
   return (
-    <div className="min-h-screen bg-gray-900 text-green-400">
+    <div className="min-h-screen bg-slate-900 text-white">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="bg-black/50 border border-green-400/30 rounded-lg p-6 backdrop-blur-sm">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={onBack}
-              className="flex items-center text-green-400/80 hover:text-green-400 transition-colors font-mono"
+              className="flex items-center text-slate-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              BACK TO UNITS
+              Back to Units
             </button>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-                <span className="font-mono text-sm">{isLive ? 'LIVE' : 'OFFLINE'}</span>
+                <span className="text-sm font-medium">{isLive ? 'LIVE' : 'PAUSED'}</span>
               </div>
               <button
                 onClick={() => setIsLive(!isLive)}
-                className="p-2 border border-green-400/30 rounded hover:bg-green-400/10 transition-colors"
+                className="p-2 border border-slate-600 rounded hover:bg-slate-700 transition-colors"
               >
                 {isLive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </button>
               <button
                 onClick={calculateStats}
-                className="p-2 border border-green-400/30 rounded hover:bg-green-400/10 transition-colors"
+                className="p-2 border border-slate-600 rounded hover:bg-slate-700 transition-colors"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -392,26 +434,54 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
           
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
-              <Monitor className="h-8 w-8 mr-3" />
-              <h1 className="text-3xl font-mono font-bold">LEARNING TELEMETRY</h1>
-              <Database className="h-8 w-8 ml-3" />
+              <Flag className="h-8 w-8 mr-3 text-blue-400" />
+              <h1 className="text-3xl font-bold">Learning Telemetry</h1>
+              <Gauge className="h-8 w-8 ml-3 text-blue-400" />
             </div>
-            <div className="font-mono text-green-400/80">
-              SYSTEM STATUS: {stats.completionRate >= 80 ? 'OPTIMAL' : stats.completionRate >= 50 ? 'NOMINAL' : 'SUBOPTIMAL'}
+            <div className={`inline-flex items-center px-4 py-2 rounded-full ${performanceStatus.bg} ${performanceStatus.color} font-semibold mb-2`}>
+              Performance: {performanceStatus.status}
             </div>
-            <div className="text-sm text-green-400/60 mt-2">
-              Last updated: {new Date().toLocaleTimeString()} | {stats.totalTasks} total tasks tracked
+            <div className="text-slate-400 text-sm">
+              {getMotivationalMessage()}
             </div>
           </div>
         </div>
 
-        {/* Core Metrics */}
+        {/* Key Performance Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { key: 'completion', label: 'COMPLETION RATE', value: `${Math.round(stats.completionRate)}%`, icon: Target, color: 'green' },
-            { key: 'velocity', label: 'VELOCITY', value: `${stats.velocity.toFixed(1)}/day`, icon: Zap, color: 'blue' },
-            { key: 'streak', label: 'STREAK', value: `${stats.streakDays} days`, icon: Flame, color: 'orange' },
-            { key: 'efficiency', label: 'EFFICIENCY', value: `${stats.efficiency > 0 ? '+' : ''}${Math.round(stats.efficiency)}%`, icon: TrendingUp, color: 'purple' }
+            { 
+              key: 'completion', 
+              label: 'Completion Rate', 
+              value: `${Math.round(stats.completionRate)}%`, 
+              icon: Target, 
+              color: stats.completionRate >= 70 ? 'text-green-400' : stats.completionRate >= 40 ? 'text-yellow-400' : 'text-orange-400',
+              bg: stats.completionRate >= 70 ? 'bg-green-500/10' : stats.completionRate >= 40 ? 'bg-yellow-500/10' : 'bg-orange-500/10'
+            },
+            { 
+              key: 'velocity', 
+              label: 'Current Pace', 
+              value: `${stats.velocity.toFixed(1)}/day`, 
+              icon: Zap, 
+              color: stats.velocity >= 1 ? 'text-blue-400' : 'text-slate-400',
+              bg: stats.velocity >= 1 ? 'bg-blue-500/10' : 'bg-slate-500/10'
+            },
+            { 
+              key: 'streak', 
+              label: 'Current Streak', 
+              value: `${stats.streakDays} days`, 
+              icon: Flame, 
+              color: stats.streakDays >= 3 ? 'text-orange-400' : 'text-slate-400',
+              bg: stats.streakDays >= 3 ? 'bg-orange-500/10' : 'bg-slate-500/10'
+            },
+            { 
+              key: 'efficiency', 
+              label: 'Trend', 
+              value: `${stats.efficiency > 0 ? '+' : ''}${Math.round(stats.efficiency)}%`, 
+              icon: TrendingUp, 
+              color: stats.efficiency > 0 ? 'text-green-400' : stats.efficiency < 0 ? 'text-red-400' : 'text-slate-400',
+              bg: stats.efficiency > 0 ? 'bg-green-500/10' : stats.efficiency < 0 ? 'bg-red-500/10' : 'bg-slate-500/10'
+            }
           ].map((metric) => {
             const Icon = metric.icon;
             const isActive = activeMetric === metric.key;
@@ -419,25 +489,25 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
             return (
               <div
                 key={metric.key}
-                className={`bg-black/50 border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
+                className={`bg-slate-800/50 border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
                   isActive 
-                    ? 'border-green-400 bg-green-400/10' 
-                    : 'border-green-400/30 hover:border-green-400/50'
+                    ? 'border-blue-400 bg-blue-500/5' 
+                    : 'border-slate-700 hover:border-slate-600'
                 }`}
                 onClick={() => setActiveMetric(metric.key as any)}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <Icon className={`h-6 w-6 ${isActive ? 'text-green-400' : 'text-green-400/60'}`} />
-                  <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-green-400/30'}`}></div>
+                  <Icon className={`h-6 w-6 ${metric.color}`} />
+                  <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`}></div>
                 </div>
-                <div className="font-mono text-xs text-green-400/60 mb-1">{metric.label}</div>
-                <div className="font-mono text-2xl font-bold text-green-400">{metric.value}</div>
+                <div className="text-xs text-slate-400 mb-1 uppercase tracking-wide">{metric.label}</div>
+                <div className={`text-2xl font-bold ${metric.color}`}>{metric.value}</div>
                 {isActive && (
-                  <div className="mt-2 text-xs text-green-400/80 font-mono">
-                    {metric.key === 'completion' && `${stats.completedTasks}/${stats.totalTasks} tasks`}
-                    {metric.key === 'velocity' && `${Math.round(stats.velocity * 7)} tasks/week`}
-                    {metric.key === 'streak' && stats.streakDays > 0 ? 'ACTIVE STREAK' : 'NO ACTIVE STREAK'}
-                    {metric.key === 'efficiency' && (stats.efficiency > 0 ? 'IMPROVING' : stats.efficiency < 0 ? 'DECLINING' : 'STABLE')}
+                  <div className="mt-2 text-xs text-slate-400">
+                    {metric.key === 'completion' && `${stats.completedTasks}/${stats.totalTasks} tasks completed`}
+                    {metric.key === 'velocity' && `${Math.round(stats.velocity * 7)} tasks this week`}
+                    {metric.key === 'streak' && (stats.streakDays > 0 ? `Best: ${stats.bestStreak} days` : 'Start your streak today')}
+                    {metric.key === 'efficiency' && (stats.efficiency > 0 ? 'Improving pace' : stats.efficiency < 0 ? 'Pace declining' : 'Steady pace')}
                   </div>
                 )}
               </div>
@@ -445,29 +515,29 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
           })}
         </div>
 
-        {/* System Overview */}
+        {/* Performance Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Task Distribution */}
-          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+          {/* Task Status */}
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
             <div className="flex items-center mb-4">
-              <PieChart className="h-5 w-5 mr-2" />
-              <h3 className="font-mono font-bold">TASK DISTRIBUTION</h3>
+              <PieChart className="h-5 w-5 mr-2 text-blue-400" />
+              <h3 className="font-semibold">Task Status</h3>
             </div>
             
             <div className="space-y-4">
               {[
-                { label: 'COMPLETED', count: stats.completedTasks, color: 'bg-green-400', textColor: 'text-green-400' },
-                { label: 'IN PROGRESS', count: stats.inProgressTasks, color: 'bg-yellow-400', textColor: 'text-yellow-400' },
-                { label: 'NOT STARTED', count: stats.notStartedTasks, color: 'bg-gray-400', textColor: 'text-gray-400' }
+                { label: 'Completed', count: stats.completedTasks, color: 'bg-green-500', textColor: 'text-green-400' },
+                { label: 'In Progress', count: stats.inProgressTasks, color: 'bg-yellow-500', textColor: 'text-yellow-400' },
+                { label: 'Not Started', count: stats.notStartedTasks, color: 'bg-slate-500', textColor: 'text-slate-400' }
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={`w-3 h-3 rounded-full ${item.color} mr-3`}></div>
-                    <span className="font-mono text-sm">{item.label}</span>
+                    <span className="text-sm">{item.label}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`font-mono font-bold ${item.textColor}`}>{item.count}</span>
-                    <div className="w-16 bg-gray-700 rounded-full h-1">
+                    <span className={`font-semibold ${item.textColor}`}>{item.count}</span>
+                    <div className="w-16 bg-slate-700 rounded-full h-1">
                       <div 
                         className={`h-1 rounded-full ${item.color}`}
                         style={{ width: `${(item.count / stats.totalTasks) * 100}%` }}
@@ -480,21 +550,21 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
           </div>
 
           {/* Performance Metrics */}
-          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
             <div className="flex items-center mb-4">
-              <Cpu className="h-5 w-5 mr-2" />
-              <h3 className="font-mono font-bold">PERFORMANCE</h3>
+              <Gauge className="h-5 w-5 mr-2 text-blue-400" />
+              <h3 className="font-semibold">Performance</h3>
             </div>
             
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-mono text-sm">AVG COMPLETION TIME</span>
-                  <span className="font-mono text-green-400">{Math.round(stats.averageTimeToComplete)}d</span>
+                  <span className="text-sm">Avg. Completion Time</span>
+                  <span className="text-blue-400 font-semibold">{Math.round(stats.averageTimeToComplete)}d</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-1">
+                <div className="w-full bg-slate-700 rounded-full h-1">
                   <div 
-                    className="bg-green-400 h-1 rounded-full"
+                    className="bg-blue-500 h-1 rounded-full"
                     style={{ width: `${Math.min(100, (5 / Math.max(1, stats.averageTimeToComplete)) * 100)}%` }}
                   ></div>
                 </div>
@@ -502,67 +572,65 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
               
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-mono text-sm">UNITS COMPLETED</span>
-                  <span className="font-mono text-green-400">{stats.completedUnits}/{stats.totalUnits}</span>
+                  <span className="text-sm">Units Completed</span>
+                  <span className="text-green-400 font-semibold">{stats.completedUnits}/{stats.totalUnits}</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-1">
+                <div className="w-full bg-slate-700 rounded-full h-1">
                   <div 
-                    className="bg-green-400 h-1 rounded-full"
+                    className="bg-green-500 h-1 rounded-full"
                     style={{ width: `${stats.totalUnits > 0 ? (stats.completedUnits / stats.totalUnits) * 100 : 0}%` }}
                   ></div>
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-green-400/20">
+              <div className="pt-2 border-t border-slate-700">
                 <div className="text-center">
-                  <div className="font-mono text-xs text-green-400/60">SYSTEM EFFICIENCY</div>
-                  <div className="font-mono text-lg font-bold text-green-400">
-                    {stats.completionRate >= 80 ? '98.7%' : stats.completionRate >= 50 ? '76.3%' : '45.1%'}
-                  </div>
+                  <div className="text-xs text-slate-400 mb-1">Session Time Today</div>
+                  <div className="text-lg font-bold text-blue-400">{stats.sessionTime}m</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity Log */}
-          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+          {/* Recent Activity */}
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
             <div className="flex items-center mb-4">
-              <Terminal className="h-5 w-5 mr-2" />
-              <h3 className="font-mono font-bold">ACTIVITY LOG</h3>
+              <Activity className="h-5 w-5 mr-2 text-blue-400" />
+              <h3 className="font-semibold">Recent Completions</h3>
             </div>
             
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {stats.recentActivity.length > 0 ? (
                 stats.recentActivity.slice(0, 8).map((task, index) => (
-                  <div key={`${task.unitId}-${task.taskId}`} className="flex items-center justify-between text-xs font-mono">
+                  <div key={`${task.unitId}-${task.taskId}`} className="flex items-center justify-between text-sm">
                     <div className="flex items-center">
                       <div className="w-1 h-1 bg-green-400 rounded-full mr-2"></div>
-                      <span className="text-green-400/80">TASK_{task.taskId}</span>
+                      <span className="text-slate-300 truncate">{task.taskId}</span>
                     </div>
-                    <div className="text-green-400/60">
+                    <div className="text-slate-400 text-xs">
                       {task.completedDate?.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-green-400/40 font-mono text-xs">
-                  NO RECENT ACTIVITY
+                <div className="text-center text-slate-400 text-sm">
+                  No completed tasks yet
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Data Visualization */}
-        <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+        {/* Progress Visualization */}
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2" />
-              <h3 className="font-mono font-bold">PROGRESS ANALYTICS</h3>
+              <BarChart3 className="h-5 w-5 mr-2 text-blue-400" />
+              <h3 className="font-semibold">Progress Analytics</h3>
             </div>
-            <div className="flex items-center space-x-2 text-xs font-mono">
+            <div className="flex items-center space-x-2 text-xs text-slate-400">
               <Signal className="h-4 w-4" />
-              <span>REAL-TIME DATA</span>
+              <span>Live Data</span>
             </div>
           </div>
           
@@ -570,21 +638,22 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Daily Completions Chart */}
               <div>
-                <div className="font-mono text-sm text-green-400/80 mb-3">DAILY TASK COMPLETIONS</div>
-                <div className="flex items-end space-x-1 h-32 bg-gray-800/50 p-4 rounded">
+                <div className="text-sm text-slate-400 mb-3">Daily Task Completions</div>
+                <div className="flex items-end space-x-1 h-32 bg-slate-900/50 p-4 rounded">
                   {stats.completionTrend.slice(-14).map((day, index) => {
-                    const height = Math.max(4, (day.completed / Math.max(...stats.completionTrend.map(d => d.completed))) * 100);
+                    const maxCompleted = Math.max(...stats.completionTrend.map(d => d.completed));
+                    const height = Math.max(4, (day.completed / Math.max(1, maxCompleted)) * 100);
                     return (
                       <div key={day.date} className="flex-1 flex flex-col items-center">
                         <div 
-                          className="w-full bg-green-400 rounded-t transition-all duration-300 hover:bg-green-300 relative group"
+                          className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-400 relative group"
                           style={{ height: `${height}%`, minHeight: day.completed > 0 ? '4px' : '1px' }}
                         >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black border border-green-400/30 px-2 py-1 rounded text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-slate-600 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                             {day.completed} tasks
                           </div>
                         </div>
-                        <div className="text-xs font-mono text-green-400/60 mt-1 transform -rotate-45 origin-left">
+                        <div className="text-xs text-slate-400 mt-1 transform -rotate-45 origin-left">
                           {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
@@ -595,17 +664,17 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
 
               {/* Cumulative Progress */}
               <div>
-                <div className="font-mono text-sm text-green-400/80 mb-3">CUMULATIVE PROGRESS</div>
-                <div className="space-y-2 max-h-32 overflow-y-auto bg-gray-800/50 p-4 rounded">
+                <div className="text-sm text-slate-400 mb-3">Cumulative Progress</div>
+                <div className="space-y-2 max-h-32 overflow-y-auto bg-slate-900/50 p-4 rounded">
                   {stats.completionTrend.slice(-6).reverse().map((day, index) => (
-                    <div key={day.date} className="flex items-center justify-between font-mono text-xs">
-                      <span className="text-green-400/60">
+                    <div key={day.date} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">
                         {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <span className="text-green-400">{day.cumulative}</span>
+                        <span className="text-blue-400 font-semibold">{day.cumulative}</span>
                         {day.completed > 0 && (
-                          <span className="bg-green-400/20 text-green-400 px-1 rounded">
+                          <span className="bg-green-500/20 text-green-400 px-1 rounded text-xs">
                             +{day.completed}
                           </span>
                         )}
@@ -616,28 +685,31 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-green-400/40 font-mono">
-              INSUFFICIENT DATA FOR VISUALIZATION
+            <div className="text-center py-8 text-slate-400">
+              Complete your first task to see progress analytics
             </div>
           )}
         </div>
 
         {/* Status Footer */}
-        <div className="bg-black/50 border border-green-400/30 rounded-lg p-4">
-          <div className="flex items-center justify-between text-xs font-mono">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <div className="flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <Wifi className="h-4 w-4 mr-1" />
-                <span>CONNECTION: STABLE</span>
+                <span>Connection: Stable</span>
               </div>
               <div className="flex items-center">
                 <Database className="h-4 w-4 mr-1" />
-                <span>DATA INTEGRITY: 100%</span>
+                <span>Data: Synchronized</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span>UPTIME: {Math.floor(Math.random() * 99) + 1}.{Math.floor(Math.random() * 9)}%</span>
-              <span>LATENCY: {Math.floor(Math.random() * 50) + 10}ms</span>
+              <span>Updated: {new Date().toLocaleTimeString()}</span>
+              <div className="flex items-center">
+                <Timer className="h-4 w-4 mr-1" />
+                <span>Response: {Math.floor(Math.random() * 50) + 10}ms</span>
+              </div>
             </div>
           </div>
         </div>
