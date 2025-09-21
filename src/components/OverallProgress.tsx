@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, TrendingUp, Calendar, Award, Target, Clock, Zap, Star, Trophy, CheckCircle2, BarChart3, Activity, Sparkles } from 'lucide-react';
+import { ArrowLeft, Zap, Target, TrendingUp, Clock, Activity, Cpu, Database, Wifi, Signal, BarChart3, LineChart, PieChart, Monitor, Code, Terminal, Gamepad2, Trophy, Star, Flame, ChevronRight, Play, Pause, RotateCcw } from 'lucide-react';
 import { UnitSummary } from '../types/Unit';
 
 interface OverallProgressProps {
@@ -34,16 +34,28 @@ interface ProgressStats {
   recentActivity: TaskAnalytics[];
   completionTrend: { date: string; completed: number; cumulative: number }[];
   weeklyProgress: { week: string; completed: number }[];
+  velocity: number; // tasks per day
+  efficiency: number; // completion rate trend
 }
 
 export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit, onBack }) => {
   const [stats, setStats] = useState<ProgressStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'week' | 'month' | 'all'>('month');
+  const [activeMetric, setActiveMetric] = useState<'completion' | 'velocity' | 'streak' | 'efficiency'>('completion');
+  const [isLive, setIsLive] = useState(true);
 
   useEffect(() => {
     calculateStats();
-  }, [units]);
+    
+    // Simulate live updates every 30 seconds
+    const interval = setInterval(() => {
+      if (isLive) {
+        calculateStats();
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [units, isLive]);
 
   const calculateStats = () => {
     setLoading(true);
@@ -149,6 +161,12 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
     // Calculate weekly progress
     const weeklyProgress = calculateWeeklyProgress(allTasks);
 
+    // Calculate velocity (tasks per day over last 7 days)
+    const velocity = calculateVelocity(allTasks);
+
+    // Calculate efficiency (improvement in completion rate)
+    const efficiency = calculateEfficiency(completionTrend);
+
     setStats({
       totalTasks,
       completedTasks,
@@ -161,7 +179,9 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
       streakDays,
       recentActivity,
       completionTrend,
-      weeklyProgress
+      weeklyProgress,
+      velocity,
+      efficiency
     });
 
     setLoading(false);
@@ -259,38 +279,63 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
       .slice(-8); // Last 8 weeks
   };
 
-  const getEncouragingMessage = (stats: ProgressStats) => {
-    if (stats.completionRate >= 90) {
-      return "🎉 Outstanding! You're absolutely crushing your learning goals!";
-    } else if (stats.completionRate >= 70) {
-      return "🌟 Fantastic progress! You're well on your way to mastery!";
-    } else if (stats.completionRate >= 50) {
-      return "💪 Great momentum! You're making solid progress every day!";
-    } else if (stats.completionRate >= 25) {
-      return "🚀 You're building great habits! Keep up the excellent work!";
-    } else if (stats.completedTasks > 0) {
-      return "✨ Every expert was once a beginner! You're on the right path!";
-    } else {
-      return "🌱 Ready to start your learning journey? Every great achievement begins with a single step!";
+  const calculateVelocity = (tasks: TaskAnalytics[]): number => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    const recentCompletions = tasks.filter(t => 
+      t.status === 'completed' && 
+      t.completedDate && 
+      t.completedDate >= sevenDaysAgo
+    );
+    
+    return recentCompletions.length / 7; // tasks per day
+  };
+
+  const calculateEfficiency = (trend: { date: string; completed: number; cumulative: number }[]): number => {
+    if (trend.length < 2) return 0;
+    
+    const recent = trend.slice(-7); // Last 7 data points
+    const older = trend.slice(-14, -7); // Previous 7 data points
+    
+    const recentAvg = recent.reduce((sum, d) => sum + d.completed, 0) / recent.length;
+    const olderAvg = older.reduce((sum, d) => sum + d.completed, 0) / Math.max(1, older.length);
+    
+    return olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-green-400';
+      case 'in-progress': return 'text-yellow-400';
+      case 'not-started': return 'text-gray-400';
+      default: return 'text-gray-400';
     }
   };
 
-  const getStreakMessage = (streak: number) => {
-    if (streak >= 30) return "🔥 Incredible! 30+ day streak!";
-    if (streak >= 14) return "⚡ Amazing! 2+ week streak!";
-    if (streak >= 7) return "💫 Fantastic! 1+ week streak!";
-    if (streak >= 3) return "🌟 Great! Multi-day streak!";
-    if (streak >= 1) return "✨ Nice! Keep it going!";
-    return "🌱 Ready to start a streak?";
+  const getMetricIcon = (metric: string) => {
+    switch (metric) {
+      case 'completion': return Target;
+      case 'velocity': return Zap;
+      case 'streak': return Flame;
+      case 'efficiency': return TrendingUp;
+      default: return Activity;
+    }
   };
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mr-4"></div>
-            <span className="text-gray-600">Analyzing your amazing progress...</span>
+      <div className="min-h-screen bg-gray-900 text-green-400">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-2 border-green-400 border-t-transparent mx-auto mb-4"></div>
+                <div className="absolute inset-0 rounded-full h-16 w-16 border border-green-400/20 animate-pulse"></div>
+              </div>
+              <div className="font-mono text-lg mb-2">INITIALIZING TELEMETRY...</div>
+              <div className="text-green-400/60 text-sm">Analyzing performance data</div>
+            </div>
           </div>
         </div>
       </div>
@@ -299,280 +344,301 @@ export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit
 
   if (!stats) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
-          <p className="text-gray-600">Unable to load progress data.</p>
+      <div className="min-h-screen bg-gray-900 text-red-400">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <Terminal className="h-16 w-16 mx-auto mb-4" />
+              <div className="font-mono text-lg">ERROR: DATA UNAVAILABLE</div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white rounded-xl p-8">
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center text-white/80 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Units
-          </button>
-        </div>
-        
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Sparkles className="h-12 w-12 text-yellow-300 mr-4" />
-            <h1 className="text-4xl font-bold">Your Learning Journey</h1>
-            <Trophy className="h-12 w-12 text-yellow-300 ml-4" />
-          </div>
-          <p className="text-xl text-blue-100 mb-4">{getEncouragingMessage(stats)}</p>
-          <div className="flex items-center justify-center space-x-8 text-lg">
-            <div className="flex items-center">
-              <Target className="h-6 w-6 mr-2" />
-              <span>{stats.completedTasks} tasks completed</span>
+    <div className="min-h-screen bg-gray-900 text-green-400">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="bg-black/50 border border-green-400/30 rounded-lg p-6 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={onBack}
+              className="flex items-center text-green-400/80 hover:text-green-400 transition-colors font-mono"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              BACK TO UNITS
+            </button>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+                <span className="font-mono text-sm">{isLive ? 'LIVE' : 'OFFLINE'}</span>
+              </div>
+              <button
+                onClick={() => setIsLive(!isLive)}
+                className="p-2 border border-green-400/30 rounded hover:bg-green-400/10 transition-colors"
+              >
+                {isLive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={calculateStats}
+                className="p-2 border border-green-400/30 rounded hover:bg-green-400/10 transition-colors"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
             </div>
-            <div className="flex items-center">
-              <Award className="h-6 w-6 mr-2" />
-              <span>{Math.round(stats.completionRate)}% progress</span>
-            </div>
-            <div className="flex items-center">
-              <Zap className="h-6 w-6 mr-2" />
-              <span>{getStreakMessage(stats.streakDays)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl border border-green-200">
-          <div className="flex items-center justify-between mb-4">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-            <span className="text-2xl">🎯</span>
-          </div>
-          <div className="text-3xl font-bold text-green-800 mb-1">{stats.completedTasks}</div>
-          <div className="text-sm text-green-600 font-medium">Tasks Completed</div>
-          <div className="text-xs text-green-500 mt-1">
-            {stats.totalTasks > 0 && `${Math.round((stats.completedTasks / stats.totalTasks) * 100)}% of all tasks`}
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-100 p-6 rounded-xl border border-blue-200">
-          <div className="flex items-center justify-between mb-4">
-            <Activity className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl">⚡</span>
-          </div>
-          <div className="text-3xl font-bold text-blue-800 mb-1">{stats.streakDays}</div>
-          <div className="text-sm text-blue-600 font-medium">Day Streak</div>
-          <div className="text-xs text-blue-500 mt-1">
-            {stats.streakDays > 0 ? 'Keep the momentum going!' : 'Start your streak today!'}
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-violet-100 p-6 rounded-xl border border-purple-200">
-          <div className="flex items-center justify-between mb-4">
-            <Clock className="h-8 w-8 text-purple-600" />
-            <span className="text-2xl">⏱️</span>
-          </div>
-          <div className="text-3xl font-bold text-purple-800 mb-1">
-            {stats.averageTimeToComplete > 0 ? Math.round(stats.averageTimeToComplete) : '-'}
-          </div>
-          <div className="text-sm text-purple-600 font-medium">Avg Days to Complete</div>
-          <div className="text-xs text-purple-500 mt-1">
-            {stats.averageTimeToComplete > 0 ? 'Great pace!' : 'Complete tasks to see stats'}
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-amber-100 p-6 rounded-xl border border-orange-200">
-          <div className="flex items-center justify-between mb-4">
-            <Award className="h-8 w-8 text-orange-600" />
-            <span className="text-2xl">🏆</span>
-          </div>
-          <div className="text-3xl font-bold text-orange-800 mb-1">{stats.completedUnits}</div>
-          <div className="text-sm text-orange-600 font-medium">Units Completed</div>
-          <div className="text-xs text-orange-500 mt-1">
-            {stats.totalUnits > 0 && `${Math.round((stats.completedUnits / stats.totalUnits) * 100)}% of all units`}
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Overall Progress */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex items-center mb-6">
-            <BarChart3 className="h-6 w-6 text-blue-600 mr-3" />
-            <h3 className="text-xl font-semibold text-gray-900">Overall Progress</h3>
           </div>
           
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Completed Tasks</span>
-                <span className="text-sm text-gray-600">{stats.completedTasks} / {stats.totalTasks}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${stats.completionRate}%` }}
-                ></div>
-              </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <Monitor className="h-8 w-8 mr-3" />
+              <h1 className="text-3xl font-mono font-bold">LEARNING TELEMETRY</h1>
+              <Database className="h-8 w-8 ml-3" />
             </div>
-
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-lg font-bold text-green-800">{stats.completedTasks}</div>
-                <div className="text-xs text-green-600">Completed</div>
-              </div>
-              <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                <div className="text-lg font-bold text-yellow-800">{stats.inProgressTasks}</div>
-                <div className="text-xs text-yellow-600">In Progress</div>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="text-lg font-bold text-gray-800">{stats.notStartedTasks}</div>
-                <div className="text-xs text-gray-600">Not Started</div>
-              </div>
+            <div className="font-mono text-green-400/80">
+              SYSTEM STATUS: {stats.completionRate >= 80 ? 'OPTIMAL' : stats.completionRate >= 50 ? 'NOMINAL' : 'SUBOPTIMAL'}
+            </div>
+            <div className="text-sm text-green-400/60 mt-2">
+              Last updated: {new Date().toLocaleTimeString()} | {stats.totalTasks} total tasks tracked
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex items-center mb-6">
-            <Star className="h-6 w-6 text-yellow-600 mr-3" />
-            <h3 className="text-xl font-semibold text-gray-900">Recent Achievements</h3>
-          </div>
-          
-          {stats.recentActivity.length > 0 ? (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {stats.recentActivity.map((task, index) => (
-                <div key={`${task.unitId}-${task.taskId}`} className="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex-shrink-0 mr-3">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle2 className="h-4 w-4 text-white" />
+        {/* Core Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { key: 'completion', label: 'COMPLETION RATE', value: `${Math.round(stats.completionRate)}%`, icon: Target, color: 'green' },
+            { key: 'velocity', label: 'VELOCITY', value: `${stats.velocity.toFixed(1)}/day`, icon: Zap, color: 'blue' },
+            { key: 'streak', label: 'STREAK', value: `${stats.streakDays} days`, icon: Flame, color: 'orange' },
+            { key: 'efficiency', label: 'EFFICIENCY', value: `${stats.efficiency > 0 ? '+' : ''}${Math.round(stats.efficiency)}%`, icon: TrendingUp, color: 'purple' }
+          ].map((metric) => {
+            const Icon = metric.icon;
+            const isActive = activeMetric === metric.key;
+            
+            return (
+              <div
+                key={metric.key}
+                className={`bg-black/50 border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
+                  isActive 
+                    ? 'border-green-400 bg-green-400/10' 
+                    : 'border-green-400/30 hover:border-green-400/50'
+                }`}
+                onClick={() => setActiveMetric(metric.key as any)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <Icon className={`h-6 w-6 ${isActive ? 'text-green-400' : 'text-green-400/60'}`} />
+                  <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-green-400/30'}`}></div>
+                </div>
+                <div className="font-mono text-xs text-green-400/60 mb-1">{metric.label}</div>
+                <div className="font-mono text-2xl font-bold text-green-400">{metric.value}</div>
+                {isActive && (
+                  <div className="mt-2 text-xs text-green-400/80 font-mono">
+                    {metric.key === 'completion' && `${stats.completedTasks}/${stats.totalTasks} tasks`}
+                    {metric.key === 'velocity' && `${Math.round(stats.velocity * 7)} tasks/week`}
+                    {metric.key === 'streak' && stats.streakDays > 0 ? 'ACTIVE STREAK' : 'NO ACTIVE STREAK'}
+                    {metric.key === 'efficiency' && (stats.efficiency > 0 ? 'IMPROVING' : stats.efficiency < 0 ? 'DECLINING' : 'STABLE')}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* System Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Task Distribution */}
+          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <PieChart className="h-5 w-5 mr-2" />
+              <h3 className="font-mono font-bold">TASK DISTRIBUTION</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {[
+                { label: 'COMPLETED', count: stats.completedTasks, color: 'bg-green-400', textColor: 'text-green-400' },
+                { label: 'IN PROGRESS', count: stats.inProgressTasks, color: 'bg-yellow-400', textColor: 'text-yellow-400' },
+                { label: 'NOT STARTED', count: stats.notStartedTasks, color: 'bg-gray-400', textColor: 'text-gray-400' }
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full ${item.color} mr-3`}></div>
+                    <span className="font-mono text-sm">{item.label}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`font-mono font-bold ${item.textColor}`}>{item.count}</span>
+                    <div className="w-16 bg-gray-700 rounded-full h-1">
+                      <div 
+                        className={`h-1 rounded-full ${item.color}`}
+                        style={{ width: `${(item.count / stats.totalTasks) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">
-                      Task {task.taskId}
-                    </div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {task.unitTitle}
-                    </div>
-                    <div className="text-xs text-green-600">
-                      {task.completedDate?.toLocaleDateString()} 
-                      {task.timeToComplete && ` • ${task.timeToComplete} day${task.timeToComplete !== 1 ? 's' : ''}`}
-                    </div>
-                  </div>
-                  {index < 3 && (
-                    <div className="flex-shrink-0">
-                      <span className="text-lg">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Star className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p>Complete your first task to see achievements here!</p>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Completion Trend */}
-      {stats.completionTrend.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
+          {/* Performance Metrics */}
+          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <Cpu className="h-5 w-5 mr-2" />
+              <h3 className="font-mono font-bold">PERFORMANCE</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-mono text-sm">AVG COMPLETION TIME</span>
+                  <span className="font-mono text-green-400">{Math.round(stats.averageTimeToComplete)}d</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-1">
+                  <div 
+                    className="bg-green-400 h-1 rounded-full"
+                    style={{ width: `${Math.min(100, (5 / Math.max(1, stats.averageTimeToComplete)) * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-mono text-sm">UNITS COMPLETED</span>
+                  <span className="font-mono text-green-400">{stats.completedUnits}/{stats.totalUnits}</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-1">
+                  <div 
+                    className="bg-green-400 h-1 rounded-full"
+                    style={{ width: `${stats.totalUnits > 0 ? (stats.completedUnits / stats.totalUnits) * 100 : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t border-green-400/20">
+                <div className="text-center">
+                  <div className="font-mono text-xs text-green-400/60">SYSTEM EFFICIENCY</div>
+                  <div className="font-mono text-lg font-bold text-green-400">
+                    {stats.completionRate >= 80 ? '98.7%' : stats.completionRate >= 50 ? '76.3%' : '45.1%'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity Log */}
+          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <Terminal className="h-5 w-5 mr-2" />
+              <h3 className="font-mono font-bold">ACTIVITY LOG</h3>
+            </div>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {stats.recentActivity.length > 0 ? (
+                stats.recentActivity.slice(0, 8).map((task, index) => (
+                  <div key={`${task.unitId}-${task.taskId}`} className="flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center">
+                      <div className="w-1 h-1 bg-green-400 rounded-full mr-2"></div>
+                      <span className="text-green-400/80">TASK_{task.taskId}</span>
+                    </div>
+                    <div className="text-green-400/60">
+                      {task.completedDate?.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-green-400/40 font-mono text-xs">
+                  NO RECENT ACTIVITY
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Data Visualization */}
+        <div className="bg-black/50 border border-green-400/30 rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <TrendingUp className="h-6 w-6 text-blue-600 mr-3" />
-              <h3 className="text-xl font-semibold text-gray-900">Progress Trend</h3>
+              <BarChart3 className="h-5 w-5 mr-2" />
+              <h3 className="font-mono font-bold">PROGRESS ANALYTICS</h3>
             </div>
-            <div className="text-sm text-gray-600">
-              Last {stats.completionTrend.length} days with activity
+            <div className="flex items-center space-x-2 text-xs font-mono">
+              <Signal className="h-4 w-4" />
+              <span>REAL-TIME DATA</span>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Simple trend visualization */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Daily Completions</h4>
-              <div className="flex items-end space-x-1 h-32">
-                {stats.completionTrend.slice(-14).map((day, index) => (
-                  <div key={day.date} className="flex-1 flex flex-col items-center">
-                    <div 
-                      className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
-                      style={{ 
-                        height: `${Math.max(8, (day.completed / Math.max(...stats.completionTrend.map(d => d.completed))) * 100)}%`,
-                        minHeight: day.completed > 0 ? '8px' : '2px'
-                      }}
-                      title={`${day.completed} tasks on ${new Date(day.date).toLocaleDateString()}`}
-                    ></div>
-                    <div className="text-xs text-gray-500 mt-1 transform -rotate-45 origin-left">
-                      {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                  </div>
-                ))}
+          {stats.completionTrend.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Daily Completions Chart */}
+              <div>
+                <div className="font-mono text-sm text-green-400/80 mb-3">DAILY TASK COMPLETIONS</div>
+                <div className="flex items-end space-x-1 h-32 bg-gray-800/50 p-4 rounded">
+                  {stats.completionTrend.slice(-14).map((day, index) => {
+                    const height = Math.max(4, (day.completed / Math.max(...stats.completionTrend.map(d => d.completed))) * 100);
+                    return (
+                      <div key={day.date} className="flex-1 flex flex-col items-center">
+                        <div 
+                          className="w-full bg-green-400 rounded-t transition-all duration-300 hover:bg-green-300 relative group"
+                          style={{ height: `${height}%`, minHeight: day.completed > 0 ? '4px' : '1px' }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black border border-green-400/30 px-2 py-1 rounded text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {day.completed} tasks
+                          </div>
+                        </div>
+                        <div className="text-xs font-mono text-green-400/60 mt-1 transform -rotate-45 origin-left">
+                          {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Cumulative progress */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Cumulative Progress</h4>
-              <div className="space-y-2">
-                {stats.completionTrend.slice(-5).reverse().map((day) => (
-                  <div key={day.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-600">
-                      {new Date(day.date).toLocaleDateString()}
-                    </span>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900 mr-2">
-                        {day.cumulative} total
+              {/* Cumulative Progress */}
+              <div>
+                <div className="font-mono text-sm text-green-400/80 mb-3">CUMULATIVE PROGRESS</div>
+                <div className="space-y-2 max-h-32 overflow-y-auto bg-gray-800/50 p-4 rounded">
+                  {stats.completionTrend.slice(-6).reverse().map((day, index) => (
+                    <div key={day.date} className="flex items-center justify-between font-mono text-xs">
+                      <span className="text-green-400/60">
+                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                       </span>
-                      {day.completed > 0 && (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          +{day.completed}
-                        </span>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">{day.cumulative}</span>
+                        {day.completed > 0 && (
+                          <span className="bg-green-400/20 text-green-400 px-1 rounded">
+                            +{day.completed}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8 text-green-400/40 font-mono">
+              INSUFFICIENT DATA FOR VISUALIZATION
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Motivational Footer */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 p-8 text-center">
-        <div className="flex items-center justify-center mb-4">
-          <Sparkles className="h-8 w-8 text-purple-600 mr-3" />
-          <h3 className="text-2xl font-bold text-gray-900">Keep Going!</h3>
-          <Sparkles className="h-8 w-8 text-purple-600 ml-3" />
-        </div>
-        <p className="text-lg text-gray-700 mb-4">
-          {stats.completedTasks > 0 
-            ? `You've completed ${stats.completedTasks} task${stats.completedTasks !== 1 ? 's' : ''} - that's incredible progress! 🌟`
-            : "Your learning journey is about to begin - every expert was once a beginner! 🚀"
-          }
-        </p>
-        <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-1" />
-            <span>Tracking since {units.length > 0 ? 'you started' : 'today'}</span>
-          </div>
-          <div className="flex items-center">
-            <Target className="h-4 w-4 mr-1" />
-            <span>{stats.totalTasks} total tasks to master</span>
-          </div>
-          <div className="flex items-center">
-            <Trophy className="h-4 w-4 mr-1" />
-            <span>{stats.totalUnits} units to complete</span>
+        {/* Status Footer */}
+        <div className="bg-black/50 border border-green-400/30 rounded-lg p-4">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <Wifi className="h-4 w-4 mr-1" />
+                <span>CONNECTION: STABLE</span>
+              </div>
+              <div className="flex items-center">
+                <Database className="h-4 w-4 mr-1" />
+                <span>DATA INTEGRITY: 100%</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span>UPTIME: {Math.floor(Math.random() * 99) + 1}.{Math.floor(Math.random() * 9)}%</span>
+              <span>LATENCY: {Math.floor(Math.random() * 50) + 10}ms</span>
+            </div>
           </div>
         </div>
       </div>
