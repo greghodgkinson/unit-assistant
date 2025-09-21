@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List, History } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 
 interface ProgressDashboardProps {
@@ -49,6 +49,12 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
     if (!answer) return 'not-started';
     if (answer.isGoodEnough) return 'completed';
     return 'in-progress';
+  };
+
+  const getLastStatusChange = (taskId: string) => {
+    const answer = progress.answers.find(a => a.taskId === taskId);
+    if (!answer?.statusHistory || answer.statusHistory.length === 0) return null;
+    return answer.statusHistory[answer.statusHistory.length - 1];
   };
 
   const getTaskTypeColor = (type: string) => {
@@ -170,6 +176,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                         .map((task) => {
                           const status = getTaskStatus(task.id);
                           const isCurrent = progress.currentTask === task.id;
+                          const lastChange = getLastStatusChange(task.id);
                           
                           return (
                             <div
@@ -194,6 +201,9 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                                   {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
                                   {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
                                   <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                                  {lastChange && (
+                                    <History className="h-3 w-3 ml-2 text-gray-400" title={`Last changed: ${lastChange.timestamp.toLocaleString()}`} />
+                                  )}
                                 </div>
                                 {isCurrent && <span className="text-xs font-medium text-blue-600">Current</span>}
                               </div>
@@ -223,6 +233,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   .map((task) => {
                   const status = getTaskStatus(task.id);
                   const isCurrent = progress.currentTask === task.id;
+                  const lastChange = getLastStatusChange(task.id);
                   
                   return (
                     <div
@@ -247,6 +258,9 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                           {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
                           {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
                           <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                          {lastChange && (
+                            <History className="h-3 w-3 ml-2 text-gray-400" title={`Last changed: ${lastChange.timestamp.toLocaleString()}`} />
+                          )}
                         </div>
                         {isCurrent && <span className="text-xs font-medium text-blue-600">Current</span>}
                       </div>

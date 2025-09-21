@@ -49,6 +49,13 @@ export interface StudentAnswer {
   isGoodEnough: boolean;
   feedbackRequested: boolean;
   feedback?: string;
+  statusHistory?: TaskStatusChange[];
+}
+
+export interface TaskStatusChange {
+  timestamp: Date;
+  status: 'not-started' | 'in-progress' | 'completed';
+  previousStatus?: 'not-started' | 'in-progress' | 'completed';
 }
 
 export interface Progress {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo, Volume2, VolumeX, List } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo, Volume2, VolumeX, List, History } from 'lucide-react';
 import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
@@ -58,6 +58,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [showUnitTaskContext, setShowUnitTaskContext] = useState(false);
+  const [showStatusHistory, setShowStatusHistory] = useState(false);
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -467,6 +468,36 @@ export const TaskView: React.FC<TaskViewProps> = ({
       case 'not-started': return 'text-gray-600 bg-gray-50 border-gray-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
+  };
+
+  const formatStatusHistory = () => {
+    if (!answer?.statusHistory || answer.statusHistory.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="space-y-2">
+        {answer.statusHistory.map((change, index) => (
+          <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${
+                change.status === 'completed' ? 'bg-green-500' :
+                change.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-400'
+              }`}></div>
+              <span className="font-medium capitalize">{change.status.replace('-', ' ')}</span>
+              {change.previousStatus && (
+                <span className="text-gray-500">
+                  (from {change.previousStatus.replace('-', ' ')})
+                </span>
+              )}
+            </div>
+            <span className="text-gray-500">
+              {change.timestamp.toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const getCleanTaskDescription = (description: string) => {
@@ -1175,6 +1206,36 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
           <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
             {formatFeedback(answer.feedback)}
+          </div>
+        </div>
+      )}
+
+      {/* Status History Section */}
+      {answer?.statusHistory && answer.statusHistory.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border">
+          <div className={showStatusHistory ? "p-6" : "p-3"}>
+            <button
+              onClick={() => setShowStatusHistory(!showStatusHistory)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <div className="flex items-center">
+                <History className="h-5 w-5 text-purple-600 mr-2" />
+                <h2 className="text-sm font-medium text-gray-900">
+                  Status History ({answer.statusHistory.length} changes)
+                </h2>
+              </div>
+              {showStatusHistory ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+          
+            {showStatusHistory && (
+              <div className="mt-4">
+                {formatStatusHistory()}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Progress, StudentAnswer, VelocityMetrics } from '../types/Unit';
+import { Progress, StudentAnswer, VelocityMetrics, TaskStatusChange } from '../types/Unit';
 
 export const useProgress = (unitId: string) => {
   const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
@@ -32,7 +32,11 @@ export const useProgress = (unitId: string) => {
           answers: parsed.answers.map((answer: any) => ({
             ...answer,
             submissionDate: new Date(answer.submissionDate),
-            lastModified: new Date(answer.lastModified)
+            lastModified: new Date(answer.lastModified),
+            statusHistory: answer.statusHistory?.map((change: any) => ({
+              ...change,
+              timestamp: new Date(change.timestamp)
+            })) || []
           }))
         };
       } catch (error) {
@@ -68,13 +72,68 @@ export const useProgress = (unitId: string) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   }, [progress]);
 
+  const getTaskStatus = (taskId: string): 'not-started' | 'in-progress' | 'completed' => {
+    const answer = progress.answers.find(a => a.taskId === taskId);
+    if (!answer) return 'not-started';
+    if (answer.isGoodEnough) return 'completed';
+    return 'in-progress';
+  };
+
+  const addStatusChange = (taskId: string, newStatus: 'not-started' | 'in-progress' | 'completed') => {
+    const currentStatus = getTaskStatus(taskId);
+    if (currentStatus === newStatus) return; // No change needed
+
+    const statusChange: TaskStatusChange = {
+      timestamp: new Date(),
+      status: newStatus,
+      previousStatus: currentStatus
+    };
+
+    setProgress(prev => ({
+      ...prev,
+      answers: prev.answers.map(a => 
+        a.taskId === taskId 
+          ? { 
+              ...a, 
+              statusHistory: [...(a.statusHistory || []), statusChange],
+              lastModified: new Date()
+            }
+          : a
+      ),
+      lastActivity: new Date()
+    }));
+  };
+
   const updateAnswer = (taskId: string, content: string) => {
+    const currentStatus = getTaskStatus(taskId);
+    const willBeInProgress = content.trim().length > 0;
+    
     setProgress(prev => {
       const existingAnswer = prev.answers.find(a => a.taskId === taskId);
+      const newStatus: 'not-started' | 'in-progress' | 'completed' = 
+        existingAnswer?.isGoodEnough ? 'completed' : 
+        willBeInProgress ? 'in-progress' : 'not-started';
+      
+      // Create status change if status is changing
+      const statusChange: TaskStatusChange | null = 
+        currentStatus !== newStatus ? {
+          timestamp: new Date(),
+          status: newStatus,
+          previousStatus: currentStatus
+        } : null;
+      
       const newAnswers = existingAnswer
         ? prev.answers.map(a => 
             a.taskId === taskId 
-              ? { ...a, content, lastModified: new Date(), version: a.version + 1 }
+              ? { 
+                  ...a, 
+                  content, 
+                  lastModified: new Date(), 
+                  version: a.version + 1,
+                  statusHistory: statusChange 
+                    ? [...(a.statusHistory || []), statusChange]
+                    : (a.statusHistory || [])
+                }
               : a
           )
         : [...prev.answers, {
@@ -84,7 +143,8 @@ export const useProgress = (unitId: string) => {
             lastModified: new Date(),
             version: 1,
             isGoodEnough: false,
-            feedbackRequested: false
+            feedbackRequested: false,
+            statusHistory: statusChange ? [statusChange] : []
           }];
 
       return {
@@ -96,6 +156,7 @@ export const useProgress = (unitId: string) => {
   };
 
   const markTaskComplete = (taskId: string) => {
+    addStatusChange(taskId, 'completed');
     setProgress(prev => ({
       ...prev,
       completedTasks: [...new Set([...prev.completedTasks, taskId])],
@@ -104,6 +165,10 @@ export const useProgress = (unitId: string) => {
   };
 
   const markTaskIncomplete = (taskId: string) => {
+    const answer = progress.answers.find(a => a.taskId === taskId);
+    const newStatus = answer?.content?.trim() ? 'in-progress' : 'not-started';
+    addStatusChange(taskId, newStatus);
+    
     setProgress(prev => ({
       ...prev,
       completedTasks: prev.completedTasks.filter(id => id !== taskId),
@@ -112,6 +177,9 @@ export const useProgress = (unitId: string) => {
   };
 
   const markAsGoodEnough = (taskId: string, isGoodEnough: boolean) => {
+    const newStatus = isGoodEnough ? 'completed' : 'in-progress';
+    addStatusChange(taskId, newStatus);
+    
     setProgress(prev => ({
       ...prev,
       answers: prev.answers.map(a => 

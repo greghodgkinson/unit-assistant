@@ -386,8 +386,18 @@ export const importProgress = (progressData: ExportedProgress) => {
     Object.entries(progressData.units).forEach(([unitId, unitData]) => {
       if (unitData.progress) {
         const progressKey = `learning-assistant-progress-${unitId}`;
+        
+        // Ensure backwards compatibility for status history
+        const migratedProgress = {
+          ...unitData.progress,
+          answers: unitData.progress.answers?.map((answer: any) => ({
+            ...answer,
+            statusHistory: answer.statusHistory || []
+          })) || []
+        };
+        
         console.log(`Importing progress for ${unitId}:`, unitData.progress);
-        localStorage.setItem(progressKey, JSON.stringify(unitData.progress));
+        localStorage.setItem(progressKey, JSON.stringify(migratedProgress));
       }
     });
     
