@@ -156,7 +156,6 @@ export const useProgress = (unitId: string) => {
   };
 
   const markTaskComplete = (taskId: string) => {
-    addStatusChange(taskId, 'completed');
     setProgress(prev => ({
       ...prev,
       completedTasks: [...new Set([...prev.completedTasks, taskId])],
@@ -167,7 +166,6 @@ export const useProgress = (unitId: string) => {
   const markTaskIncomplete = (taskId: string) => {
     const answer = progress.answers.find(a => a.taskId === taskId);
     const newStatus = answer?.content?.trim() ? 'in-progress' : 'not-started';
-    addStatusChange(taskId, newStatus);
     
     setProgress(prev => ({
       ...prev,
