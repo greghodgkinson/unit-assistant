@@ -34,7 +34,8 @@ function App() {
     addFeedback,
     setCurrentTask,
     getVelocityMetrics,
-    getNextTask
+    getNextTask,
+    getPreviousTask
   } = useProgress(currentUnitId && unitData ? currentUnitId : '');
 
   // Show loading state
@@ -199,6 +200,13 @@ function App() {
     }
   };
 
+  const handleNavigatePrevious = () => {
+    const previousTask = getPreviousTask(unitData?.learning_outcomes || []);
+    if (previousTask) {
+      setCurrentTask(previousTask.loId, previousTask.taskId);
+    }
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'list':
@@ -260,6 +268,7 @@ function App() {
         const task = getCurrentTask();
         const answer = getCurrentAnswer();
         const nextTask = getNextTask(unitData?.learning_outcomes || []);
+        const previousTask = getPreviousTask(unitData?.learning_outcomes || []);
         
         // Calculate unique tasks across all learning outcomes
         const getUniqueTaskCount = () => {
@@ -298,7 +307,9 @@ function App() {
             onMarkComplete={handleMarkComplete}
             onNavigateBack={() => setCurrentView('dashboard')}
             onNavigateNext={handleNavigateNext}
+            onNavigatePrevious={handleNavigatePrevious}
             hasNext={!!nextTask}
+            hasPrevious={!!previousTask}
             totalTasks={totalTasks}
             completedTasks={metrics.completedTasks}
             currentTaskNumber={currentTaskNumber}

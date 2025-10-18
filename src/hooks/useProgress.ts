@@ -224,7 +224,7 @@ export const useProgress = (unitId: string) => {
   const getNextTask = (learningOutcomes: any[] = []) => {
     // Create a map to avoid duplicate tasks and get unique tasks only
     const taskMap = new Map();
-    learningOutcomes.forEach(lo => 
+    learningOutcomes.forEach(lo =>
       lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id, task }))
         .forEach(taskInfo => {
           if (!taskMap.has(taskInfo.taskId)) {
@@ -232,13 +232,33 @@ export const useProgress = (unitId: string) => {
           }
         })
     );
-    
+
     const allTasks = Array.from(taskMap.values());
-    
+
     const currentIndex = allTasks.findIndex(t => t.taskId === progress.currentTask);
     const nextTask = allTasks[currentIndex + 1];
-    
+
     return nextTask || null;
+  };
+
+  const getPreviousTask = (learningOutcomes: any[] = []) => {
+    // Create a map to avoid duplicate tasks and get unique tasks only
+    const taskMap = new Map();
+    learningOutcomes.forEach(lo =>
+      lo.outcome_tasks.map(task => ({ loId: lo.id, taskId: task.id, task }))
+        .forEach(taskInfo => {
+          if (!taskMap.has(taskInfo.taskId)) {
+            taskMap.set(taskInfo.taskId, taskInfo);
+          }
+        })
+    );
+
+    const allTasks = Array.from(taskMap.values());
+
+    const currentIndex = allTasks.findIndex(t => t.taskId === progress.currentTask);
+    const previousTask = allTasks[currentIndex - 1];
+
+    return previousTask || null;
   };
 
   return {
@@ -251,6 +271,7 @@ export const useProgress = (unitId: string) => {
     addFeedback,
     setCurrentTask,
     getVelocityMetrics,
-    getNextTask
+    getNextTask,
+    getPreviousTask
   };
 };

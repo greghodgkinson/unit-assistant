@@ -18,7 +18,9 @@ interface TaskViewProps {
   onMarkComplete: () => void;
   onNavigateBack: () => void;
   onNavigateNext: () => void;
+  onNavigatePrevious: () => void;
   hasNext: boolean;
+  hasPrevious: boolean;
   totalTasks?: number;
   completedTasks?: number;
   currentTaskNumber?: number;
@@ -35,7 +37,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onMarkComplete,
   onNavigateBack,
   onNavigateNext,
+  onNavigatePrevious,
   hasNext,
+  hasPrevious,
   totalTasks = 0,
   completedTasks = 0,
   currentTaskNumber = 1
@@ -1242,20 +1246,30 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
       {/* Navigation */}
       <div className="flex justify-between items-center pt-6">
-        <button
-          onClick={onNavigateBack}
-          className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Previous
-        </button>
-        
+        {hasPrevious ? (
+          <button
+            onClick={onNavigatePrevious}
+            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Previous Task
+          </button>
+        ) : (
+          <button
+            onClick={onNavigateBack}
+            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </button>
+        )}
+
         {hasNext && (
           <button
             onClick={onNavigateNext}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Next
+            Next Task
             <ArrowRight className="h-4 w-4 ml-2" />
           </button>
         )}
