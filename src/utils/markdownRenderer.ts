@@ -13,19 +13,20 @@ export const renderMarkdown = (text: string): string => {
 
 export const replaceTablesWithPlaceholder = (text: string): string => {
   // Match markdown tables anywhere in the text
-  // A table consists of:
-  // 1. Header row with pipes (can appear after any content)
-  // 2. Separator row with dashes and pipes
-  // 3. One or more data rows with pipes
-  // The pattern matches from the start of a line with pipes through all consecutive pipe rows
-  const tableRegex = /(^|\n)(\|.+\|\r?\n)+/gm;
+  // A table consists of consecutive lines that contain pipes (|)
+  // This is more forgiving and handles tables with or without trailing pipes
+  const tableRegex = /(^|\n)(\|.+(\r?\n|$))+/gm;
 
   return text.replace(tableRegex, (match, leadingNewline) => {
-    // Check if this looks like a table (has separator row with dashes)
-    if (/\|[\s:-]+\|/.test(match)) {
+    // Count how many lines have pipes - must have at least 3 (header, separator, data)
+    const lines = match.trim().split(/\r?\n/);
+    const pipeLines = lines.filter(line => line.includes('|'));
+
+    // Check if this looks like a table (has separator row with dashes and at least 3 rows)
+    if (pipeLines.length >= 3 && /\|[\s:-]+\|/.test(match)) {
       return leadingNewline + '[table]\n';
     }
-    // If no separator row, keep original (might be false positive)
+    // If doesn't meet criteria, keep original
     return match;
   });
 };
