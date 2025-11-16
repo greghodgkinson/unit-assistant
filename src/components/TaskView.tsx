@@ -6,6 +6,7 @@ import { WorkingTimeIndicator } from './WorkingTimeIndicator';
 import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
 import { migrateQuillToTiptap, isQuillContent } from '../utils/contentMigration';
+import { renderMarkdown } from '../utils/markdownRenderer';
 
 interface TaskViewProps {
   learningOutcome: LearningOutcome;
@@ -856,9 +857,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <h1 className="text-2xl font-bold text-gray-900">{learningOutcome.id}: {task.id}</h1>
             </div>
             <div className="ml-11">
-              <div className="text-lg font-semibold text-gray-800 whitespace-pre-line">
-                {getCleanTaskDescription(task.description)}
-              </div>
+              <div
+                className="text-lg font-semibold text-gray-800 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(getCleanTaskDescription(task.description)) }}
+              />
             </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTaskTypeColor(task.type)}`}>
