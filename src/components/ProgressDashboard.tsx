@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List, History } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
+import { replaceTablesWithPlaceholder } from '../utils/markdownRenderer';
 
 interface ProgressDashboardProps {
   unit: Unit;
@@ -143,7 +144,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
               {/* Unit Task Banner */}
               <div className="bg-white rounded-xl shadow-sm border p-6 mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{unitTask.id}</h3>
-                <p className="text-gray-600">{unitTask.description}</p>
+                <p className="text-gray-600">{replaceTablesWithPlaceholder(unitTask.description)}</p>
               </div>
               
               {/* Learning Outcomes for this Unit Task */}
@@ -163,7 +164,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                         <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
                         <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
                       </div>
-                      <p className="text-gray-600 mt-1">{lo.description}</p>
+                      <p className="text-gray-600 mt-1">{replaceTablesWithPlaceholder(lo.description)}</p>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -195,7 +196,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                                   {task.type}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+                              <p className="text-sm text-gray-600 mb-3">{replaceTablesWithPlaceholder(task.description)}</p>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                   {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
@@ -224,7 +225,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   <Lightbulb className="h-6 w-6 text-yellow-600 mr-3" />
                   <h3 className="text-lg font-semibold text-gray-900">{lo.id}</h3>
                 </div>
-                <p className="text-gray-600 mt-1">{lo.description}</p>
+                <p className="text-gray-600 mt-1">{replaceTablesWithPlaceholder(lo.description)}</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

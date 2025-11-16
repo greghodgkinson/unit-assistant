@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Unit } from '../types/Unit';
 import { BookOpen, Target, Users, ChevronDown, ChevronRight, Clock, MapPin, CheckSquare, Lightbulb, FileText, Play, List } from 'lucide-react';
+import { replaceTablesWithPlaceholder } from '../utils/markdownRenderer';
 
 interface UnitOverviewProps {
   unit: Unit;
@@ -128,7 +129,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
                       <span>{unitTask.outcome_tasks.length} task{unitTask.outcome_tasks.length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <p className="text-gray-800 leading-relaxed mb-3">{unitTask.description}</p>
+                  <p className="text-gray-800 leading-relaxed mb-3">{replaceTablesWithPlaceholder(unitTask.description)}</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium text-gray-700">Learning Outcomes:</span>
@@ -168,7 +169,7 @@ export const UnitOverview: React.FC<UnitOverviewProps> = ({ unit, onStartLearnin
           {unit.learning_outcomes.map((lo) => (
             <div key={lo.id} className="p-4 border border-gray-200 rounded-lg">
               <h3 className="font-medium text-gray-900 mb-2">{lo.id}</h3>
-              <p className="text-sm text-gray-600 mb-3">{lo.description}</p>
+              <p className="text-sm text-gray-600 mb-3">{replaceTablesWithPlaceholder(lo.description)}</p>
               <div className="flex items-center text-xs text-gray-500">
                 <CheckSquare className="h-3 w-3 mr-1" />
                 {lo.outcome_tasks.length} task{lo.outcome_tasks.length !== 1 ? 's' : ''}
