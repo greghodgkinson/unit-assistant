@@ -18,12 +18,17 @@ export const replaceTablesWithPlaceholder = (text: string): string => {
   const tableRegex = /(^|\n)(\|.+(\r?\n|$))+/gm;
 
   return text.replace(tableRegex, (match, leadingNewline) => {
-    // Count how many lines have pipes - must have at least 3 (header, separator, data)
+    // Count how many lines have pipes - must have at least 3 rows
     const lines = match.trim().split(/\r?\n/);
     const pipeLines = lines.filter(line => line.includes('|'));
 
-    // Check if this looks like a table (has separator row with dashes and at least 3 rows)
-    if (pipeLines.length >= 3 && /\|[\s:-]+\|/.test(match)) {
+    // Check if this looks like a table
+    // Option 1: Has separator row with dashes (traditional markdown)
+    // Option 2: Has at least 3 rows with multiple pipes (looks like a table)
+    const hasSeparator = /\|[\s:-]+\|/.test(match);
+    const hasMultiplePipes = pipeLines.some(line => (line.match(/\|/g) || []).length >= 3);
+
+    if (pipeLines.length >= 3 && (hasSeparator || hasMultiplePipes)) {
       return leadingNewline + '[table]\n';
     }
     // If doesn't meet criteria, keep original
