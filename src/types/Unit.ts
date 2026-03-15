@@ -12,6 +12,7 @@ export interface TaskItem {
 
 export interface IndicativeContent {
   description: string;
+  type?: 'heading' | 'bullet' | 'sub_bullet';
 }
 
 export interface LearningOutcome {

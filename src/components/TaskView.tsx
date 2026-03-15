@@ -960,15 +960,31 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </button>
         
           {showIndicativeContent && (
-            <div className="mt-4">
-              <ul className="space-y-2">
-                {learningOutcome.indicative_content.map((content, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+            <div className="mt-4 space-y-1">
+              {learningOutcome.indicative_content.map((content, index) => {
+                const type = content.type ?? 'bullet';
+                if (type === 'heading') {
+                  return (
+                    <p key={index} className="text-xs font-semibold text-gray-600 mt-3 first:mt-0">
+                      {content.description}
+                    </p>
+                  );
+                }
+                if (type === 'sub_bullet') {
+                  return (
+                    <div key={index} className="flex items-start ml-4">
+                      <span className="w-1.5 h-1.5 bg-gray-300 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                      <span className="text-xs text-gray-600">{content.description}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={index} className="flex items-start">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
                     <span className="text-xs text-gray-700">{content.description}</span>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
