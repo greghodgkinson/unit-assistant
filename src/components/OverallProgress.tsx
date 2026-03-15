@@ -1,717 +1,384 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Zap, Target, TrendingUp, Clock, Activity, Cpu, Database, Wifi, Signal, BarChart3, LineChart, PieChart, Monitor, Code, Terminal, Gamepad2, Trophy, Star, Flame, ChevronRight, Play, Pause, RotateCcw, Radio, Gauge, Timer, Flag } from 'lucide-react';
-import { UnitSummary } from '../types/Unit';
+import React, { useState } from 'react';
+import { ArrowLeft, CheckCircle, MessageCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { UnitSummary, TaskStatus, StudentAnswer } from '../types/Unit';
+import { getTimestampForStatus, getLatestTimestampForStatus } from '../utils/taskStatus';
 
 interface OverallProgressProps {
   units: UnitSummary[];
   getUnit: (unitId: string) => any;
   onBack: () => void;
+  onSubmitUnit: (unitId: string) => void;
+  onTaskSelect: (unitId: string, loId: string, taskId: string) => void;
+  onRecordOutcome: (unitId: string, taskId: string, outcome: 'achieved' | 'not-yet-achieved', reviewFeedback?: string) => void;
 }
 
-interface TaskAnalytics {
-  taskId: string;
+const STATUS_COLUMNS: { status: TaskStatus; label: string; color: string }[] = [
+  { status: 'in-progress',          label: 'In Progress',      color: 'bg-yellow-500' },
+  { status: 'completed',            label: 'Completed',        color: 'bg-blue-500'   },
+  { status: 'submitted-for-review', label: 'Submitted',        color: 'bg-purple-500' },
+  { status: 'not-yet-achieved',     label: 'Not Yet Achieved', color: 'bg-orange-500' },
+  { status: 'achieved',             label: 'Achieved',         color: 'bg-green-600'  },
+];
+
+interface TaskRow {
   unitId: string;
   unitTitle: string;
-  status: 'not-started' | 'in-progress' | 'completed';
-  completedDate?: Date;
-  timeToComplete?: number; // days
-  submissionDate?: Date;
-  lastModified?: Date;
-  version: number;
-  hasStatusHistory: boolean;
+  loId: string;
+  taskId: string;
+  description: string;
+  answer?: StudentAnswer;
 }
 
-interface ProgressStats {
-  totalTasks: number;
-  completedTasks: number;
-  inProgressTasks: number;
-  notStartedTasks: number;
-  completionRate: number;
-  averageTimeToComplete: number;
-  totalUnits: number;
-  completedUnits: number;
-  streakDays: number;
-  recentActivity: TaskAnalytics[];
-  completionTrend: { date: string; completed: number; cumulative: number }[];
-  weeklyProgress: { week: string; completed: number }[];
-  velocity: number; // tasks per day
-  efficiency: number; // completion rate trend
-  sessionTime: number; // minutes today
-  bestStreak: number;
-}
+export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit, onBack, onSubmitUnit, onTaskSelect, onRecordOutcome }) => {
+  const [activeOutcomeKey, setActiveOutcomeKey] = useState<string | null>(null); // "unitId:taskId"
+  const [showFeedbackFor, setShowFeedbackFor] = useState<string | null>(null);   // "unitId:taskId"
+  const [feedbackInput, setFeedbackInput] = useState('');
+  const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
 
-export const OverallProgress: React.FC<OverallProgressProps> = ({ units, getUnit, onBack }) => {
-  const [stats, setStats] = useState<ProgressStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeMetric, setActiveMetric] = useState<'completion' | 'velocity' | 'streak' | 'efficiency'>('completion');
-  const [isLive, setIsLive] = useState(true);
+  const toggleUnit = (unitId: string) => {
+    setExpandedUnits(prev => {
+      const next = new Set(prev);
+      if (next.has(unitId)) next.delete(unitId); else next.add(unitId);
+      return next;
+    });
+  };
 
-  useEffect(() => {
-    calculateStats();
-    
-    // Update every 10 seconds for live feel
-    const interval = setInterval(() => {
-      if (isLive) {
-        calculateStats();
-      }
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, [units, isLive]);
+  const outcomeKey = (unitId: string, taskId: string) => `${unitId}:${taskId}`;
+  // Build task rows across all units
+  const taskRows: TaskRow[] = [];
 
-  const calculateStats = () => {
-    setLoading(true);
-    
-    const allTasks: TaskAnalytics[] = [];
-    let totalUnitsCompleted = 0;
+  units.forEach(unitSummary => {
+    const unit = getUnit(unitSummary.id);
+    if (!unit) return;
 
-    // Collect all tasks from all units
-    units.forEach(unitSummary => {
-      const unit = getUnit(unitSummary.id);
-      if (!unit) return;
+    const progressData = localStorage.getItem(`learning-assistant-progress-${unitSummary.id}`);
+    const rawProgress = progressData ? JSON.parse(progressData) : null;
 
-      const progressKey = `learning-assistant-progress-${unitSummary.id}`;
-      const progressData = localStorage.getItem(progressKey);
-      const progress = progressData ? JSON.parse(progressData) : null;
+    // Deserialise dates in statusHistory
+    const answers: StudentAnswer[] = (rawProgress?.answers || []).map((a: any) => ({
+      ...a,
+      submissionDate: new Date(a.submissionDate),
+      lastModified: new Date(a.lastModified),
+      statusHistory: (a.statusHistory || []).map((c: any) => ({
+        ...c,
+        timestamp: new Date(c.timestamp),
+      })),
+    }));
 
-      // Check if unit is completed
-      if (unitSummary.completedTasks === unitSummary.totalTasks && unitSummary.totalTasks > 0) {
-        totalUnitsCompleted++;
-      }
-
-      // Get unique tasks from this unit
-      const uniqueTasks = new Set<string>();
-      unit.learning_outcomes.forEach((lo: any) => {
-        lo.outcome_tasks.forEach((task: any) => {
-          if (!uniqueTasks.has(task.id)) {
-            uniqueTasks.add(task.id);
-            
-            const answer = progress?.answers?.find((a: any) => a.taskId === task.id);
-            let status: 'not-started' | 'in-progress' | 'completed' = 'not-started';
-            let completedDate: Date | undefined;
-            let timeToComplete: number | undefined;
-
-            if (answer) {
-              status = answer.isGoodEnough ? 'completed' : 'in-progress';
-              
-              // Try to get completion date from status history first
-              if (answer.statusHistory && answer.statusHistory.length > 0) {
-                const completionChange = answer.statusHistory
-                  .reverse()
-                  .find((change: any) => change.status === 'completed');
-                
-                if (completionChange) {
-                  completedDate = new Date(completionChange.timestamp);
-                }
-              }
-              
-              // Fallback: if no status history but task is completed, use submission date
-              if (!completedDate && answer.isGoodEnough && answer.submissionDate) {
-                completedDate = new Date(answer.submissionDate);
-              }
-
-              // Calculate time to complete if we have a completion date
-              if (completedDate && answer.submissionDate) {
-                const startDate = new Date(answer.submissionDate);
-                const endDate = completedDate;
-                timeToComplete = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-              }
-            }
-
-            allTasks.push({
-              taskId: task.id,
-              unitId: unitSummary.id,
-              unitTitle: unitSummary.title,
-              status,
-              completedDate,
-              timeToComplete,
-              submissionDate: answer?.submissionDate ? new Date(answer.submissionDate) : undefined,
-              lastModified: answer?.lastModified ? new Date(answer.lastModified) : undefined,
-              version: answer?.version || 0,
-              hasStatusHistory: answer?.statusHistory && answer.statusHistory.length > 0
-            });
-          }
-        });
+    // Deduplicate tasks — each task shown under the last LO it appears in
+    const taskToLastLO = new Map<string, string>();
+    unit.learning_outcomes.forEach((lo: any) => {
+      lo.outcome_tasks.forEach((task: any) => {
+        taskToLastLO.set(task.id, lo.id);
       });
     });
 
-    // Calculate basic stats
-    const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter(t => t.status === 'completed').length;
-    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress').length;
-    const notStartedTasks = allTasks.filter(t => t.status === 'not-started').length;
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-    // Calculate average time to complete
-    const completedTasksWithTime = allTasks.filter(t => t.status === 'completed' && t.timeToComplete);
-    const averageTimeToComplete = completedTasksWithTime.length > 0 
-      ? completedTasksWithTime.reduce((sum, t) => sum + (t.timeToComplete || 0), 0) / completedTasksWithTime.length
-      : 0;
-
-    // Calculate streak (consecutive days with activity)
-    const streakDays = calculateStreak(allTasks);
-    const bestStreak = calculateBestStreak(allTasks);
-
-    // Get recent activity (last 10 completed tasks)
-    const recentActivity = allTasks
-      .filter(t => t.status === 'completed' && t.completedDate)
-      .sort((a, b) => (b.completedDate?.getTime() || 0) - (a.completedDate?.getTime() || 0))
-      .slice(0, 10);
-
-    // Calculate completion trend
-    const completionTrend = calculateCompletionTrend(allTasks);
-
-    // Calculate weekly progress
-    const weeklyProgress = calculateWeeklyProgress(allTasks);
-
-    // Calculate velocity (tasks per day over last 7 days)
-    const velocity = calculateVelocity(allTasks);
-
-    // Calculate efficiency (improvement in completion rate)
-    const efficiency = calculateEfficiency(completionTrend);
-
-    // Simulate session time (would be tracked in real app)
-    const sessionTime = Math.floor(Math.random() * 120) + 30;
-
-    setStats({
-      totalTasks,
-      completedTasks,
-      inProgressTasks,
-      notStartedTasks,
-      completionRate,
-      averageTimeToComplete,
-      totalUnits: units.length,
-      completedUnits: totalUnitsCompleted,
-      streakDays,
-      recentActivity,
-      completionTrend,
-      weeklyProgress,
-      velocity,
-      efficiency,
-      sessionTime,
-      bestStreak
-    });
-
-    setLoading(false);
-  };
-
-  const calculateStreak = (tasks: TaskAnalytics[]): number => {
-    const completedTasks = tasks
-      .filter(t => t.status === 'completed' && t.completedDate)
-      .sort((a, b) => (b.completedDate?.getTime() || 0) - (a.completedDate?.getTime() || 0));
-
-    if (completedTasks.length === 0) return 0;
-
-    let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-
-    // Check if there's activity today or yesterday to start the streak
-    const hasRecentActivity = completedTasks.some(task => {
-      const taskDate = new Date(task.completedDate!);
-      taskDate.setHours(0, 0, 0, 0);
-      const daysDiff = Math.floor((currentDate.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
-      return daysDiff <= 1;
-    });
-
-    if (!hasRecentActivity) return 0;
-
-    // Count consecutive days with activity
-    for (let i = 0; i < 30; i++) { // Check last 30 days max
-      const checkDate = new Date(currentDate);
-      checkDate.setDate(checkDate.getDate() - i);
-      
-      const hasActivityOnDate = completedTasks.some(task => {
-        const taskDate = new Date(task.completedDate!);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === checkDate.getTime();
-      });
-
-      if (hasActivityOnDate) {
-        streak++;
-      } else if (i > 0) { // Allow for today to have no activity if checking from yesterday
-        break;
-      }
-    }
-
-    return streak;
-  };
-
-  const calculateBestStreak = (tasks: TaskAnalytics[]): number => {
-    const completedTasks = tasks
-      .filter(t => t.status === 'completed' && t.completedDate)
-      .sort((a, b) => (a.completedDate?.getTime() || 0) - (b.completedDate?.getTime() || 0));
-
-    if (completedTasks.length === 0) return 0;
-
-    let bestStreak = 0;
-    let currentStreak = 0;
-    let lastDate: Date | null = null;
-
-    completedTasks.forEach(task => {
-      const taskDate = new Date(task.completedDate!);
-      taskDate.setHours(0, 0, 0, 0);
-
-      if (lastDate) {
-        const daysDiff = Math.floor((taskDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysDiff === 1) {
-          currentStreak++;
-        } else if (daysDiff > 1) {
-          bestStreak = Math.max(bestStreak, currentStreak);
-          currentStreak = 1;
+    const seen = new Set<string>();
+    unit.learning_outcomes.forEach((lo: any) => {
+      lo.outcome_tasks.forEach((task: any) => {
+        if (!seen.has(task.id) && taskToLastLO.get(task.id) === lo.id) {
+          seen.add(task.id);
+          taskRows.push({
+            unitId: unitSummary.id,
+            unitTitle: unitSummary.title,
+            loId: lo.id,
+            taskId: task.id,
+            description: task.description,
+            answer: answers.find((a: StudentAnswer) => a.taskId === task.id),
+          });
         }
-      } else {
-        currentStreak = 1;
-      }
-
-      lastDate = taskDate;
-    });
-
-    return Math.max(bestStreak, currentStreak);
-  };
-
-  const calculateCompletionTrend = (tasks: TaskAnalytics[]) => {
-    const completedTasks = tasks
-      .filter(t => t.status === 'completed' && t.completedDate)
-      .sort((a, b) => (a.completedDate?.getTime() || 0) - (b.completedDate?.getTime() || 0));
-
-    const trend: { date: string; completed: number; cumulative: number }[] = [];
-    const dailyCompletions = new Map<string, number>();
-
-    // Group by date
-    completedTasks.forEach(task => {
-      const dateStr = task.completedDate!.toISOString().split('T')[0];
-      dailyCompletions.set(dateStr, (dailyCompletions.get(dateStr) || 0) + 1);
-    });
-
-    // Create trend data
-    let cumulative = 0;
-    const sortedDates = Array.from(dailyCompletions.keys()).sort();
-    
-    sortedDates.forEach(date => {
-      const completed = dailyCompletions.get(date) || 0;
-      cumulative += completed;
-      trend.push({
-        date,
-        completed,
-        cumulative
       });
     });
+  });
 
-    return trend.slice(-30); // Last 30 data points
+  const totalTasks = taskRows.length;
+  const achievedCount = taskRows.filter(r => {
+    const history = r.answer?.statusHistory || [];
+    return history.some(c => c.status === 'achieved');
+  }).length;
+  const submittedCount = taskRows.filter(r => {
+    const history = r.answer?.statusHistory || [];
+    return history.some(c => c.status === 'submitted-for-review');
+  }).length;
+
+  // Derive current status per task (top-level, shared with summary)
+  const deriveLastStatus = (r: TaskRow): TaskStatus => {
+    const history = r.answer?.statusHistory || [];
+    if (history.length > 0) return history[history.length - 1].status as TaskStatus;
+    if (r.answer?.isGoodEnough) return 'completed';
+    if (r.answer) return 'in-progress';
+    return 'not-started';
   };
 
-  const calculateWeeklyProgress = (tasks: TaskAnalytics[]) => {
-    const completedTasks = tasks.filter(t => t.status === 'completed' && t.completedDate);
-    const weeklyData = new Map<string, number>();
+  const statusSummary = STATUS_COLUMNS.map(col => {
+    const count = taskRows.filter(r => deriveLastStatus(r) === col.status).length;
+    const pct = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
+    return { ...col, count, pct };
+  });
+  const notStartedCount = taskRows.filter(r => deriveLastStatus(r) === 'not-started').length;
+  const notStartedPct = totalTasks > 0 ? Math.round((notStartedCount / totalTasks) * 100) : 0;
 
-    completedTasks.forEach(task => {
-      const date = new Date(task.completedDate!);
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
-      const weekKey = weekStart.toISOString().split('T')[0];
-      
-      weeklyData.set(weekKey, (weeklyData.get(weekKey) || 0) + 1);
-    });
-
-    return Array.from(weeklyData.entries())
-      .map(([week, completed]) => ({ week, completed }))
-      .sort((a, b) => a.week.localeCompare(b.week))
-      .slice(-8); // Last 8 weeks
-  };
-
-  const calculateVelocity = (tasks: TaskAnalytics[]): number => {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const recentCompletions = tasks.filter(t => 
-      t.status === 'completed' && 
-      t.completedDate && 
-      t.completedDate >= sevenDaysAgo
-    );
-    
-    return recentCompletions.length / 7; // tasks per day
-  };
-
-  const calculateEfficiency = (trend: { date: string; completed: number; cumulative: number }[]): number => {
-    if (trend.length < 2) return 0;
-    
-    const recent = trend.slice(-7); // Last 7 data points
-    const older = trend.slice(-14, -7); // Previous 7 data points
-    
-    const recentAvg = recent.reduce((sum, d) => sum + d.completed, 0) / recent.length;
-    const olderAvg = older.reduce((sum, d) => sum + d.completed, 0) / Math.max(1, older.length);
-    
-    return olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
-  };
-
-  const getPerformanceStatus = () => {
-    if (stats!.completionRate >= 80) return { status: 'EXCELLENT', color: 'text-green-400', bg: 'bg-green-500/20' };
-    if (stats!.completionRate >= 60) return { status: 'STRONG', color: 'text-blue-400', bg: 'bg-blue-500/20' };
-    if (stats!.completionRate >= 40) return { status: 'STEADY', color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
-    return { status: 'BUILDING', color: 'text-orange-400', bg: 'bg-orange-500/20' };
-  };
-
-  const getMotivationalMessage = () => {
-    if (!stats) return '';
-    
-    if (stats.completionRate >= 90) return 'Outstanding performance - you\'re in the zone!';
-    if (stats.completionRate >= 70) return 'Solid progress - keep up the momentum!';
-    if (stats.completionRate >= 50) return 'Good pace - you\'re building consistency!';
-    if (stats.completionRate >= 25) return 'Nice start - every expert was once a beginner!';
-    return 'Ready to begin your learning journey!';
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="relative mb-8">
-                <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin border-t-blue-500 mx-auto"></div>
-                <div className="absolute inset-0 w-16 h-16 border-2 border-blue-400/20 rounded-full animate-pulse mx-auto"></div>
-              </div>
-              <div className="text-xl font-semibold mb-2">Analyzing Performance Data</div>
-              <div className="text-slate-400">Processing telemetry...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="min-h-screen bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <Radio className="h-16 w-16 mx-auto mb-4 text-red-400" />
-              <div className="text-xl font-semibold text-red-400">Telemetry Unavailable</div>
-              <div className="text-slate-400">Unable to process performance data</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const performanceStatus = getPerformanceStatus();
+  // Group rows by unit for display
+  const unitIds = [...new Set(taskRows.map(r => r.unitId))];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={onBack}
-              className="flex items-center text-slate-400 hover:text-white transition-colors"
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onBack}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Units
+          </button>
+        </div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Overall Progress</h1>
+          <p className="text-sm text-gray-500 mt-1">{totalTasks} tasks across {unitIds.length} unit{unitIds.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+            <p className="text-xl font-bold text-gray-700">{notStartedCount}</p>
+            <p className="text-xs text-gray-500 font-medium">{notStartedPct}%</p>
+            <p className="text-xs text-gray-500 mt-0.5">Not Started</p>
+          </div>
+          {statusSummary.map(s => (
+            <div key={s.status} className={`rounded-lg p-3 text-center border ${
+              s.status === 'achieved'             ? 'bg-green-50 border-green-200' :
+              s.status === 'not-yet-achieved'     ? 'bg-orange-50 border-orange-200' :
+              s.status === 'submitted-for-review' ? 'bg-purple-50 border-purple-200' :
+              s.status === 'completed'            ? 'bg-blue-50 border-blue-200' :
+                                                    'bg-yellow-50 border-yellow-200'
+            }`}>
+              <p className={`text-xl font-bold ${
+                s.status === 'achieved'             ? 'text-green-700' :
+                s.status === 'not-yet-achieved'     ? 'text-orange-700' :
+                s.status === 'submitted-for-review' ? 'text-purple-700' :
+                s.status === 'completed'            ? 'text-blue-700' :
+                                                      'text-yellow-700'
+              }`}>{s.count}</p>
+              <p className="text-xs text-gray-500 font-medium">{s.pct}%</p>
+              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Matrix per unit */}
+      {unitIds.map(unitId => {
+        const rows = taskRows.filter(r => r.unitId === unitId);
+        const unitTitle = rows[0]?.unitTitle || unitId;
+
+        const getLastStatus = (r: TaskRow) => {
+          const history = r.answer?.statusHistory || [];
+          if (history.length > 0) return history[history.length - 1].status;
+          if (r.answer?.isGoodEnough) return 'completed';
+          if (r.answer) return 'in-progress';
+          return 'not-started';
+        };
+
+        const allTasksDone = rows.every(r =>
+          ['completed', 'submitted-for-review', 'not-yet-achieved', 'achieved'].includes(getLastStatus(r))
+        );
+        const hasUnsubmitted = rows.some(r => getLastStatus(r) === 'completed');
+        const canSubmit = allTasksDone && hasUnsubmitted;
+
+        const getUnitStatus = (): { label: string; className: string } => {
+          const statuses = rows.map(r => getLastStatus(r));
+          if (statuses.every(s => s === 'achieved'))
+            return { label: 'Achieved', className: 'bg-green-100 text-green-800 border-green-300' };
+          if (statuses.some(s => s === 'not-yet-achieved'))
+            return { label: 'Feedback Received', className: 'bg-orange-100 text-orange-800 border-orange-300' };
+          if (statuses.every(s => s === 'submitted-for-review' || s === 'achieved'))
+            return { label: 'Submitted for Review', className: 'bg-purple-100 text-purple-800 border-purple-300' };
+          if (canSubmit)
+            return { label: 'Ready to Submit', className: 'bg-blue-100 text-blue-800 border-blue-300' };
+          if (statuses.some(s => s !== 'not-started'))
+            return { label: 'In Progress', className: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+          return { label: 'Not Started', className: 'bg-gray-100 text-gray-600 border-gray-300' };
+        };
+
+        const unitStatus = getUnitStatus();
+
+        const isExpanded = expandedUnits.has(unitId);
+
+        return (
+          <div key={unitId} className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div
+              className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => toggleUnit(unitId)}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Units
-            </button>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-                <span className="text-sm font-medium">{isLive ? 'LIVE' : 'PAUSED'}</span>
+              <div className="flex items-center space-x-3">
+                {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-500" /> : <ChevronRight className="h-4 w-4 text-gray-500" />}
+                <h2 className="font-semibold text-gray-800">{unitTitle}</h2>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${unitStatus.className}`}>
+                  {unitStatus.label}
+                </span>
+                <span className="text-xs text-gray-400">{rows.length} task{rows.length !== 1 ? 's' : ''}</span>
               </div>
-              <button
-                onClick={() => setIsLive(!isLive)}
-                className="p-2 border border-slate-600 rounded hover:bg-slate-700 transition-colors"
-              >
-                {isLive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </button>
-              <button
-                onClick={calculateStats}
-                className="p-2 border border-slate-600 rounded hover:bg-slate-700 transition-colors"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Flag className="h-8 w-8 mr-3 text-blue-400" />
-              <h1 className="text-3xl font-bold">Learning Telemetry</h1>
-              <Gauge className="h-8 w-8 ml-3 text-blue-400" />
-            </div>
-            <div className={`inline-flex items-center px-4 py-2 rounded-full ${performanceStatus.bg} ${performanceStatus.color} font-semibold mb-2`}>
-              Performance: {performanceStatus.status}
-            </div>
-            <div className="text-slate-400 text-sm">
-              {getMotivationalMessage()}
-            </div>
-          </div>
-        </div>
-
-        {/* Key Performance Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { 
-              key: 'completion', 
-              label: 'Completion Rate', 
-              value: `${Math.round(stats.completionRate)}%`, 
-              icon: Target, 
-              color: stats.completionRate >= 70 ? 'text-green-400' : stats.completionRate >= 40 ? 'text-yellow-400' : 'text-orange-400',
-              bg: stats.completionRate >= 70 ? 'bg-green-500/10' : stats.completionRate >= 40 ? 'bg-yellow-500/10' : 'bg-orange-500/10'
-            },
-            { 
-              key: 'velocity', 
-              label: 'Current Pace', 
-              value: `${stats.velocity.toFixed(1)}/day`, 
-              icon: Zap, 
-              color: stats.velocity >= 1 ? 'text-blue-400' : 'text-slate-400',
-              bg: stats.velocity >= 1 ? 'bg-blue-500/10' : 'bg-slate-500/10'
-            },
-            { 
-              key: 'streak', 
-              label: 'Current Streak', 
-              value: `${stats.streakDays} days`, 
-              icon: Flame, 
-              color: stats.streakDays >= 3 ? 'text-orange-400' : 'text-slate-400',
-              bg: stats.streakDays >= 3 ? 'bg-orange-500/10' : 'bg-slate-500/10'
-            },
-            { 
-              key: 'efficiency', 
-              label: 'Trend', 
-              value: `${stats.efficiency > 0 ? '+' : ''}${Math.round(stats.efficiency)}%`, 
-              icon: TrendingUp, 
-              color: stats.efficiency > 0 ? 'text-green-400' : stats.efficiency < 0 ? 'text-red-400' : 'text-slate-400',
-              bg: stats.efficiency > 0 ? 'bg-green-500/10' : stats.efficiency < 0 ? 'bg-red-500/10' : 'bg-slate-500/10'
-            }
-          ].map((metric) => {
-            const Icon = metric.icon;
-            const isActive = activeMetric === metric.key;
-            
-            return (
-              <div
-                key={metric.key}
-                className={`bg-slate-800/50 border rounded-lg p-4 cursor-pointer transition-all duration-300 ${
-                  isActive 
-                    ? 'border-blue-400 bg-blue-500/5' 
-                    : 'border-slate-700 hover:border-slate-600'
-                }`}
-                onClick={() => setActiveMetric(metric.key as any)}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <Icon className={`h-6 w-6 ${metric.color}`} />
-                  <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`}></div>
-                </div>
-                <div className="text-xs text-slate-400 mb-1 uppercase tracking-wide">{metric.label}</div>
-                <div className={`text-2xl font-bold ${metric.color}`}>{metric.value}</div>
-                {isActive && (
-                  <div className="mt-2 text-xs text-slate-400">
-                    {metric.key === 'completion' && `${stats.completedTasks}/${stats.totalTasks} tasks completed`}
-                    {metric.key === 'velocity' && `${Math.round(stats.velocity * 7)} tasks this week`}
-                    {metric.key === 'streak' && (stats.streakDays > 0 ? `Best: ${stats.bestStreak} days` : 'Start your streak today')}
-                    {metric.key === 'efficiency' && (stats.efficiency > 0 ? 'Improving pace' : stats.efficiency < 0 ? 'Pace declining' : 'Steady pace')}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Performance Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Task Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <PieChart className="h-5 w-5 mr-2 text-blue-400" />
-              <h3 className="font-semibold">Task Status</h3>
-            </div>
-            
-            <div className="space-y-4">
-              {[
-                { label: 'Completed', count: stats.completedTasks, color: 'bg-green-500', textColor: 'text-green-400' },
-                { label: 'In Progress', count: stats.inProgressTasks, color: 'bg-yellow-500', textColor: 'text-yellow-400' },
-                { label: 'Not Started', count: stats.notStartedTasks, color: 'bg-slate-500', textColor: 'text-slate-400' }
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full ${item.color} mr-3`}></div>
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`font-semibold ${item.textColor}`}>{item.count}</span>
-                    <div className="w-16 bg-slate-700 rounded-full h-1">
-                      <div 
-                        className={`h-1 rounded-full ${item.color}`}
-                        style={{ width: `${(item.count / stats.totalTasks) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Performance Metrics */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <Gauge className="h-5 w-5 mr-2 text-blue-400" />
-              <h3 className="font-semibold">Performance</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm">Avg. Completion Time</span>
-                  <span className="text-blue-400 font-semibold">{Math.round(stats.averageTimeToComplete)}d</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-1">
-                  <div 
-                    className="bg-blue-500 h-1 rounded-full"
-                    style={{ width: `${Math.min(100, (5 / Math.max(1, stats.averageTimeToComplete)) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm">Units Completed</span>
-                  <span className="text-green-400 font-semibold">{stats.completedUnits}/{stats.totalUnits}</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-1">
-                  <div 
-                    className="bg-green-500 h-1 rounded-full"
-                    style={{ width: `${stats.totalUnits > 0 ? (stats.completedUnits / stats.totalUnits) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div className="pt-2 border-t border-slate-700">
-                <div className="text-center">
-                  <div className="text-xs text-slate-400 mb-1">Session Time Today</div>
-                  <div className="text-lg font-bold text-blue-400">{stats.sessionTime}m</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <Activity className="h-5 w-5 mr-2 text-blue-400" />
-              <h3 className="font-semibold">Recent Completions</h3>
-            </div>
-            
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {stats.recentActivity.length > 0 ? (
-                stats.recentActivity.slice(0, 8).map((task, index) => (
-                  <div key={`${task.unitId}-${task.taskId}`} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center">
-                      <div className="w-1 h-1 bg-green-400 rounded-full mr-2"></div>
-                      <span className="text-slate-300 truncate">{task.taskId}</span>
-                    </div>
-                    <div className="text-slate-400 text-xs">
-                      {task.completedDate?.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-slate-400 text-sm">
-                  No completed tasks yet
-                </div>
+              {canSubmit && (
+                <button
+                  onClick={e => { e.stopPropagation(); onSubmitUnit(unitId); }}
+                  className="flex items-center px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Submit for Review
+                </button>
               )}
             </div>
-          </div>
-        </div>
+            {isExpanded && <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50/50">
+                    <th className="text-left p-3 font-semibold text-gray-700 w-20">Task</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Description</th>
+                    {STATUS_COLUMNS.map(col => (
+                      <th key={col.status} className="p-3 font-semibold text-gray-700 text-center whitespace-nowrap min-w-[110px]">
+                        {col.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, idx) => (
+                    <tr
+                      key={row.taskId}
+                      onClick={() => onTaskSelect(row.unitId, row.loId, row.taskId)}
+                      className={`border-b cursor-pointer transition-colors hover:bg-blue-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'}`}
+                    >
+                      <td className="p-3 font-semibold text-gray-900">{row.taskId}</td>
+                      <td className="p-3 text-gray-600 max-w-xs">
+                        <span className="line-clamp-2 text-xs">{row.description}</span>
+                      </td>
+                      {STATUS_COLUMNS.map(col => {
+                        const currentStatus = getLastStatus(row);
+                        // For submitted/not-yet-achieved use the latest occurrence; others use first
+                        const usesLatest = col.status === 'submitted-for-review' || col.status === 'not-yet-achieved';
+                        const ts = usesLatest
+                          ? getLatestTimestampForStatus(row.answer, col.status)
+                          : getTimestampForStatus(row.answer, col.status);
+                        const reached = !!ts;
 
-        {/* Progress Visualization */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2 text-blue-400" />
-              <h3 className="font-semibold">Progress Analytics</h3>
-            </div>
-            <div className="flex items-center space-x-2 text-xs text-slate-400">
-              <Signal className="h-4 w-4" />
-              <span>Live Data</span>
-            </div>
-          </div>
-          
-          {stats.completionTrend.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Daily Completions Chart */}
-              <div>
-                <div className="text-sm text-slate-400 mb-3">Daily Task Completions</div>
-                <div className="flex items-end space-x-1 h-32 bg-slate-900/50 p-4 rounded">
-                  {stats.completionTrend.slice(-14).map((day, index) => {
-                    const maxCompleted = Math.max(...stats.completionTrend.map(d => d.completed));
-                    const height = Math.max(4, (day.completed / Math.max(1, maxCompleted)) * 100);
-                    return (
-                      <div key={day.date} className="flex-1 flex flex-col items-center">
-                        <div 
-                          className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-400 relative group"
-                          style={{ height: `${height}%`, minHeight: day.completed > 0 ? '4px' : '1px' }}
-                        >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-slate-600 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {day.completed} tasks
-                          </div>
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1 transform -rotate-45 origin-left">
-                          {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                        // Stale = part of a review cycle superseded by a later re-completion
+                        const latestCompletedTs = getLatestTimestampForStatus(row.answer, 'completed');
+                        const cycleStale = usesLatest && !!ts && !!latestCompletedTs && ts < latestCompletedTs;
+                        // Grey out completed cell only while in not-yet-achieved (answer invalidated, not yet revised)
+                        const completedStale = col.status === 'completed' && currentStatus === 'not-yet-achieved';
+                        const isStale = cycleStale || completedStale;
+                        const isActionable = col.status === 'submitted-for-review' && currentStatus === 'submitted-for-review';
+                        const key = outcomeKey(row.unitId, row.taskId);
+                        const isActive = activeOutcomeKey === key;
+                        const isFeedbackOpen = showFeedbackFor === key;
 
-              {/* Cumulative Progress */}
-              <div>
-                <div className="text-sm text-slate-400 mb-3">Cumulative Progress</div>
-                <div className="space-y-2 max-h-32 overflow-y-auto bg-slate-900/50 p-4 rounded">
-                  {stats.completionTrend.slice(-6).reverse().map((day, index) => (
-                    <div key={day.date} className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">
-                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-blue-400 font-semibold">{day.cumulative}</span>
-                        {day.completed > 0 && (
-                          <span className="bg-green-500/20 text-green-400 px-1 rounded text-xs">
-                            +{day.completed}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                        return (
+                          <td
+                            key={col.status}
+                            className="p-2 text-center align-top"
+                            onClick={isActionable ? e => { e.stopPropagation(); setActiveOutcomeKey(isActive ? null : key); setShowFeedbackFor(null); setFeedbackInput(''); } : undefined}
+                          >
+                            {reached ? (
+                              isStale ? (
+                                <div className="bg-gray-300 rounded-lg p-2 mx-1 opacity-50">
+                                  <p className="text-gray-600 text-xs font-medium leading-tight line-through">
+                                    {ts.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                  </p>
+                                  <p className="text-gray-500 text-xs">
+                                    {ts.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className={`${col.color} rounded-lg p-2 mx-1 ${isActionable ? 'cursor-pointer hover:opacity-80' : ''}`}>
+                                  <p className="text-white text-xs font-medium leading-tight">
+                                    {ts.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                  </p>
+                                  <p className="text-white/80 text-xs">
+                                    {ts.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                  {isActionable && <p className="text-white/70 text-xs mt-1">click to record outcome</p>}
+                                </div>
+                              )
+                            ) : (
+                              <div className="bg-gray-100 rounded-lg p-2 mx-1 h-[44px]" />
+                            )}
+
+                            {/* Outcome panel */}
+                            {isActionable && isActive && !isFeedbackOpen && (
+                              <div className="mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1 text-left" onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={() => setShowFeedbackFor(key)}
+                                  className="w-full flex items-center px-2 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded hover:bg-orange-100 transition-colors"
+                                >
+                                  <MessageCircle className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                  Not Yet Achieved
+                                </button>
+                                <button
+                                  onClick={() => { onRecordOutcome(row.unitId, row.taskId, 'achieved'); setActiveOutcomeKey(null); }}
+                                  className="w-full flex items-center px-2 py-1.5 text-xs bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 transition-colors"
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                  Achieved
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Feedback input */}
+                            {isActionable && isFeedbackOpen && (
+                              <div className="mt-1 bg-white border border-orange-200 rounded-lg shadow-lg p-3 text-left w-80" onClick={e => e.stopPropagation()}>
+                                <p className="text-xs font-medium text-orange-800 mb-2">Feedback received:</p>
+                                <textarea
+                                  autoFocus
+                                  value={feedbackInput}
+                                  onChange={e => setFeedbackInput(e.target.value)}
+                                  className="w-full p-2 text-sm border border-orange-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                  rows={8}
+                                  placeholder="Enter feedback notes..."
+                                />
+                                <div className="flex space-x-1 mt-1">
+                                  <button
+                                    onClick={() => { onRecordOutcome(row.unitId, row.taskId, 'not-yet-achieved', feedbackInput); setActiveOutcomeKey(null); setShowFeedbackFor(null); setFeedbackInput(''); }}
+                                    className="flex-1 px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={() => { setShowFeedbackFor(null); setFeedbackInput(''); }}
+                                    className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                  >
+                                    Back
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
                   ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-400">
-              Complete your first task to see progress analytics
-            </div>
-          )}
-        </div>
-
-        {/* Status Footer */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <Wifi className="h-4 w-4 mr-1" />
-                <span>Connection: Stable</span>
-              </div>
-              <div className="flex items-center">
-                <Database className="h-4 w-4 mr-1" />
-                <span>Data: Synchronized</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span>Updated: {new Date().toLocaleTimeString()}</span>
-              <div className="flex items-center">
-                <Timer className="h-4 w-4 mr-1" />
-                <span>Response: {Math.floor(Math.random() * 50) + 10}ms</span>
-              </div>
-            </div>
+                </tbody>
+              </table>
+            </div>}
           </div>
+        );
+      })}
+
+      {taskRows.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm border p-12 text-center text-gray-500">
+          No units loaded yet. Add a unit to see progress here.
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+        {STATUS_COLUMNS.map(col => (
+          <div key={col.status} className="flex items-center space-x-1">
+            <div className={`w-3 h-3 rounded ${col.color}`} />
+            <span>{col.label}</span>
+          </div>
+        ))}
+        <div className="flex items-center space-x-1">
+          <div className="w-3 h-3 rounded bg-gray-200" />
+          <span>Not reached</span>
         </div>
       </div>
     </div>

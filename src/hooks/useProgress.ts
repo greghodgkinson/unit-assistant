@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Progress, StudentAnswer, VelocityMetrics, TaskStatusChange } from '../types/Unit';
+import { Progress, StudentAnswer, VelocityMetrics, TaskStatusChange, TaskStatus } from '../types/Unit';
+import { deriveTaskStatus, VALID_TRANSITIONS } from '../utils/taskStatus';
 
 export const useProgress = (unitId: string) => {
   const STORAGE_KEY = `learning-assistant-progress-${unitId}`;
@@ -72,16 +73,19 @@ export const useProgress = (unitId: string) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   }, [progress]);
 
-  const getTaskStatus = (taskId: string): 'not-started' | 'in-progress' | 'completed' => {
+  const getTaskStatus = (taskId: string): TaskStatus => {
     const answer = progress.answers.find(a => a.taskId === taskId);
-    if (!answer) return 'not-started';
-    if (answer.isGoodEnough) return 'completed';
-    return 'in-progress';
+    return deriveTaskStatus(answer);
   };
 
-  const addStatusChange = (taskId: string, newStatus: 'not-started' | 'in-progress' | 'completed') => {
+  const addStatusChange = (taskId: string, newStatus: TaskStatus) => {
     const currentStatus = getTaskStatus(taskId);
-    if (currentStatus === newStatus) return; // No change needed
+    if (currentStatus === newStatus) return;
+
+    const validNext = VALID_TRANSITIONS[currentStatus];
+    if (validNext && !validNext.includes(newStatus)) {
+      console.warn(`Status transition ${currentStatus} → ${newStatus} is not in the expected flow`);
+    }
 
     const statusChange: TaskStatusChange = {
       timestamp: new Date(),
@@ -91,10 +95,10 @@ export const useProgress = (unitId: string) => {
 
     setProgress(prev => ({
       ...prev,
-      answers: prev.answers.map(a => 
-        a.taskId === taskId 
-          ? { 
-              ...a, 
+      answers: prev.answers.map(a =>
+        a.taskId === taskId
+          ? {
+              ...a,
               statusHistory: [...(a.statusHistory || []), statusChange],
               lastModified: new Date()
             }
@@ -104,33 +108,62 @@ export const useProgress = (unitId: string) => {
     }));
   };
 
+  const submitForReview = (taskId: string) => {
+    addStatusChange(taskId, 'submitted-for-review');
+  };
+
+  const recordReviewOutcome = (taskId: string, outcome: 'achieved' | 'not-yet-achieved', reviewFeedback?: string) => {
+    const currentStatus = getTaskStatus(taskId);
+    const statusChange: TaskStatusChange = {
+      timestamp: new Date(),
+      status: outcome,
+      previousStatus: currentStatus
+    };
+
+    setProgress(prev => ({
+      ...prev,
+      answers: prev.answers.map(a =>
+        a.taskId === taskId
+          ? {
+              ...a,
+              statusHistory: [...(a.statusHistory || []), statusChange],
+              lastModified: new Date(),
+              ...(reviewFeedback !== undefined ? { reviewFeedback } : {}),
+              ...(outcome === 'achieved' ? { isGoodEnough: true } : {})
+            }
+          : a
+      ),
+      lastActivity: new Date()
+    }));
+  };
+
   const updateAnswer = (taskId: string, content: string) => {
     const currentStatus = getTaskStatus(taskId);
+
+    // Block content changes when task is locked
+    if (currentStatus === 'submitted-for-review' || currentStatus === 'achieved') return;
+
+    // Only auto-transition between not-started and in-progress
     const willBeInProgress = content.trim().length > 0;
-    
+    let statusChange: TaskStatusChange | null = null;
+    if (currentStatus === 'not-started' && willBeInProgress) {
+      statusChange = { timestamp: new Date(), status: 'in-progress', previousStatus: 'not-started' };
+    } else if (currentStatus === 'in-progress' && !willBeInProgress) {
+      statusChange = { timestamp: new Date(), status: 'not-started', previousStatus: 'in-progress' };
+    }
+
     setProgress(prev => {
       const existingAnswer = prev.answers.find(a => a.taskId === taskId);
-      const newStatus: 'not-started' | 'in-progress' | 'completed' = 
-        existingAnswer?.isGoodEnough ? 'completed' : 
-        willBeInProgress ? 'in-progress' : 'not-started';
-      
-      // Create status change if status is changing
-      const statusChange: TaskStatusChange | null = 
-        currentStatus !== newStatus ? {
-          timestamp: new Date(),
-          status: newStatus,
-          previousStatus: currentStatus
-        } : null;
-      
+
       const newAnswers = existingAnswer
-        ? prev.answers.map(a => 
-            a.taskId === taskId 
-              ? { 
-                  ...a, 
-                  content, 
-                  lastModified: new Date(), 
+        ? prev.answers.map(a =>
+            a.taskId === taskId
+              ? {
+                  ...a,
+                  content,
+                  lastModified: new Date(),
                   version: a.version + 1,
-                  statusHistory: statusChange 
+                  statusHistory: statusChange
                     ? [...(a.statusHistory || []), statusChange]
                     : (a.statusHistory || [])
                 }
@@ -272,6 +305,9 @@ export const useProgress = (unitId: string) => {
     setCurrentTask,
     getVelocityMetrics,
     getNextTask,
-    getPreviousTask
+    getPreviousTask,
+    submitForReview,
+    recordReviewOutcome,
+    getTaskStatus
   };
 };

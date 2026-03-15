@@ -59,6 +59,7 @@ export interface StudentQuestionRequest {
   unitId: string;
   studentQuestion: string;
   answerText: string;
+  reviewFeedback?: string;
   taskDetails?: {
     description: string;
     acceptance_criteria: Array<{
@@ -75,8 +76,7 @@ export interface StudentQuestionRequest {
 
 export interface StudentQuestionResponse {
   answer: string;
-  response?: string; // Support both formats
-  response: string;
+  response?: string;
 }
 
 export const askStudentQuestion = async (request: StudentQuestionRequest): Promise<StudentQuestionResponse> => {

@@ -20,18 +20,18 @@ Increment the ID sequentially. When a story is done, move it to **Completed** an
 ### US-001: Extended Unit Task Status Lifecycle
 **As a** student, **I want** my unit tasks to progress through a full review lifecycle, **so that** I can track where my work is in the feedback and marking process.
 
-Note: submission and review happen outside the app — the student manually records the outcome back into the app.
+Note: submission is at the **unit level** (not per-task) and is triggered from the Overall Progress dashboard. Review and outcomes happen outside the app — the student manually records them back in.
 
 - [ ] Task statuses follow this lifecycle (existing statuses kept as-is, new ones added after):
   1. `not-started` — task not begun
   2. `in-progress` — student is working on it
   3. `completed` — student is happy with their answer
-  4. `submitted-for-review` — student manually marks as submitted (actual submission is outside the app)
-  5. `not-yet-achieved` — student records this outcome + feedback received externally (loops back to step 4 after revising and resubmitting)
+  4. `submitted-for-review` — set on all completed/not-yet-achieved tasks when student clicks "Submit for Review" at unit level from the Overall Progress dashboard
+  5. `not-yet-achieved` — student records this outcome + feedback received externally; resubmission also done from the Overall Progress dashboard
   6. `achieved` — student records this outcome, task is done
 - [ ] UI reflects each status with a distinct label/indicator
 - [ ] Transitions between statuses are enforced in the correct order
-- [ ] Relevant actions are shown only when valid for the current status
+- [ ] Submit for Review is only available from the Overall Progress dashboard (not from within a task)
 
 ### US-002: Task Feedback Capture and Answer Iteration
 **As a** student, **I want** to record feedback I received externally and edit my answer in response, **so that** I can track and action feedback within the app and get help from the unit assistant.

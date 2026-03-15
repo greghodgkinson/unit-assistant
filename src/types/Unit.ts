@@ -41,6 +41,14 @@ export interface UnitTask {
   outcome_tasks: string[];
 }
 
+export type TaskStatus =
+  | 'not-started'
+  | 'in-progress'
+  | 'completed'
+  | 'submitted-for-review'
+  | 'not-yet-achieved'
+  | 'achieved';
+
 export interface StudentAnswer {
   taskId: string;
   content: string;
@@ -50,13 +58,14 @@ export interface StudentAnswer {
   isGoodEnough: boolean;
   feedbackRequested: boolean;
   feedback?: string;
+  reviewFeedback?: string;
   statusHistory?: TaskStatusChange[];
 }
 
 export interface TaskStatusChange {
   timestamp: Date;
-  status: 'not-started' | 'in-progress' | 'completed';
-  previousStatus?: 'not-started' | 'in-progress' | 'completed';
+  status: TaskStatus;
+  previousStatus?: TaskStatus;
 }
 
 export interface Progress {

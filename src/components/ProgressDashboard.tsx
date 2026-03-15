@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, CheckCircle, Clock, TrendingUp, Target, Lightbulb, List, History } from 'lucide-react';
 import { Progress, VelocityMetrics, Unit } from '../types/Unit';
 import { replaceTablesWithPlaceholder } from '../utils/markdownRenderer';
+import { deriveTaskStatus } from '../utils/taskStatus';
 
 interface ProgressDashboardProps {
   unit: Unit;
@@ -26,30 +27,28 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
     });
     return allTaskIds.size;
   };
-  
+
   // Create a map of task ID to the last learning outcome it appears in
   const getTaskToLastLearningOutcomeMap = () => {
     const taskToLastLO = new Map<string, string>();
-    
+
     unit.learning_outcomes.forEach(lo => {
       lo.outcome_tasks.forEach(task => {
         taskToLastLO.set(task.id, lo.id);
       });
     });
-    
+
     return taskToLastLO;
   };
-  
+
   const taskToLastLO = getTaskToLastLearningOutcomeMap();
-  
+
   const totalTasks = getUniqueTaskCount();
   const completionRate = (metrics.completedTasks / totalTasks) * 100;
 
   const getTaskStatus = (taskId: string) => {
     const answer = progress.answers.find(a => a.taskId === taskId);
-    if (!answer) return 'not-started';
-    if (answer.isGoodEnough) return 'completed';
-    return 'in-progress';
+    return deriveTaskStatus(answer);
   };
 
   const getLastStatusChange = (taskId: string) => {
@@ -69,7 +68,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'border-green-300 bg-green-50';
+      case 'achieved': return 'border-green-400 bg-green-50';
+      case 'completed': return 'border-blue-300 bg-blue-50';
+      case 'submitted-for-review': return 'border-purple-300 bg-purple-50';
+      case 'not-yet-achieved': return 'border-orange-300 bg-orange-50';
       case 'in-progress': return 'border-yellow-300 bg-yellow-50';
       case 'not-started': return 'border-gray-200 bg-white';
       default: return 'border-gray-200 bg-white';
@@ -89,7 +91,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="flex items-center">
             <CheckCircle className="h-8 w-8 text-green-600" />
@@ -99,7 +101,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="flex items-center">
             <Clock className="h-8 w-8 text-orange-600" />
@@ -109,7 +111,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="flex items-center">
             <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -128,7 +130,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
           <span className="text-sm text-gray-600">{metrics.completedTasks} of {totalTasks} tasks</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
+          <div
             className="bg-blue-600 h-3 rounded-full transition-all duration-300"
             style={{ width: `${completionRate}%` }}
           ></div>
@@ -146,14 +148,14 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{unitTask.id}</h3>
                 <p className="text-gray-600">{replaceTablesWithPlaceholder(unitTask.description)}</p>
               </div>
-              
+
               {/* Learning Outcomes for this Unit Task */}
               {unit.learning_outcomes
                 .filter(lo => unitTask.learning_outcomes.includes(lo.id))
                 .filter(lo => {
                   // Only show LOs that have at least one task for this unit task
-                  return lo.outcome_tasks.some(task => 
-                    unitTask.outcome_tasks.includes(task.id) && 
+                  return lo.outcome_tasks.some(task =>
+                    unitTask.outcome_tasks.includes(task.id) &&
                     taskToLastLO.get(task.id) === lo.id
                   );
                 })
@@ -166,19 +168,19 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                       </div>
                       <p className="text-gray-600 mt-1">{replaceTablesWithPlaceholder(lo.description)}</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {lo.outcome_tasks
                         .filter((task) => {
                           // Only show tasks that belong to this unit task AND are the last occurrence
-                          return unitTask.outcome_tasks.includes(task.id) && 
+                          return unitTask.outcome_tasks.includes(task.id) &&
                                  taskToLastLO.get(task.id) === lo.id;
                         })
                         .map((task) => {
                           const status = getTaskStatus(task.id);
                           const isCurrent = progress.currentTask === task.id;
                           const lastChange = getLastStatusChange(task.id);
-                          
+
                           return (
                             <div
                               key={task.id}
@@ -199,9 +201,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                               <p className="text-sm text-gray-600 mb-3">{replaceTablesWithPlaceholder(task.description)}</p>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center">
-                                  {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                  {status === 'achieved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                  {status === 'completed' && <CheckCircle className="h-4 w-4 text-blue-600" />}
                                   {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
-                                  <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                                  <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace(/-/g, ' ')}</span>
                                   {lastChange && (
                                     <History className="h-3 w-3 ml-2 text-gray-400" title={`Last changed: ${lastChange.timestamp.toLocaleString()}`} />
                                   )}
@@ -227,7 +230,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 </div>
                 <p className="text-gray-600 mt-1">{replaceTablesWithPlaceholder(lo.description)}</p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {lo.outcome_tasks
                   .filter((task) => taskToLastLO.get(task.id) === lo.id)
@@ -235,7 +238,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                   const status = getTaskStatus(task.id);
                   const isCurrent = progress.currentTask === task.id;
                   const lastChange = getLastStatusChange(task.id);
-                  
+
                   return (
                     <div
                       key={task.id}
@@ -256,9 +259,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                       <p className="text-sm text-gray-600 mb-3">{task.description}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          {status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                          {status === 'achieved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                          {status === 'completed' && <CheckCircle className="h-4 w-4 text-blue-600" />}
                           {status === 'in-progress' && <Clock className="h-4 w-4 text-yellow-600" />}
-                          <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace('-', ' ')}</span>
+                          <span className="ml-1 text-xs text-gray-500 capitalize">{status.replace(/-/g, ' ')}</span>
                           {lastChange && (
                             <History className="h-3 w-3 ml-2 text-gray-400" title={`Last changed: ${lastChange.timestamp.toLocaleString()}`} />
                           )}

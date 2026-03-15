@@ -18,6 +18,7 @@ type View = 'list' | 'upload' | 'load-storage' | 'settings' | 'overview' | 'dash
 function App() {
   const [currentView, setCurrentView] = useState<View>('list');
   const [currentUnitId, setCurrentUnitId] = useState<string | null>(null);
+  const [overallProgressKey, setOverallProgressKey] = useState(0);
   const { units, unitList, loading, error, addUnit, removeUnit, getUnit, updateUnitProgress } = useUnitManager();
   
   // Get unit data
@@ -35,7 +36,9 @@ function App() {
     setCurrentTask,
     getVelocityMetrics,
     getNextTask,
-    getPreviousTask
+    getPreviousTask,
+    submitForReview,
+    recordReviewOutcome
   } = useProgress(currentUnitId && unitData ? currentUnitId : '');
 
   // Show loading state
@@ -170,25 +173,119 @@ function App() {
   const handleMarkComplete = () => {
     const currentAnswer = getCurrentAnswer();
     const isCurrentlyComplete = currentAnswer?.isGoodEnough || false;
-    
+
     if (isCurrentlyComplete) {
-      // Mark as incomplete
       markAsGoodEnough(progress.currentTask, false);
       markTaskIncomplete(progress.currentTask);
-      // Remove from completed tasks
       if (currentUnitId) {
         const newCompletedCount = Math.max(0, progress.completedTasks.length - 1);
         updateUnitProgress(currentUnitId, newCompletedCount);
       }
     } else {
-      // Mark as complete
       markAsGoodEnough(progress.currentTask, true);
       markTaskComplete(progress.currentTask);
-      
-      // Update unit progress in the manager
       if (currentUnitId) {
         updateUnitProgress(currentUnitId, progress.completedTasks.length + 1);
       }
+    }
+  };
+
+  const handleSubmitForReview = () => {
+    submitForReview(progress.currentTask);
+  };
+
+  const handleOverallProgressTaskSelect = (unitId: string, loId: string, taskId: string) => {
+    // Always write the target task into localStorage so the hook picks it up on init
+    const key = `learning-assistant-progress-${unitId}`;
+    const saved = localStorage.getItem(key);
+    const prog = saved ? JSON.parse(saved) : {
+      unitId,
+      currentLO: loId,
+      currentTask: taskId,
+      completedTasks: [],
+      answers: [],
+      startDate: new Date().toISOString(),
+      lastActivity: new Date().toISOString()
+    };
+    localStorage.setItem(key, JSON.stringify({ ...prog, currentLO: loId, currentTask: taskId }));
+
+    if (unitId === currentUnitId) {
+      // Same unit — hook won't re-init, so update state directly
+      setCurrentTask(loId, taskId);
+      setCurrentView('task');
+    } else {
+      // Different unit — changing unitId re-inits useProgress from localStorage
+      setCurrentUnitId(unitId);
+      setCurrentView('task');
+    }
+  };
+
+  const handleOverallProgressRecordOutcome = (unitId: string, taskId: string, outcome: 'achieved' | 'not-yet-achieved', reviewFeedback?: string) => {
+    const key = `learning-assistant-progress-${unitId}`;
+    const saved = localStorage.getItem(key);
+    if (!saved) return;
+
+    const prog = JSON.parse(saved);
+    const now = new Date().toISOString();
+
+    const updatedAnswers = prog.answers.map((answer: any) => {
+      if (answer.taskId !== taskId) return answer;
+      const lastStatus = answer.statusHistory?.length > 0
+        ? answer.statusHistory[answer.statusHistory.length - 1].status
+        : (answer.isGoodEnough ? 'completed' : 'not-started');
+      return {
+        ...answer,
+        statusHistory: [
+          ...(answer.statusHistory || []),
+          { timestamp: now, status: outcome, previousStatus: lastStatus }
+        ],
+        lastModified: now,
+        ...(reviewFeedback !== undefined ? { reviewFeedback } : {}),
+        ...(outcome === 'achieved' ? { isGoodEnough: true } : {})
+      };
+    });
+
+    localStorage.setItem(key, JSON.stringify({ ...prog, answers: updatedAnswers, lastActivity: now }));
+    if (unitId === currentUnitId) refreshProgress();
+    setOverallProgressKey(k => k + 1);
+  };
+
+  const handleSubmitUnit = (unitId: string) => {
+    const key = `learning-assistant-progress-${unitId}`;
+    const saved = localStorage.getItem(key);
+    if (!saved) return;
+
+    const prog = JSON.parse(saved);
+    const now = new Date().toISOString();
+
+    const updatedAnswers = prog.answers.map((answer: any) => {
+      const lastStatus = answer.statusHistory?.length > 0
+        ? answer.statusHistory[answer.statusHistory.length - 1].status
+        : (answer.isGoodEnough ? 'completed' : (answer.content?.trim() ? 'in-progress' : 'not-started'));
+
+      if (lastStatus === 'completed' || lastStatus === 'not-yet-achieved') {
+        return {
+          ...answer,
+          statusHistory: [
+            ...(answer.statusHistory || []),
+            { timestamp: now, status: 'submitted-for-review', previousStatus: lastStatus }
+          ],
+          lastModified: now
+        };
+      }
+      return answer;
+    });
+
+    localStorage.setItem(key, JSON.stringify({ ...prog, answers: updatedAnswers, lastActivity: now }));
+    if (unitId === currentUnitId) refreshProgress();
+    setOverallProgressKey(k => k + 1);
+  };
+
+  const handleRecordOutcome = (outcome: 'achieved' | 'not-yet-achieved', reviewFeedback?: string) => {
+    recordReviewOutcome(progress.currentTask, outcome, reviewFeedback);
+    if (outcome === 'achieved' && currentUnitId) {
+      markTaskComplete(progress.currentTask);
+      updateUnitProgress(currentUnitId, progress.completedTasks.length + 1);
     }
   };
     
@@ -235,9 +332,13 @@ function App() {
       case 'overall-progress':
         return (
           <OverallProgress
+            key={overallProgressKey}
             units={unitList}
             getUnit={getUnit}
             onBack={() => setCurrentView('list')}
+            onSubmitUnit={handleSubmitUnit}
+            onTaskSelect={handleOverallProgressTaskSelect}
+            onRecordOutcome={handleOverallProgressRecordOutcome}
           />
         );
       
@@ -305,6 +406,8 @@ function App() {
             onAnswerUpdate={handleAnswerUpdate}
             onRequestFeedback={handleRequestFeedback}
             onMarkComplete={handleMarkComplete}
+            onSubmitForReview={handleSubmitForReview}
+            onRecordOutcome={handleRecordOutcome}
             onNavigateBack={() => setCurrentView('dashboard')}
             onNavigateNext={handleNavigateNext}
             onNavigatePrevious={handleNavigatePrevious}
@@ -342,7 +445,7 @@ function App() {
             </div>
             
             {currentView !== 'list' && currentView !== 'upload' && currentView !== 'overview' && currentView !== 'settings' && (
-              <nav className="flex space-x-4">
+              <nav className="flex space-x-2">
                 <button
                   onClick={() => setCurrentView('dashboard')}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -351,7 +454,17 @@ function App() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Dashboard
+                  Unit Dashboard
+                </button>
+                <button
+                  onClick={() => setCurrentView('overall-progress')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'overall-progress'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Overall Dashboard
                 </button>
               </nav>
             )}

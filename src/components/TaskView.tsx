@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle, MessageCircle, Save, ChevronDown, ChevronRight, Clock, BookOpen, Maximize2, Minimize2, HelpCircle, Send, Target, FileText, CheckSquare, Compass, Undo, Redo, Volume2, VolumeX, List, History } from 'lucide-react';
-import { LearningOutcome, TaskItem, StudentAnswer } from '../types/Unit';
+import { LearningOutcome, TaskItem, StudentAnswer, Unit, TaskStatus } from '../types/Unit';
+import { deriveTaskStatus, isEditable } from '../utils/taskStatus';
 import { askStudentQuestion, StudentQuestionRequest, StudentQuestionResponse } from '../utils/feedbackService';
 import { WorkingTimeIndicator } from './WorkingTimeIndicator';
 import { DEFAULT_EXAMPLE_QUESTIONS } from '../constants/defaultQuestions';
@@ -17,6 +18,8 @@ interface TaskViewProps {
   onAnswerUpdate: (content: string) => void;
   onRequestFeedback: () => Promise<void>;
   onMarkComplete: () => void;
+  onSubmitForReview: () => void;
+  onRecordOutcome: (outcome: 'achieved' | 'not-yet-achieved', reviewFeedback?: string) => void;
   onNavigateBack: () => void;
   onNavigateNext: () => void;
   onNavigatePrevious: () => void;
@@ -36,6 +39,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onAnswerUpdate,
   onRequestFeedback,
   onMarkComplete,
+  onSubmitForReview,
+  onRecordOutcome,
   onNavigateBack,
   onNavigateNext,
   onNavigatePrevious,
@@ -64,6 +69,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [showUnitTaskContext, setShowUnitTaskContext] = useState(false);
   const [showStatusHistory, setShowStatusHistory] = useState(false);
+  const [showNotYetAchievedPanel, setShowNotYetAchievedPanel] = useState(false);
+  const [reviewFeedbackInput, setReviewFeedbackInput] = useState('');
 
   // Autosave timer ref
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -303,6 +310,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         unitId: unitId,
         studentQuestion: studentQuestion,
         answerText: content.trim(),
+        reviewFeedback: answer?.reviewFeedback,
         taskDetails: {
           description: task.description,
           acceptance_criteria: task.acceptance_criteria.map(ac => ({
@@ -442,33 +450,38 @@ export const TaskView: React.FC<TaskViewProps> = ({
     );
   };
 
-  const getTaskStatus = () => {
-    if (!answer) return 'not-started';
-    if (answer.isGoodEnough) return 'completed';
-    return 'in-progress';
-  };
+  const getTaskStatus = (): TaskStatus => deriveTaskStatus(answer);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'achieved': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'completed': return <CheckCircle className="h-5 w-5 text-blue-600" />;
+      case 'submitted-for-review': return <Send className="h-5 w-5 text-purple-600" />;
+      case 'not-yet-achieved': return <MessageCircle className="h-5 w-5 text-orange-600" />;
       case 'in-progress': return <Clock className="h-5 w-5 text-yellow-600" />;
       case 'not-started': return <BookOpen className="h-5 w-5 text-gray-400" />;
       default: return <BookOpen className="h-5 w-5 text-gray-400" />;
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: TaskStatus) => {
     switch (status) {
+      case 'achieved': return 'Achieved';
       case 'completed': return 'Completed';
+      case 'submitted-for-review': return 'Submitted for Review';
+      case 'not-yet-achieved': return 'Not Yet Achieved';
       case 'in-progress': return 'In Progress';
       case 'not-started': return 'Not Started';
       default: return 'Not Started';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: TaskStatus) => {
     switch (status) {
-      case 'completed': return 'text-green-600 bg-green-50 border-green-200';
+      case 'achieved': return 'text-green-700 bg-green-50 border-green-300';
+      case 'completed': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'submitted-for-review': return 'text-purple-600 bg-purple-50 border-purple-200';
+      case 'not-yet-achieved': return 'text-orange-600 bg-orange-50 border-orange-200';
       case 'in-progress': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'not-started': return 'text-gray-600 bg-gray-50 border-gray-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
@@ -486,7 +499,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
           <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
             <div className="flex items-center space-x-2">
               <div className={`w-2 h-2 rounded-full ${
-                change.status === 'completed' ? 'bg-green-500' :
+                change.status === 'achieved' ? 'bg-green-600' :
+                change.status === 'completed' ? 'bg-blue-500' :
+                change.status === 'submitted-for-review' ? 'bg-purple-500' :
+                change.status === 'not-yet-achieved' ? 'bg-orange-500' :
                 change.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-400'
               }`}></div>
               <span className="font-medium capitalize">{change.status.replace('-', ' ')}</span>
@@ -626,33 +642,70 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 Auto-saved at {lastAutoSave.toLocaleTimeString()}
               </div>
             )}
-            {answer && !answer.isGoodEnough && (
-              <button
-                onClick={handleRequestFeedback}
-                disabled={isRequestingFeedback}
-                className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
-              </button>
+            {taskStatus === 'in-progress' && (
+              <>
+                <button
+                  onClick={handleRequestFeedback}
+                  disabled={isRequestingFeedback}
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+                </button>
+                <button
+                  onClick={onMarkComplete}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Mark Complete
+                </button>
+              </>
             )}
-            {answer && !answer.isGoodEnough && (
+            {taskStatus === 'completed' && (
               <button
                 onClick={onMarkComplete}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark Complete
-              </button>
-            )}
-            {answer && answer.isGoodEnough && (
-              <button
-                onClick={() => onMarkComplete()}
                 className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
               >
                 <Clock className="h-4 w-4 mr-2" />
                 Mark Incomplete
               </button>
+            )}
+            {taskStatus === 'submitted-for-review' && (
+              <>
+                <button
+                  onClick={() => setShowNotYetAchievedPanel(true)}
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Not Yet Achieved
+                </button>
+                <button
+                  onClick={() => onRecordOutcome('achieved')}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Achieved
+                </button>
+              </>
+            )}
+            {taskStatus === 'not-yet-achieved' && (
+              <>
+                <button
+                  onClick={handleRequestFeedback}
+                  disabled={isRequestingFeedback}
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+                </button>
+                <button
+                  onClick={onMarkComplete}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Mark Complete
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -1046,33 +1099,70 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   Auto-saved at {lastAutoSave.toLocaleTimeString()}
                 </div>
               )}
-              {content.trim() && (!answer || !answer.isGoodEnough) && (
-                <button
-                  onClick={handleRequestFeedback}
-                  disabled={isRequestingFeedback}
-                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
-                </button>
+              {taskStatus === 'in-progress' && (
+                <>
+                  <button
+                    onClick={handleRequestFeedback}
+                    disabled={isRequestingFeedback}
+                    className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+                  </button>
+                  <button
+                    onClick={onMarkComplete}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark Complete
+                  </button>
+                </>
               )}
-              {content.trim() && (!answer || !answer.isGoodEnough) && (
+              {taskStatus === 'completed' && (
                 <button
                   onClick={onMarkComplete}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark Complete
-                </button>
-              )}
-              {answer && answer.isGoodEnough && (
-                <button
-                  onClick={() => onMarkComplete()}
                   className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                 >
                   <Clock className="h-4 w-4 mr-2" />
                   Mark Incomplete
                 </button>
+              )}
+              {taskStatus === 'submitted-for-review' && !showNotYetAchievedPanel && (
+                <>
+                  <button
+                    onClick={() => setShowNotYetAchievedPanel(true)}
+                    className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Not Yet Achieved
+                  </button>
+                  <button
+                    onClick={() => onRecordOutcome('achieved')}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Achieved
+                  </button>
+                </>
+              )}
+              {taskStatus === 'not-yet-achieved' && (
+                <>
+                  <button
+                    onClick={handleRequestFeedback}
+                    disabled={isRequestingFeedback}
+                    className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    {isRequestingFeedback ? 'Requesting...' : 'Request Feedback'}
+                  </button>
+                  <button
+                    onClick={onMarkComplete}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark Complete
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -1094,13 +1184,53 @@ export const TaskView: React.FC<TaskViewProps> = ({
           {answer && (
             <div className="mt-4 text-sm text-gray-600">
               <p>Last saved: {answer.lastModified.toLocaleString()}</p>
-            {lastAutoSave && (
-              <p>Last auto-save: {lastAutoSave.toLocaleString()}</p>
-            )}
-             {lastAutoSave && (
-               <p>Last auto-save: {lastAutoSave.toLocaleString()}</p>
-             )}
+              {lastAutoSave && (
+                <p>Last auto-save: {lastAutoSave.toLocaleString()}</p>
+              )}
               <p>Version: {answer.version}</p>
+            </div>
+          )}
+
+          {/* Locked banner */}
+          {(taskStatus === 'submitted-for-review' || taskStatus === 'achieved') && (
+            <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-600 flex items-center">
+              <Target className="h-4 w-4 mr-2 flex-shrink-0" />
+              {taskStatus === 'achieved'
+                ? 'This task has been marked Achieved. Answer is locked.'
+                : 'This task has been submitted for review. Answer is locked until a review outcome is recorded.'}
+            </div>
+          )}
+
+          {/* Not Yet Achieved feedback input */}
+          {showNotYetAchievedPanel && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg space-y-3">
+              <h4 className="font-medium text-orange-900">Record Feedback Received</h4>
+              <textarea
+                value={reviewFeedbackInput}
+                onChange={e => setReviewFeedbackInput(e.target.value)}
+                placeholder="Enter the feedback notes received from your reviewer..."
+                className="w-full p-3 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 resize-none text-sm"
+                rows={4}
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    onRecordOutcome('not-yet-achieved', reviewFeedbackInput);
+                    setShowNotYetAchievedPanel(false);
+                    setReviewFeedbackInput('');
+                  }}
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Confirm Not Yet Achieved
+                </button>
+                <button
+                  onClick={() => { setShowNotYetAchievedPanel(false); setReviewFeedbackInput(''); }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1219,7 +1349,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         </div>
       </div>
 
-      {/* Feedback Section */}
+      {/* AI Feedback Section */}
       {answer?.feedback && (
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center mb-4">
@@ -1228,6 +1358,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
           <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
             {formatFeedback(answer.feedback)}
+          </div>
+        </div>
+      )}
+
+      {/* Review Feedback Section */}
+      {answer?.reviewFeedback && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center mb-4">
+            <Target className="h-6 w-6 text-orange-600 mr-3" />
+            <h2 className="text-lg font-semibold text-gray-900">Reviewer Feedback</h2>
+            <span className={`ml-3 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(taskStatus)}`}>
+              {getStatusText(taskStatus)}
+            </span>
+          </div>
+          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 text-sm text-orange-900 whitespace-pre-line">
+            {answer.reviewFeedback}
           </div>
         </div>
       )}
