@@ -1,0 +1,455 @@
+{
+  "id": "unit-9",
+  "title": "Unit 9 Human Resources Assignment",
+  "credits": 15,
+  "guided_learning_hours": 90,
+  "instructions": "At the beginning of each module, you will need to decide whether you want to achieve a Pass, Merit, or Distinction grade for the relevant module keeping in mind your overall score goal and possible qualification progression goal.\n\n1. Pass: Complete the \"Pass\" questions in the assignment. Please disregard the extension activities.\n\nThe Merit and Distinction within assignments are extension activities, which enable you to provide additional evidence to show that the criteria for the higher grades have been met.\n\n2. Merit: To achieve a Merit for this Module, complete the \"Pass\" as well as the \"Merit\" additional extension activities in the assignment.\n\n3. Distinction: To achieve a Distinction for this Module complete the \"Pass\", \"Merit\" & \"Distinction\" additional extension activities in the assignment.\n\n*Please also note* Students cannot omit to complete work to meet the pass standard and simply work to the higher grades, as this would put a pass for the unit in jeopardy.\n\nSimilarly, students cannot complete work to meet the criteria for distinction in the anticipation that this will also meet the criteria for merit. However, where work for the pass standard is marginal, assessors can consider any extension work completed as this may support the achievement of the pass standard.\n\nREMEMBER: Extension activities will not only contribute to a Merit, or Distinction for the module. It can also help to increase your overall point score.\n\nThe points are converted to an overall qualification grade where you can either meet the minimum number of points required for Pass, Merit or Distinction grade for the qualification.\n\nSee the Course Orientation for further clarification.",
+  "scenario": "Mini-Mart Ltd (MML) is a regional grocery chain operating 27 stores across the north of the country. Recently the CEO, Chun Wang, has been considering how the company could become more environmentally aware. There are several farms situated in the region producing fruit, vegetables, meat and dairy products. Chun thinks it would help the environment by reducing food miles if MML sourced more products locally. She has already approached one of the local farmers about stocking his seasonal fruit and vegetables rather than importing from the usual overseas supplier.\n\nYou have recently joined MML as a junior manager and Chun Wang has asked you to lead a new business development team in researching how MML can become a more sustainable business whilst supporting the local environment.",
+  "unit_tasks": [
+    {
+      "id": "Task 1",
+      "description": "Jenny Bashir, the HR Manager, has suggested you should be involved in the recruitment of more sales staff as the current sales team lacks the experience of researching and sourcing more locally produced products. Before doing this, Jenny has asked you to prepare detailed notes to familiarise yourself with the function of HR. Your detailed notes must:",
+      "learning_outcomes": [
+        "LO1",
+        "LO2"
+      ],
+      "outcome_tasks": [
+        "1.1",
+        "1.2",
+        "1M1",
+        "2.1",
+        "2.2",
+        "2D1"
+      ]
+    },
+    {
+      "id": "Task 2",
+      "description": "Jenny Bashir has asked you support the two new sales staff who have been recently recruited. You will need to understand how employees are supported and developed so you decide to do some research in preparation. Jenny thinks this is a good idea and has asked if you would record your research in a guide for the HR team to refer to in the future. Your guide should: • Compare training, coaching, mentoring and counselling methods. (LO3) • Analyse reasons why the need for workplace welfare has increased in recent years. (LO3) • Explain how organisations provide workplace welfare using examples. (LO3)",
+      "learning_outcomes": [
+        "LO3"
+      ],
+      "outcome_tasks": [
+        "3.1",
+        "3.2",
+        "3.3",
+        "3M1",
+        "3D1"
+      ]
+    },
+    {
+      "id": "Task 3",
+      "description": "Jenny Bashir is impressed with your work so far. There is a whole staff training day approaching and Jenny thinks you should be involved. She has asked you to prepare a presentation she will deliver on employee monitoring. You will need to produce presentation slides with detailed speaker notes which Jenny can follow. The slides and speaker notes should: • Explain the elements of effective appraisal practice. (LO4) • Explain the use of KPIs when monitoring employee performance. (LO4)",
+      "learning_outcomes": [
+        "LO4"
+      ],
+      "outcome_tasks": [
+        "4.1",
+        "4.2",
+        "4M1"
+      ]
+    }
+  ],
+  "learning_outcomes": [
+    {
+      "id": "LO1",
+      "description": "Understand the role of the Human Resource Function (HR)",
+      "outcome_tasks": [
+        {
+          "id": "1.1",
+          "description": "Explain the role of the HR function. (LO1)",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 1.1",
+              "criteria": "AC 1.1 Learners will explain in detail the role of the HR function ensuring there is substantial use of the indicative content. The work should be supported by examples."
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "description": "Outline key legislation impacting the HR function in a named country. (LO1)",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 1.2",
+              "criteria": "AC 1.2 Learners will outline key legislation impacting the HR function in a named country. Ideally, the country should be that of the learner as this is more useful to the learner and at least four examples of legislation should be included."
+            }
+          ]
+        },
+        {
+          "id": "1M1",
+          "description": "Analyse the relationship of HR with other organisational functions. (LO1)",
+          "type": "merit",
+          "acceptance_criteria": [
+            {
+              "id": "AC 1M1",
+              "criteria": "AC 1M1 The learners need to give a detailed analysis of the relationship of HR with at least four other organisational functions. In the analysis, the learner should break the relationships into separate parts and examine each part in detail. They should identify the main issues and include reference to current research or theory where appropriate."
+            }
+          ]
+        },
+        {
+          "id": "2D1",
+          "description": "Evaluate the impact of employment legislation on the recruitment and selection process in named country. (LO1 and LO2)",
+          "type": "distinction",
+          "acceptance_criteria": [
+            {
+              "id": "AC 2D1",
+              "criteria": "AC 2D1 This AC is synoptic and assesses learning across LO1 AC 2D1 and LO2. Learners will evaluate the impact of employment legislation on the recruitment and selection process in a named country Ideally, the learners will apply their evaluation to their own country. They will judge the legislation from the different perspectives and make a valid conclusion using examples to support their work."
+            }
+          ]
+        }
+      ],
+      "indicative_content": [
+        {
+          "description": "The role of the HR function to include:",
+          "type": "heading"
+        },
+        {
+          "description": "Recruitment",
+          "type": "bullet"
+        },
+        {
+          "description": "Selection",
+          "type": "bullet"
+        },
+        {
+          "description": "Retention",
+          "type": "bullet"
+        },
+        {
+          "description": "Support and development of employees",
+          "type": "bullet"
+        },
+        {
+          "description": "Remuneration",
+          "type": "bullet"
+        },
+        {
+          "description": "Termination of employee contracts",
+          "type": "bullet"
+        },
+        {
+          "description": "Liaison with unions",
+          "type": "bullet"
+        },
+        {
+          "description": "Compliance with legislation",
+          "type": "bullet"
+        },
+        {
+          "description": "Management of grievance and disciplinary procedures",
+          "type": "bullet"
+        },
+        {
+          "description": "Relationship of HR to other organisational functions to include:",
+          "type": "heading"
+        },
+        {
+          "description": "Management of budgets",
+          "type": "bullet"
+        },
+        {
+          "description": "Organisational and functional skills needs analysis",
+          "type": "bullet"
+        },
+        {
+          "description": "Introduction to employment law to include compliance with:",
+          "type": "heading"
+        },
+        {
+          "description": "Discrimination",
+          "type": "bullet"
+        },
+        {
+          "description": "Health and safety",
+          "type": "bullet"
+        },
+        {
+          "description": "Equality and diversity",
+          "type": "bullet"
+        },
+        {
+          "description": "Data protection",
+          "type": "bullet"
+        },
+        {
+          "description": "Employment legislation",
+          "type": "bullet"
+        }
+      ]
+    },
+    {
+      "id": "LO2",
+      "description": "Understand HR responsibilities when recruiting employees or terminating employee contracts",
+      "outcome_tasks": [
+        {
+          "id": "2.1",
+          "description": "Explain the steps needed for effective recruitment and selection of employees. (LO2)",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 2.1",
+              "criteria": "AC 2.1 Learners will explain the steps needed for effective recruitment and selection of employees. The steps should start with an explanation of a HR needs analysis and follow through with the steps given in the indicative content."
+            }
+          ]
+        },
+        {
+          "id": "2.2",
+          "description": "Explain how HR manages the termination of employee contracts including the use of discipl inary procedures. (LO2)",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 2.2",
+              "criteria": "AC 2.2 The learners will explain how HR manages the termination of employee contracts including the use of disciplinary procedures. There should be an explanation of possible reasons for termination of an employee’s contract."
+            }
+          ]
+        },
+        {
+          "id": "2D1",
+          "description": "Evaluate the impact of employment legislation on the recruitment and selection process in named country. (LO1 and LO2)",
+          "type": "distinction",
+          "acceptance_criteria": [
+            {
+              "id": "AC 2D1",
+              "criteria": "AC 2D1 This AC is synoptic and assesses learning across LO1 AC 2D1 and LO2. Learners will evaluate the impact of employment legislation on the recruitment and selection process in a named country Ideally, the learners will apply their evaluation to their own country. They will judge the legislation from the different perspectives and make a valid conclusion using examples to support their work."
+            }
+          ]
+        }
+      ],
+      "indicative_content": [
+        {
+          "description": "HR needs analysis",
+          "type": "bullet"
+        },
+        {
+          "description": "Job analysis",
+          "type": "bullet"
+        },
+        {
+          "description": "Preparing job description and personal specification documentation",
+          "type": "bullet"
+        },
+        {
+          "description": "Interviewing potential employees",
+          "type": "bullet"
+        },
+        {
+          "description": "Equality and diversity",
+          "type": "bullet"
+        },
+        {
+          "description": "Disciplinary procedures",
+          "type": "bullet"
+        },
+        {
+          "description": "Termination of employee contracts to include: retirement, health grounds, misconduct, promotion, redundancy, employee leaving",
+          "type": "bullet"
+        }
+      ]
+    },
+    {
+      "id": "LO3",
+      "description": "Understand how employees are supported and developed",
+      "outcome_tasks": [
+        {
+          "id": "3.1",
+          "description": "Compare training, coaching, mentoring and counselling methods.",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 3.1",
+              "criteria": "AC 3.1 The learners should make a detailed comparison/contrast of training, coaching, mentoring, and counselling methods. The work should include examples and reference to current theory as appropriate."
+            }
+          ]
+        },
+        {
+          "id": "3.2",
+          "description": "Analyse reasons why the need for workplace welfare has increased in recent years.",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 3.2",
+              "criteria": "AC 3.2 The learners will analyse reasons why the need for workplace welfare has increased in recent years. In the analysis, the learner should break the reasons into separate parts and examine each part in detail. They should identify the main issues and include reference to current research or theory if appropriate. Good use should be made of the indicative content."
+            }
+          ]
+        },
+        {
+          "id": "3.3",
+          "description": "Explain how organisations provide workplace welfare using examples.",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 3.3",
+              "criteria": "AC 3.3 The learners’ work will explain how organisations provide workplace welfare and will be supported with examples."
+            }
+          ]
+        },
+        {
+          "id": "3M1",
+          "description": "Analyse the issues HR faces when supporting employees working remotely.",
+          "type": "merit",
+          "acceptance_criteria": [
+            {
+              "id": "AC 3M1",
+              "criteria": "AC 3M1 Learners will analyse the issues HR faces when supporting employees working remotely. They should identify the main issues and include reference to current research or theory if appropriate. In the analysis, the learners should break the issues into separate parts and examine each part in detail."
+            }
+          ]
+        },
+        {
+          "id": "3D1",
+          "description": "Analyse how a named organisation manages workplace stress.",
+          "type": "distinction",
+          "acceptance_criteria": [
+            {
+              "id": "AC 3D1",
+              "criteria": "AC 3D1 Learners will analyse how a named organisation manages workplace stress. Tutors should ensure the organisation chosen is sufficiently well-known for learners to access the information needed. In the analysis, the learners should break the way stress is managed into separate parts and examine each part in detail. They should identify the main issues and include reference to current research or theory if appropriate."
+            }
+          ]
+        }
+      ],
+      "indicative_content": [
+        {
+          "description": "Induction of new employees",
+          "type": "bullet"
+        },
+        {
+          "description": "Development of employees to include: training, coaching, mentoring and counselling methods",
+          "type": "bullet"
+        },
+        {
+          "description": "Management shadowing",
+          "type": "bullet"
+        },
+        {
+          "description": "Secondment opportunities",
+          "type": "bullet"
+        },
+        {
+          "description": "Grievance procedures",
+          "type": "bullet"
+        },
+        {
+          "description": "Workplace welfare to include: managing workplace stress, supporting employees working remotely",
+          "type": "bullet"
+        },
+        {
+          "description": "The increased need for workplace welfare:",
+          "type": "bullet"
+        },
+        {
+          "description": "Increased pressures on workers as workloads increase due to staff shortages",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Increased costs of living pushing workers to take on more hours and overtime",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Increased use of remote working e.g. circumstances due to pandemic, leading to isolation of workers, lack of social interaction causing stress",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Improved understanding of welfare needs",
+          "type": "sub_bullet"
+        }
+      ]
+    },
+    {
+      "id": "LO4",
+      "description": "Understand how employees are monitored",
+      "outcome_tasks": [
+        {
+          "id": "4.1",
+          "description": "Explain the elements of effective appraisal practice.",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 4.1",
+              "criteria": "AC 4.1 The learners will explain the elements of effective appraisal practice including the different approaches such as peer and 360-degree appraisal. The work should explain how employee observation feeds into appraisal."
+            }
+          ]
+        },
+        {
+          "id": "4.2",
+          "description": "Explain the use of KPIs when monitoring employee performance.",
+          "type": "standard",
+          "acceptance_criteria": [
+            {
+              "id": "AC 4.2",
+              "criteria": "AC 4.2 When explaining the use of KPIs for monitoring employee performance learners should consider at least five of those listed in the indicative content."
+            }
+          ]
+        },
+        {
+          "id": "4M1",
+          "description": "Evaluate approaches to monitoring employee performance in a named organisation.",
+          "type": "merit",
+          "acceptance_criteria": [
+            {
+              "id": "AC 4M1",
+              "criteria": "AC 4M1 The learners will evaluate approaches to monitoring employee performance in a named organisation, preferably that used in AC 3D1. The learners will examine strengths and weaknesses of approaches used judging the evidence from the different perspectives and make a valid conclusion or reasoned judgment. Learners should apply current research or theories to support the evaluation when applicable."
+            }
+          ]
+        }
+      ],
+      "indicative_content": [
+        {
+          "description": "Employee observation",
+          "type": "bullet"
+        },
+        {
+          "description": "Goal and target setting",
+          "type": "bullet"
+        },
+        {
+          "description": "Appraisal process",
+          "type": "bullet"
+        },
+        {
+          "description": "Peer appraisal",
+          "type": "bullet"
+        },
+        {
+          "description": "360-degree appraisal",
+          "type": "bullet"
+        },
+        {
+          "description": "Self-monitoring",
+          "type": "bullet"
+        },
+        {
+          "description": "Key Performance Indicators (KPIs), e.g.:",
+          "type": "bullet"
+        },
+        {
+          "description": "Absenteeism",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Punctuality",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Sales targets",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Productivity",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Employee turnover",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Revenue per employee",
+          "type": "sub_bullet"
+        },
+        {
+          "description": "Profit per employee",
+          "type": "sub_bullet"
+        }
+      ]
+    }
+  ]
+}
